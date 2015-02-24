@@ -1,0 +1,122 @@
+/*! JQuery Heavy Preloader | Daniele Fioroni | dfioroni91@gmail.com */
+(function(window, document, $, undefined){
+	'use strict';
+
+
+
+	// heavy freamwork
+	//----------------
+	$.heavy 			= undefined == $.heavy ? {} : $.heavy;
+	$.heavy.preloader 	= { name : 'HeavyPreloader', version : '1.2', method : 'heavyPreload' };
+	var plugin 			= $.heavy.preloader;
+
+
+
+	$[plugin.method]	= function(options, callback){
+
+		var o = $.extend({}, {
+				urls	   : new Array(),
+				onProgress : null
+			}, options || {}),
+			c = function(){
+				if( $.isFunction(callback) )
+					callback.call(this)
+			},
+			j = o.urls.length,
+			l = function(){
+
+				//incremento
+				++i;
+
+				// restituisce all'utente la percentuale di caricamento del set di immagini
+				o.progress = i / j * 100;
+
+				// funzione eseguita ad ogni immagine caricata
+				if( $.isFunction(o.onProgress) )
+					o.onProgress();
+
+				// esegue la callback se il totale viene raggiunto
+				if( i == j )
+					c();
+
+			};
+
+		// se c'è almeno un elemento immagine da caricare, daje caricalo!
+		if( j > 0 ){
+
+			var i = 0;
+
+			for( var k in o.urls )
+				$(new Image()).error(l).load(l).attr('src', o.urls[k]);
+
+		// altrimenti, se si sta cercando di preloadare un contenitore in cui non è stato trovato nessun elemento-immagine, esegue subito la callback
+		}else
+			c();
+
+		// per accedere all'oggetto delle opzioni dalle opzioni stesse TODO: trovare eventuali controindicazioni
+		return o;
+
+	},
+
+
+	$.fn[plugin.method] = function(options, callback){
+
+		var t = this,
+			o = $.extend({}, {
+				attrs		 : new Array(),
+				urls		 : new Array(),
+				onProgress	 : null
+			}, options || {}),
+			g = function(s){
+
+				if( /([^\s]+(?=\.(jp[e]?g|gif|png|tif[f]?|bmp))\.\2)/gi.test(s) )
+					o.urls.push(s);
+
+			};
+
+		return t.each(function(){
+
+			$(this)
+				// cerca <img />
+				.find('img').each(function(){
+					g( $(this).attr('src') );
+				})
+				.end()
+				// cerca sfondi
+				.find('*:not(img)').filter(function(){ return $(this).css('background-image') != 'none'; }).each(function(){
+					g( $(this).css('background-image').replace(/\"|\'|\)|\(|url/gi, '') );
+				});
+
+			// cerca attributi contenenti url di immagini
+			for( var k in o.attrs )
+				$(this).find('['+o.attrs[k]+']').each(function(){
+					g( $(this).attr(o.attrs[k]) );
+				});
+
+			// loop
+			var m = new $[plugin.method]({
+				urls	   : o.urls,
+				onProgress : function(){
+
+					o.progress = m.progress;
+					
+					if( $.isFunction(o.onProgress) )
+						o.onProgress();
+
+					return o;
+
+				}
+			}, function(){
+
+				// se la callback prende il posto delle options, altrimenti, callback normale con parametri specificati
+				var w = typeof options === 'function' && typeof callback === 'undefined' ? options : callback;
+				if( $.isFunction(w) )
+					w.call(t);
+
+			});
+
+		});
+	};
+
+	
+})(window, document, jQuery);
