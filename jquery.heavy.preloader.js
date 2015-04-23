@@ -7,7 +7,7 @@
 	// heavy freamwork
 	//----------------
 	$.heavy 			= undefined == $.heavy ? {} : $.heavy;
-	$.heavy.preloader 	= { name : 'HeavyPreloader', version : '1.2', method : 'heavyPreload' };
+	$.heavy.preloader 	= { name : 'HeavyPreloader', version : '1.2.1', method : 'heavyPreload' };
 	var plugin 			= $.heavy.preloader;
 
 
@@ -16,7 +16,8 @@
 
 		var o = $.extend({}, {
 				urls	   : new Array(),
-				onProgress : null
+				onProgress : null,
+				stop	   : false
 			}, options || {}),
 			c = function(){
 				if( $.isFunction(callback) )
@@ -24,6 +25,10 @@
 			},
 			j = o.urls.length,
 			l = function(){
+
+				// abort
+				if( o.stop )
+					return;
 
 				//incremento
 				++i;
@@ -69,28 +74,51 @@
 			}, options || {}),
 			g = function(s){
 
-				if( /([^\s]+(?=\.(jp[e]?g|gif|png|tif[f]?|bmp))\.\2)/gi.test(s) )
+				s = s.replace(/\"|\'|\)|\(|url/gi, '');
+
+				if( /([^\s]+(?=\.(jp[e]?g|gif|png|tif[f]?|bmp))\.\2)/gi.test( s ) )
 					o.urls.push(s);
 
 			};
 
 		return t.each(function(){
 
-			$(this)
+			var $t = $(this);
+
+			// se ci sono accodate altre richieste vale solo l'ultima
+			if( $.data($t[0], $.heavy.preloader.name) )
+				$t.data($.heavy.preloader.name).stop();
+
+			// se this è un immagine
+			if( $t.is('img') )
+				g( $t.attr('src') );
+
+			// se this ha un background
+			if( $t.css('background-image') != 'none' )
+				g( $t.css('background-image') );
+
+			// discendenti
+			$t
 				// cerca <img />
 				.find('img').each(function(){
+					
 					g( $(this).attr('src') );
+
 				})
 				.end()
 				// cerca sfondi
 				.find('*:not(img)').filter(function(){ return $(this).css('background-image') != 'none'; }).each(function(){
-					g( $(this).css('background-image').replace(/\"|\'|\)|\(|url/gi, '') );
+					
+					g( $(this).css('background-image') );
+
 				});
 
 			// cerca attributi contenenti url di immagini
 			for( var k in o.attrs )
-				$(this).find('['+o.attrs[k]+']').each(function(){
+				$t.find('['+o.attrs[k]+']').each(function(){
+					
 					g( $(this).attr(o.attrs[k]) );
+
 				});
 
 			// loop
@@ -113,6 +141,20 @@
 				if( $.isFunction(w) )
 					w.call(t);
 
+				//
+        		$.removeData($t[0], $.heavy.preloader.name);
+
+			});
+
+			// public method usato solo per stoppare una richiesta
+			$(this).data($.heavy.preloader.name, {
+				stop : function(){
+
+					m.stop = true;
+
+					$.removeData($t[0], $.heavy.preloader.name);
+
+				}
 			});
 
 		});
