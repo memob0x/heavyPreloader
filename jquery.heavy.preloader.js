@@ -7,7 +7,7 @@
 	// heavy freamwork
 	//----------------
 	$.heavy 			= undefined == $.heavy ? {} : $.heavy;
-	$.heavy.preloader 	= { name : 'HeavyPreloader', version : '1.2.1', method : 'heavyPreload' };
+	$.heavy.preloader 	= { name : 'HeavyPreloader', version : '1.2.2', method : 'heavyPreload' };
 	var plugin 			= $.heavy.preloader;
 
 
@@ -94,7 +94,7 @@
 				g( $t.attr('src') );
 
 			// se this ha un background
-			if( $t.css('background-image') != 'none' )
+			if( document !== $t[0] && $t.css('background-image') != 'none' )
 				g( $t.css('background-image') );
 
 			// discendenti
