@@ -7,7 +7,7 @@
 	// heavy freamwork
 	//----------------
 	$.heavy 			= undefined == $.heavy ? {} : $.heavy;
-	$.heavy.preloader 	= { name : 'HeavyPreloader', version : '1.2.2', method : 'heavyPreload' };
+	$.heavy.preloader 	= { name : 'HeavyPreloader', version : '1.2.3-r2', method : 'heavyPreload' };
 	var plugin 			= $.heavy.preloader;
 
 
@@ -101,8 +101,11 @@
 			$t
 				// cerca <img />
 				.find('img').each(function(){
-					
-					g( $(this).attr('src') );
+
+                    var src = $(this).attr('src');
+
+                    if( undefined !== src && src !== false )
+					    g( src );
 
 				})
 				.end()
