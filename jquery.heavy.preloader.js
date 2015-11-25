@@ -2,12 +2,13 @@
 (function(window, document, $, undefined){
 	'use strict';
 
-
+    // TODO make srcset to load only one pic (the current one)
+	// TODO support <picture>
 
 	// heavy freamwork
 	//----------------
 	$.heavy 			= undefined == $.heavy ? {} : $.heavy;
-	$.heavy.preloader 	= { name : 'HeavyPreloader', version : '1.2.3-r2', method : 'heavyPreload' };
+	$.heavy.preloader 	= { name : 'HeavyPreloader', version : '1.2.3-r4', method : 'heavyPreload' };
 	var plugin 			= $.heavy.preloader;
 
 
@@ -15,10 +16,10 @@
 	$[plugin.method]	= function(options, callback){
 
 		var o = $.extend({}, {
-				urls	   : new Array(),
-				onProgress : null,
-				stop	   : false
-			}, options || {}),
+					urls	   : new Array(),
+					onProgress : null,
+					stop	   : false
+				}, options || {}),
 			c = function(){
 				if( $.isFunction(callback) )
 					callback.call(this)
@@ -54,7 +55,7 @@
 			for( var k in o.urls )
 				$(new Image()).error(l).load(l).attr('src', o.urls[k]);
 
-		// altrimenti, se si sta cercando di preloadare un contenitore in cui non è stato trovato nessun elemento-immagine, esegue subito la callback
+			// altrimenti, se si sta cercando di preloadare un contenitore in cui non è stato trovato nessun elemento-immagine, esegue subito la callback
 		}else
 			c();
 
@@ -74,10 +75,19 @@
 			}, options || {}),
 			g = function(s){
 
-				s = s.replace(/\"|\'|\)|\(|url/gi, '');
+				if( undefined === s || s === false )
+					return;
 
-				if( /([^\s]+(?=\.(jp[e]?g|gif|png|tif[f]?|bmp))\.\2)/gi.test( s ) )
-					o.urls.push(s);
+                var a = s.split(/,|\s/);
+
+                for( var k in a ) {
+
+                    var s = a[k].replace(/\"|\'|\)|\(|url/gi, '');
+
+                    if (/([^\s]+(?=\.(jp[e]?g|gif|png|tif[f]?|bmp))\.\2)/gi.test(s))
+                        o.urls.push(s);
+
+                }
 
 			};
 
@@ -90,8 +100,10 @@
 				$t.data($.heavy.preloader.name).stop();
 
 			// se this è un immagine
-			if( $t.is('img') )
+			if( $t.is('img') ){
 				g( $t.attr('src') );
+				g( $t.attr('srcset') );
+			}
 
 			// se this ha un background
 			if( document !== $t[0] && $t.css('background-image') != 'none' )
@@ -99,27 +111,25 @@
 
 			// discendenti
 			$t
-				// cerca <img />
+			// cerca <img />
 				.find('img').each(function(){
 
-                    var src = $(this).attr('src');
-
-                    if( undefined !== src && src !== false )
-					    g( src );
+					g( $(this).attr('src') );
+					g( $(this).attr('srcset') );
 
 				})
 				.end()
 				// cerca sfondi
 				.find('*:not(img)').filter(function(){ return $(this).css('background-image') != 'none'; }).each(function(){
-					
-					g( $(this).css('background-image') );
 
-				});
+				g( $(this).css('background-image') );
+
+			});
 
 			// cerca attributi contenenti url di immagini
 			for( var k in o.attrs )
 				$t.find('['+o.attrs[k]+']').each(function(){
-					
+
 					g( $(this).attr(o.attrs[k]) );
 
 				});
@@ -130,7 +140,7 @@
 				onProgress : function(){
 
 					o.progress = m.progress;
-					
+
 					if( $.isFunction(o.onProgress) )
 						o.onProgress();
 
@@ -145,7 +155,7 @@
 					w.call(t);
 
 				//
-        		$.removeData($t[0], $.heavy.preloader.name);
+				$.removeData($t[0], $.heavy.preloader.name);
 
 			});
 
@@ -163,5 +173,5 @@
 		});
 	};
 
-	
+
 })(window, document, jQuery);
