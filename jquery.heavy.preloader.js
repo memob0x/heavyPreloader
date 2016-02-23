@@ -2,6 +2,7 @@
 (function(window, document, $, undefined){
 	'use strict';
 
+    // TODO *(1): far sì che gli altri plugin heavy* overridino il
     // TODO make srcset to load only one pic (the current one)
 	// TODO support <picture>
 
@@ -96,7 +97,7 @@
 			var $t = $(this);
 
 			// se ci sono accodate altre richieste vale solo l'ultima
-			if( $.data($t[0], $.heavy.preloader.name) )
+			if( $.data($t[0], $.heavy.preloader.name) ) // TODO fix *(1)
 				$t.data($.heavy.preloader.name).stop();
 
 			// se this è un immagine
