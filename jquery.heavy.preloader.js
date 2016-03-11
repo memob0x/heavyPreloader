@@ -6,13 +6,21 @@
     // TODO make srcset to load only one pic (the current one)
 	// TODO support <picture>
 
+	// todo check and end initial support for videos
+
 	// heavy freamwork
 	//----------------
 	$.heavy 			= undefined == $.heavy ? {} : $.heavy;
-	$.heavy.preloader 	= { name : 'HeavyPreloader', version : '1.2.3-r4', method : 'heavyPreload' };
+	$.heavy.preloader 	= { name : 'HeavyPreloader', version : '1.2.4b', method : 'heavyPreload' };
 	var plugin 			= $.heavy.preloader;
 
 
+	var isImg = function(s){
+			return /([^\s]+(?=\.(jp[e]?g|gif|png|tif[f]?|bmp))\.\2)/gi.test(s);
+		},
+		isVid = function(s){
+			return /([^\s]+(?=\.(mp4|ogv|webm|ogg))\.\2)/gi.test(s);
+		};
 
 	$[plugin.method]	= function(options, callback){
 
@@ -53,8 +61,28 @@
 
 			var i = 0;
 
-			for( var k in o.urls )
-				$(new Image()).error(l).load(l).attr('src', o.urls[k]);
+			for( var k in o.urls ){
+
+				if( isImg(o.urls[k]) )
+					$(new Image()).error(l).load(l).attr('src', o.urls[k]);
+
+				if( isVid(o.urls[k]) ){
+
+					$('<video />', {
+					    src  : o.urls[k],
+					    type : 'video/'+o.urls[k].match(/mp4|ogv|ogg|webm/gi),
+					}).on('progress', function(){
+						//console.log( { video : o.urls[k], loaded : parseInt( video.buffered.end(0) / video.duration * 100) }); // todo
+					})
+					.on('error', l)
+					.on('canplaythrough', l); // todo: to check
+
+				}
+
+				// todo isAud(); 4 audio files?
+
+			}
+
 
 			// altrimenti, se si sta cercando di preloadare un contenitore in cui non è stato trovato nessun elemento-immagine, esegue subito la callback
 		}else
@@ -85,7 +113,7 @@
 
                     var s = a[k].replace(/\"|\'|\)|\(|url/gi, '');
 
-                    if (/([^\s]+(?=\.(jp[e]?g|gif|png|tif[f]?|bmp))\.\2)/gi.test(s))
+                    if( isImg(s) || isVid(s) )
                         o.urls.push(s);
 
                 }
@@ -106,6 +134,10 @@
 				g( $t.attr('srcset') );
 			}
 
+			// se this è un video
+			if( $t.is('video') )
+				g( $t[0].currentSrc );
+
 			// se this ha un background
 			if( document !== $t[0] && $t.css('background-image') != 'none' )
 				g( $t.css('background-image') );
@@ -123,9 +155,14 @@
 				// cerca sfondi
 				.find('*:not(img)').filter(function(){ return $(this).css('background-image') != 'none'; }).each(function(){
 
-				g( $(this).css('background-image') );
+					g( $(this).css('background-image') );
 
-			});
+				})
+				.end()
+				.end()
+				.find('video').each(function(){
+					g( this.currentSrc );
+				});
 
 			// cerca attributi contenenti url di immagini
 			for( var k in o.attrs )
