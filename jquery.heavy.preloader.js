@@ -2,16 +2,15 @@
 (function(window, document, $, undefined){
 	'use strict';
 
-    // TODO *(1): far sì che gli altri plugin heavy* overridino il
+    // TODO TO CHECK *(1): far sì che gli altri plugin heavy* overridino il
+	// TODO TO CHECK videos support
     // TODO make srcset to load only one pic (the current one)
 	// TODO support <picture>
-
-	// todo check and end initial support for videos
 
 	// heavy freamwork
 	//----------------
 	$.heavy 			= undefined == $.heavy ? {} : $.heavy;
-	$.heavy.preloader 	= { name : 'HeavyPreloader', version : '1.2.4b', method : 'heavyPreload' };
+	$.heavy.preloader 	= { name : 'HeavyPreloader', version : '1.2.5b', method : 'heavyPreload' };
 	var plugin 			= $.heavy.preloader;
 
 
@@ -124,8 +123,8 @@
 
 			var $t = $(this);
 
-			// se ci sono accodate altre richieste vale solo l'ultima
-			if( $.data($t[0], $.heavy.preloader.name) ) // TODO fix *(1)
+			// se ci sono accodate altre richieste vale solo l'ultima se non si forza
+			if( $.data($t[0], $.heavy.preloader.name) && !$t.data($.heavy.preloader.name).force ) // TODO fix *(1)
 				$t.data($.heavy.preloader.name).stop();
 
 			// se this è un immagine
@@ -197,9 +196,10 @@
 
 			});
 
-			// public method usato solo per stoppare una richiesta
+			// public methods...
 			$(this).data($.heavy.preloader.name, {
-				stop : function(){
+				//force : false, 		// ... per forzare una richiesta anche se ce n'è un'altra in atto
+				stop  : function(){ // ... per stoppare una richiesta
 
 					m.stop = true;
 
