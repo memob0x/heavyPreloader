@@ -10,7 +10,7 @@
 	// heavy freamwork
 	//----------------
 	$.heavy 			= undefined == $.heavy ? {} : $.heavy;
-	$.heavy.preloader 	= { name : 'HeavyPreloader', version : '1.2.5b', method : 'heavyPreload' };
+	$.heavy.preloader 	= { name : 'HeavyPreloader', version : '1.2.5.1b', method : 'heavyPreload' };
 	var plugin 			= $.heavy.preloader;
 
 
@@ -30,7 +30,7 @@
 				}, options || {}),
 			c = function(){
 				if( $.isFunction(callback) )
-					callback.call(this)
+					callback.call(this);
 			},
 			j = o.urls.length,
 			l = function(){
@@ -70,11 +70,12 @@
 					$('<video />', {
 					    src  : o.urls[k],
 					    type : 'video/'+o.urls[k].match(/mp4|ogv|ogg|webm/gi),
-					}).on('progress', function(){
-						//console.log( { video : o.urls[k], loaded : parseInt( video.buffered.end(0) / video.duration * 100) }); // todo
+					}).on('progress', function(e){
+						// console.log( parseInt( video.buffered.end(0) / video.duration * 100) ); // ??
+						// console.log( e.originalEvent.loaded / e.originalEvent.total * 100 );
 					})
 					.on('error', l)
-					.on('canplaythrough', l); // todo: to check
+					.on('canplaythrough', l);
 
 				}
 
@@ -95,36 +96,35 @@
 
 	$.fn[plugin.method] = function(options, callback){
 
-		var t = this,
-			o = $.extend({}, {
-				attrs		 : new Array(),
-				urls		 : new Array(),
-				onProgress	 : null
-			}, options || {}),
-			g = function(s){
+		return this.each(function(){
 
-				if( undefined === s || s === false )
-					return;
+			var t  = this,
+				$t = $(t),
+				o  = $.extend({}, {
+					attrs		 : new Array(),
+					urls		 : new Array(),
+					onProgress	 : null
+				}, options || {}),
+				g = function(s){
 
-                var a = s.split(/,|\s/);
+					if( undefined === s || s === false )
+						return;
 
-                for( var k in a ) {
+	                var a = s.split(/,|\s/);
 
-                    var s = a[k].replace(/\"|\'|\)|\(|url/gi, '');
+	                for( var k in a ) {
 
-                    if( isImg(s) || isVid(s) )
-                        o.urls.push(s);
+	                    var s = a[k].replace(/\"|\'|\)|\(|url/gi, '');
 
-                }
+	                    if( isImg(s) || isVid(s) )
+	                        o.urls.push(s);
 
-			};
+	                }
 
-		return t.each(function(){
-
-			var $t = $(this);
+				};
 
 			// se ci sono accodate altre richieste vale solo l'ultima se non si forza
-			if( $.data($t[0], $.heavy.preloader.name) && !$t.data($.heavy.preloader.name).force ) // TODO fix *(1)
+			if( $.data(t, $.heavy.preloader.name) && !$t.data($.heavy.preloader.name).force ) // TODO fix *(1)
 				$t.data($.heavy.preloader.name).stop();
 
 			// se this è un immagine
@@ -135,10 +135,10 @@
 
 			// se this è un video
 			if( $t.is('video') )
-				g( $t[0].currentSrc );
+				g( t.currentSrc );
 
 			// se this ha un background
-			if( document !== $t[0] && $t.css('background-image') != 'none' )
+			if( document !== t && $t.css('background-image') != 'none' )
 				g( $t.css('background-image') );
 
 			// discendenti
@@ -152,12 +152,13 @@
 				})
 				.end()
 				// cerca sfondi
-				.find('*:not(img)').filter(function(){ return $(this).css('background-image') != 'none'; }).each(function(){
+				.find('*:not(img)')
+					.filter(function(){ return $(this).css('background-image') != 'none'; }).each(function(){
 
-					g( $(this).css('background-image') );
+						g( $(this).css('background-image') );
 
-				})
-				.end()
+					})
+					.end()
 				.end()
 				.find('video').each(function(){
 					g( this.currentSrc );
@@ -192,7 +193,7 @@
 					w.call(t);
 
 				//
-				$.removeData($t[0], $.heavy.preloader.name);
+				$.removeData(t, $.heavy.preloader.name);
 
 			});
 
@@ -203,7 +204,7 @@
 
 					m.stop = true;
 
-					$.removeData($t[0], $.heavy.preloader.name);
+					$.removeData(t, $.heavy.preloader.name);
 
 				}
 			});
