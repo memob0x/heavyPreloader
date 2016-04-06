@@ -2,16 +2,14 @@
 (function(window, document, $, undefined){
     'use strict';
 
-    // TODO TO CHECK *(1): far sì che gli altri plugin heavy* overridino il
-    // TODO TO CHECK videos support
     // TODO make srcset to load only one pic (the current one)
     // TODO support <picture>
 
     // heavy freamwork
     //----------------
-    $.heavy 			= undefined == $.heavy ? {} : $.heavy;
-    $.heavy.preloader 	= { name : 'HeavyPreloader', version : '1.2.5.2b', method : 'heavyPreload' };
-    var plugin 			= $.heavy.preloader;
+    $.heavy             = undefined == $.heavy ? {} : $.heavy;
+    $.heavy.preloader   = { name : 'HeavyPreloader', version : '1.2.5.3b', method : 'heavyPreload', nameCSS : 'heavy-preloader' };
+    var plugin          = $.heavy.preloader;
 
 
     var isImg = function(s){
@@ -21,12 +19,12 @@
             return /([^\s]+(?=\.(mp4|ogv|webm|ogg))\.\2)/gi.test(s);
         };
 
-    $[plugin.method]	= function(options, callback){
+    $[plugin.method]    = function(options, callback){
 
         var o = $.extend({}, {
-                urls	   : new Array(),
+                urls       : new Array(),
                 onProgress : null,
-                stop	   : false
+                stop       : false
             }, options || {}),
             c = function(){
                 if( $.isFunction(callback) )
@@ -65,36 +63,52 @@
                 var url = o.urls[k];
 
                 if( isImg(url) )
-                    $(new Image()).error(l).load(l).attr('src', url);
+                    $(new Image()).error(l).load(l).attr('src', url+'?'+plugin.nameCSS);
 
                 if( isVid(url) ){
 
-                    var $video = $('<video />', {
-                            src  : url,
-                            type : 'video/'+url.match(/mp4|ogv|ogg|webm/gi),
-                        })
-                        .on('progress', function(e){
+                    var $video = $('video').filter(function(){
+                            return $(this).find('source[src="'+url+'"]').length;
+                        }).first(),
+                        $video = $video.length ? $video : $('<video />', {
+                            src      : url+'?'+plugin.nameCSS,
+                            type     : 'video/'+url.match(/mp4|ogv|ogg|webm/gi),
+                            muted    : true,
+                            preload  : 'metadata'
+                        }),
+                        vid = $video[0],
+                        l_  = function(){
 
-                            var vid = $video[0];
+                            l();
 
-                            if( !vid.duration ){ // error!
+                            vid.currentTime = 0;
 
-                                l();
+                            $video.off('.'+plugin.nameCSS)
 
-                                return;
+                        };
 
-                            }
+                    vid.currentTime++;
 
-                            // force preload!
-                            vid.currentTime++;
+                    $video.on('progress.'+plugin.nameCSS, function(e){
 
-                            // todo o.progress for percentage stuff...
-                            // console.log( parseInt( video.buffered.end(0) / video.duration * 100) ); // ??
-                            // console.log( e.originalEvent.loaded / e.originalEvent.total * 100 );
+                        if( !vid.duration ){ // error!
 
-                        })
-                        .on('error', l)
-                        .on('canplaythrough', l);
+                            l_();
+
+                            return;
+
+                        }
+
+                        // force preload!
+                        vid.currentTime++;
+
+                        // todo o.progress for percentage stuff...
+                        // console.log( parseInt( video.buffered.end(0) / video.duration * 100) ); // ??
+                        // console.log( e.originalEvent.loaded / e.originalEvent.total * 100 );
+
+                    })
+                    .on('error.'+plugin.nameCSS, l_)
+                    .on('canplaythrough.'+plugin.nameCSS, l_);
 
                 }
 
@@ -120,9 +134,9 @@
                 var t  = this,
                     $t = $(t),
                     o  = $.extend({}, {
-                        attrs		 : new Array(),
-                        urls		 : new Array(),
-                        onProgress	 : null
+                        attrs        : new Array(),
+                        urls         : new Array(),
+                        onProgress   : null
                     }, options || {}),
                     g = function(s){
 
@@ -193,7 +207,7 @@
 
                 // loop
                 var m = new $[plugin.method]({
-                    urls	   : o.urls,
+                    urls       : o.urls,
                     onProgress : function(){
 
                         o.progress = m.progress;
@@ -218,7 +232,7 @@
 
                 // public methods...
                 $(this).data($.heavy.preloader.name, {
-                    //force : false, 		// ... per forzare una richiesta anche se ce n'è un'altra in atto
+                    //force : false,        // ... per forzare una richiesta anche se ce n'è un'altra in atto
                     stop  : function(){ // ... per stoppare una richiesta
 
                         m.stop = true;
