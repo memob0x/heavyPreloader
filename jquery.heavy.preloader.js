@@ -8,9 +8,24 @@
     // heavy freamwork
     //----------------
     $.heavy             = undefined == $.heavy ? {} : $.heavy;
-    $.heavy.preloader   = { name : 'HeavyPreloader', version : '1.2.5.3b', method : 'heavyPreload', nameCSS : 'heavy-preloader' };
+    $.heavy.preloader   = { name : 'HeavyPreloader', version : '1.2.5.4b', method : 'heavyPreload', nameCSS : 'heavy-preloader' };
     var plugin          = $.heavy.preloader;
 
+    var videoSupport = function(extension){
+        var tmpVid = document.createElement('video');
+        return tmpVid.canPlayType('video/'+extension);
+    };
+
+    if( videoSupport('mp4') )
+        $.heavy.videoSupport = 'mp4';
+    if( videoSupport('ogg') )
+        $.heavy.videoSupport = 'ogg';
+    if( videoSupport('ogv') )
+        $.heavy.videoSupport = 'ogv';
+    if( videoSupport('webm') )
+        $.heavy.videoSupport = 'webm';
+
+    $.heavy.preloader.cache = new Array();
 
     var isImg = function(s){
             return /([^\s]+(?=\.(jp[e]?g|gif|png|tif[f]?|bmp))\.\2)/gi.test(s);
@@ -53,64 +68,78 @@
 
             };
 
-        // se c'è almeno un elemento immagine da caricare, daje caricalo!
+        // se c'è almeno un elemento da caricare, daje caricalo!
         if( j > 0 ){
 
             var i = 0;
 
             for( var k in o.urls ){
 
-                var url = o.urls[k];
+                var url = o.urls[k],
+                    vidExt = url.match(/mp4|ogv|ogg|webm/gi);
+
+                if( $.inArray(url, $.heavy.preloader.cache) > -1 || ( isVid(url) && !videoSupport(vidExt) ) ){
+
+                    l();
+
+                    continue;
+
+                }
 
                 if( isImg(url) )
                     $(new Image()).error(l).load(l).attr('src', url+'?'+plugin.nameCSS);
 
                 if( isVid(url) ){
 
-                    var $video = $('video').filter(function(){
-                            return $(this).find('source[src="'+url+'"]').length;
-                        }).first(),
-                        $video = $video.length ? $video : $('<video />', {
-                            src      : url+'?'+plugin.nameCSS,
-                            type     : 'video/'+url.match(/mp4|ogv|ogg|webm/gi),
-                            muted    : true,
-                            preload  : 'metadata'
-                        }),
-                        vid = $video[0],
-                        l_  = function(){
+                    var id = $.heavy.preloader.name + 'Vid' + Math.floor( Math.random() * 99999 );
 
-                            l();
+                    window[id] = $('video').filter(function(){ return $(this).find('source[src="' + url + '"]').length; }).first(),
+                    window[id] = window[id].length ? window[id] : $('<video />', {
+                        src: url + '?' + plugin.nameCSS,
+                        type: 'video/' + vidExt,
+                        muted: true,
+                        preload: 'metadata'
+                    });
 
-                            vid.currentTime = 0;
+                    var l_ = function () {
 
-                            $video.off('.'+plugin.nameCSS)
+                        l();
 
-                        };
+                        window[id][0].currentTime = 0;
 
-                    vid.currentTime++;
+                        window[id].off('.' + plugin.nameCSS)
 
-                    $video.on('progress.'+plugin.nameCSS, function(e){
+                        delete window[id];
 
-                        if( !vid.duration ){ // error!
+                    };
 
-                            l_();
+                    window[id][0].currentTime++;
 
-                            return;
+                    window[id]
+                        .on('progress.' + plugin.nameCSS, function (e) {
 
-                        }
+                            if( this.readyState > 0 && !this.duration ) { // probably an error occurred!
 
-                        // force preload!
-                        vid.currentTime++;
+                                l_();
 
-                        // todo o.progress for percentage stuff...
-                        // console.log( parseInt( video.buffered.end(0) / video.duration * 100) ); // ??
-                        // console.log( e.originalEvent.loaded / e.originalEvent.total * 100 );
+                                return;
 
-                    })
-                    .on('error.'+plugin.nameCSS, l_)
-                    .on('canplaythrough.'+plugin.nameCSS, l_);
+                            }
+
+                            // force preload!
+                            this.currentTime++;
+
+                            // todo o.progress for percentage stuff...
+                            // console.log( parseInt( video.buffered.end(0) / video.duration * 100) ); // ??
+                            // console.log( e.originalEvent.loaded / e.originalEvent.total * 100 );
+
+                        })
+                        .on('error.' + plugin.nameCSS, l_)
+                        .on('canplaythrough.' + plugin.nameCSS, l_);
 
                 }
+
+                $.heavy.preloader.cache.push(url);
 
                 // todo isAud(); 4 audio files?
 
@@ -127,123 +156,123 @@
     },
 
 
-        $.fn[plugin.method] = function(options, callback){
+    $.fn[plugin.method] = function(options, callback){
 
-            return this.each(function(){
+        return this.each(function(){
 
-                var t  = this,
-                    $t = $(t),
-                    o  = $.extend({}, {
-                        attrs        : new Array(),
-                        urls         : new Array(),
-                        onProgress   : null
-                    }, options || {}),
-                    g = function(s){
+            var t  = this,
+                $t = $(t),
+                o  = $.extend({}, {
+                    attrs        : new Array(),
+                    urls         : new Array(),
+                    onProgress   : null
+                }, options || {}),
+                g = function(s){
 
-                        if( undefined === s || s === false )
-                            return;
+                    if( undefined === s || s === false )
+                        return;
 
-                        var a = s.split(/,|\s/);
+                    var a = s.split(/,|\s/);
 
-                        for( var k in a ) {
+                    for( var k in a ) {
 
-                            var s = a[k].replace(/\"|\'|\)|\(|url/gi, '');
+                        var s = a[k].replace(/\"|\'|\)|\(|url/gi, '');
 
-                            if( isImg(s) || isVid(s) )
-                                o.urls.push(s);
+                        if( isImg(s) || isVid(s) )
+                            o.urls.push(s);
 
-                        }
+                    }
 
-                    };
+                };
 
-                // se ci sono accodate altre richieste vale solo l'ultima se non si forza
-                if( $.data(t, $.heavy.preloader.name) && !$t.data($.heavy.preloader.name).force ) // TODO fix *(1)
-                    $t.data($.heavy.preloader.name).stop();
+            // se ci sono accodate altre richieste vale solo l'ultima se non si forza
+            if( $.data(t, $.heavy.preloader.name) && !$t.data($.heavy.preloader.name).force ) // TODO fix *(1)
+                $t.data($.heavy.preloader.name).stop();
 
-                // se this è un immagine
-                if( $t.is('img') ){
-                    g( $t.attr('src') );
-                    g( $t.attr('srcset') );
+            // se this è un immagine
+            if( $t.is('img') ){
+                g( $t.attr('src') );
+                g( $t.attr('srcset') );
+            }
+
+            // se this è un video
+            if( $t.is('video') )
+                g( t.currentSrc );
+
+            // se this ha un background
+            if( document !== t && $t.css('background-image') != 'none' )
+                g( $t.css('background-image') );
+
+            // discendenti
+            $t
+            // cerca <img />
+                .find('img').each(function(){
+
+                    g( $(this).attr('src') );
+                    g( $(this).attr('srcset') );
+
+                })
+                .end()
+                // cerca sfondi
+                .find('*:not(img)')
+                .filter(function(){ return $(this).css('background-image') != 'none'; }).each(function(){
+
+                    g( $(this).css('background-image') );
+
+                })
+                .end()
+                .end()
+                .find('video').each(function(){
+                g( this.currentSrc );
+            });
+
+            // cerca attributi contenenti url di immagini
+            for( var k in o.attrs )
+                $t.find('['+o.attrs[k]+']').each(function(){
+
+                    g( $(this).attr(o.attrs[k]) );
+
+                });
+
+            // loop
+            var m = new $[plugin.method]({
+                urls       : o.urls,
+                onProgress : function(){
+
+                    o.progress = undefined === m ? 0 : m.progress;
+
+                    if( $.isFunction(o.onProgress) )
+                        o.onProgress();
+
+                    return o;
+
                 }
+            }, function(){
 
-                // se this è un video
-                if( $t.is('video') )
-                    g( t.currentSrc );
+                // se la callback prende il posto delle options, altrimenti, callback normale con parametri specificati
+                var w = typeof options === 'function' && typeof callback === 'undefined' ? options : callback;
+                if( $.isFunction(w) )
+                    w.call(t);
 
-                // se this ha un background
-                if( document !== t && $t.css('background-image') != 'none' )
-                    g( $t.css('background-image') );
-
-                // discendenti
-                $t
-                // cerca <img />
-                    .find('img').each(function(){
-
-                        g( $(this).attr('src') );
-                        g( $(this).attr('srcset') );
-
-                    })
-                    .end()
-                    // cerca sfondi
-                    .find('*:not(img)')
-                    .filter(function(){ return $(this).css('background-image') != 'none'; }).each(function(){
-
-                        g( $(this).css('background-image') );
-
-                    })
-                    .end()
-                    .end()
-                    .find('video').each(function(){
-                    g( this.currentSrc );
-                });
-
-                // cerca attributi contenenti url di immagini
-                for( var k in o.attrs )
-                    $t.find('['+o.attrs[k]+']').each(function(){
-
-                        g( $(this).attr(o.attrs[k]) );
-
-                    });
-
-                // loop
-                var m = new $[plugin.method]({
-                    urls       : o.urls,
-                    onProgress : function(){
-
-                        o.progress = m.progress;
-
-                        if( $.isFunction(o.onProgress) )
-                            o.onProgress();
-
-                        return o;
-
-                    }
-                }, function(){
-
-                    // se la callback prende il posto delle options, altrimenti, callback normale con parametri specificati
-                    var w = typeof options === 'function' && typeof callback === 'undefined' ? options : callback;
-                    if( $.isFunction(w) )
-                        w.call(t);
-
-                    //
-                    $.removeData(t, $.heavy.preloader.name);
-
-                });
-
-                // public methods...
-                $(this).data($.heavy.preloader.name, {
-                    //force : false,        // ... per forzare una richiesta anche se ce n'è un'altra in atto
-                    stop  : function(){ // ... per stoppare una richiesta
-
-                        m.stop = true;
-
-                        $.removeData(t, $.heavy.preloader.name);
-
-                    }
-                });
+                //
+                $.removeData(t, $.heavy.preloader.name);
 
             });
-        };
+
+            // public methods...
+            $(this).data($.heavy.preloader.name, {
+                //force : false,        // ... per forzare una richiesta anche se ce n'è un'altra in atto
+                stop  : function(){ // ... per stoppare una richiesta
+
+                    m.stop = true;
+
+                    $.removeData(t, $.heavy.preloader.name);
+
+                }
+            });
+
+        });
+    };
 
 
 })(window, document, jQuery);
