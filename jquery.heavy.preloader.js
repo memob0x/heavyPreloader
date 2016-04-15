@@ -101,21 +101,35 @@
                         preload: 'metadata'
                     });
 
-                    var l_ = function () {
+                    $('body').append(
+                        window[id].css({
+                            width       : 2,
+                            height      : 1,
+                            visibility  : 'hidden',
+                            position    : 'absolute',
+                            left        : -9999,
+                            top         : -9999
+                        })
+                    );
 
-                        l();
+                    var l_ = function () {
 
                         window[id][0].currentTime = 0;
 
-                        window[id].off('.' + plugin.nameCSS)
+                        window[id]
+                            .off('.' + plugin.nameCSS)
+                            .remove();
 
                         delete window[id];
 
+                        l();
+
                     };
 
-                    window[id][0].currentTime++;
-
                     window[id]
+                        .on('load', function(){
+                             console.log('asd')
+                         })
                         .on('progress.' + plugin.nameCSS, function (e) {
 
                             if( this.readyState > 0 && !this.duration ) { // probably an error occurred!
@@ -136,6 +150,8 @@
                         })
                         .on('error.' + plugin.nameCSS, l_)
                         .on('canplaythrough.' + plugin.nameCSS, l_);
+
+                    window[id][0].currentTime++;
 
                 }
 
