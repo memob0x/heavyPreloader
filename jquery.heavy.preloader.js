@@ -8,7 +8,7 @@
     // heavy freamwork
     //----------------
     $.heavy             = undefined == $.heavy ? {} : $.heavy;
-    $.heavy.preloader   = { name : 'HeavyPreloader', version : '1.2.5.4b', method : 'heavyPreload', nameCSS : 'heavy-preloader' };
+    $.heavy.preloader   = { name : 'HeavyPreloader', version : '1.2.5.41b', method : 'heavyPreload', nameCSS : 'heavy-preloader' };
     var plugin          = $.heavy.preloader;
 
     var videoSupport = function(extension){
@@ -127,6 +127,11 @@
                     };
 
                     window[id]
+                        .on('loadedmetadata', function(){ // init
+
+                            this.currentTime++;
+
+                        })
                         .on('load', function(){
                              console.log('asd')
                          })
@@ -151,7 +156,8 @@
                         .on('error.' + plugin.nameCSS, l_)
                         .on('canplaythrough.' + plugin.nameCSS, l_);
 
-                    window[id][0].currentTime++;
+                    if( !isNaN(window[id][0].duration) ) // modern browsers ? // todo: check if still needed cuz loadedmetadata
+                        window[id][0].currentTime++;
 
                 }
 
