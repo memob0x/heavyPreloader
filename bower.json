@@ -12,7 +12,7 @@
     "jquery": ">=1.9.1"
   },
   "moduleType": [
-    "es6",
+    "es6"
   ],
   "keywords": [
     "preloader",
