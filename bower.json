@@ -1,0 +1,32 @@
+{
+  "name": "Heavy Preloader",
+  "description": "a tool that offers an elegant way to detect (or trigger) the loading process of images",
+  "main": [
+    "jquery.heavy.preloader.js",
+    "jquery.heavy.preloader.min.js"
+  ],
+  "dependencies": {
+    "jquery": "~1.9.1"
+  },
+  "devDependencies": {
+    "jquery": "~1.9.1"
+  },
+  "moduleType": [
+    "jquery",
+  ],
+  "keywords": [
+    "preloader",
+    "tool",
+    "simple",
+    "powerful"
+  ],
+  "authors": [
+    "Daniele Fioroni <dfioroni91@gmail.com>"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "test",
+    "tests"
+  ],
+  "private": false
+}
