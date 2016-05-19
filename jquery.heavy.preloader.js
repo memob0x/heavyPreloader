@@ -60,8 +60,6 @@
                 var J = j === 0 ? 1 : j;
                 o.progress = i / J * 100;
 
-                console.log(o.progress)
-
                 // funzione eseguita ad ogni immagine caricata
                 if( $.isFunction(o.onProgress) )
                     o.onProgress();
@@ -133,7 +131,7 @@
 
                     })
                     .on('load', function(){
-                        console.log('asd')
+
                     })
                     .on('progress.' + plugin.nameCSS, function (e) {
 
