@@ -8,7 +8,7 @@
     // heavy freamwork
     //----------------
     $.heavy             = undefined == $.heavy ? {} : $.heavy;
-    $.heavy.preloader   = { name : 'HeavyPreloader', version : '1.2.5.42c', method : 'heavyPreload', nameCSS : 'heavy-preloader' };
+    $.heavy.preloader   = { name : 'HeavyPreloader', version : '1.2.6b', method : 'heavyPreload', nameCSS : 'heavy-preloader' };
     var plugin          = $.heavy.preloader;
 
     var videoSupport = function(extension){
@@ -26,6 +26,8 @@
         $.heavy.videoSupport = 'webm';
 
     $.heavy.preloader.cache = new Array();
+
+    $.heavy.preloader.customAttrs = new Array();
 
     var isImg = function(s){
             return /([^\s]+(?=\.(jp[e]?g|gif|png|tif[f]?|bmp))\.\2)/gi.test(s);
@@ -76,7 +78,7 @@
             var url = o.urls[k],
                 vidExt = url.match(/mp4|ogv|ogg|webm/gi);
 
-            if( $.inArray(url, $.heavy.preloader.cache) > -1 || ( isVid(url) && !videoSupport(vidExt) ) ){
+            if( $.inArray(url.replace('?'+plugin.nameCSS, ''), $.heavy.preloader.cache) > -1 || ( isVid(url) && !videoSupport(vidExt) ) ){
 
                 l();
 
@@ -84,39 +86,61 @@
 
             }
 
-            if( isImg(url) )
-                $(new Image()).error(l).load(l).attr('src', url+'?'+plugin.nameCSS);
+            $.heavy.preloader.cache.push(url);
+
+            var id = $.heavy.preloader.name + 'Vid' + Math.floor( Math.random() * 99999 );
+
+            if( isImg(url) ){
+
+                var selector = '';
+
+                if( $.heavy.preloader.customAttrs.length )
+                    for( var k in $.heavy.preloader.customAttrs )
+                        selector += ',img['+$.heavy.preloader.customAttrs[k]+'="'+ url +'"]';
+
+                window[id] = $('img[src="' + url + '"], img[data-src="' + url + '"]'+selector).first(),
+                window[id] = window[id].length ? window[id] : $(new Image());
+
+                window[id].error(l).load(l).attr('src', url+'?'+plugin.nameCSS);
+
+            }
 
             if( isVid(url) ){
 
-                var id = $.heavy.preloader.name + 'Vid' + Math.floor( Math.random() * 99999 );
+                window[id] = $('video').filter(function(){ return $(this).find('source[src="' + url + '"]').length; }).first();
 
-                window[id] = $('video').filter(function(){ return $(this).find('source[src="' + url + '"]').length; }).first(),
-                window[id] = window[id].length ? window[id].clone() : $('<video />', {
-                    src: url + '?' + plugin.nameCSS,
-                    type: 'video/' + vidExt,
-                    muted: true,
-                    preload: 'metadata'
-                });
+                var nonExistent = !window[id].length;
 
-                $('body').append(
-                    window[id].css({
-                        width       : 2,
-                        height      : 1,
-                        visibility  : 'hidden',
-                        position    : 'absolute',
-                        left        : -9999,
-                        top         : -9999
-                    })
-                );
+                if( nonExistent ){
+
+                    window[id] = $('<video />', {
+                        src: url + '?' + plugin.nameCSS,
+                        type: 'video/' + vidExt,
+                        muted: true,
+                        preload: 'metadata'
+                    });
+
+                    $('body').append(
+                        window[id].css({
+                            width       : 2,
+                            height      : 1,
+                            visibility  : 'hidden',
+                            position    : 'absolute',
+                            left        : -9999,
+                            top         : -9999
+                        })
+                    );
+
+                }
 
                 var l_ = function () {
 
                     window[id][0].currentTime = 0;
 
-                    window[id]
-                        .off('.' + plugin.nameCSS)
-                        .remove();
+                    window[id].off('.' + plugin.nameCSS);
+
+                    if( nonExistent )
+                        window[id].remove();
 
                     delete window[id];
 
@@ -158,8 +182,6 @@
                     window[id][0].currentTime++;
 
             }
-
-            $.heavy.preloader.cache.push(url);
 
             // todo isAud(); 4 audio files?
 
@@ -246,12 +268,20 @@
             });
 
             // cerca attributi contenenti url di immagini
-            for( var k in o.attrs )
+            for( var k in o.attrs ){
+
+                $.heavy.preloader.customAttrs.push(o.attrs[k]);
+
+                if( $t.is('['+o.attrs[k]+']') )
+                    g( $t.attr(o.attrs[k]) );
+
                 $t.find('['+o.attrs[k]+']').each(function(){
 
                     g( $(this).attr(o.attrs[k]) );
 
                 });
+
+            }
 
             // loop
             var m = new $[plugin.method]({
