@@ -2,8 +2,9 @@
 (function(window, document, $, undefined){
     'use strict';
 
-    // TODO make srcset to load only one pic (the current one)
     // TODO support <picture>
+    // TODO support <iframe>
+    // TODO make srcset to load only one pic (the current one) --> done?
 
     // heavy freamwork
     //----------------
@@ -50,11 +51,22 @@
                 stop       : false
             }, options || {}),
             c = function(){
+
                 if( $.isFunction(callback) )
                     callback.call(this);
-            },
+
+                callback = null; // O.o ... ehm. evita il ripetersi della callback al resize? caching matto? todo: check
+
+            };
+
+        // rimuove duplicati
+        var dupes = o.urls;
+        o.urls = dupes.filter(function(elem, pos) {
+            return dupes.indexOf(elem) == pos;
+        });
+
+        var j = o.urls.length,
             i = 0,
-            j = o.urls.length,
             l = function(){
 
                 // abort
@@ -76,25 +88,26 @@
                 if( i >= j )
                     c();
 
-            };
+            }
 
         // se c'è almeno un elemento da caricare, daje caricalo!
         if( j > 0 ) for( var k in o.urls ){
 
             var url = o.urls[k],
-                vidExt = url.match(/mp4|ogv|ogg|webm/gi);
+                id = $.heavy.preloader.name + 'Vid' + Math.floor( Math.random() * 99999),
+                vidExt = url.match(/mp4|ogv|ogg|webm/gi),
+                wasCached = $.inArray(url.replace('?'+plugin.nameCSS, ''), $.heavy.preloader.cache) > -1;
 
-            if( $.inArray(url.replace('?'+plugin.nameCSS, ''), $.heavy.preloader.cache) > -1 || ( isVid(url) && !mediaSupport('video', vidExt) ) ){
+            if( !wasCached )
+                $.heavy.preloader.cache.push(url);
+
+            if( wasCached || ( isVid(url) && !mediaSupport('video', vidExt) ) ){
 
                 l();
 
                 continue;
 
             }
-
-            $.heavy.preloader.cache.push(url);
-
-            var id = $.heavy.preloader.name + 'Vid' + Math.floor( Math.random() * 99999 );
 
             if( isImg(url) ){
 
@@ -104,31 +117,30 @@
                     for( var k in $.heavy.preloader.customAttrs )
                         selector += ',img['+$.heavy.preloader.customAttrs[k]+'="'+ url +'"]';
 
-                window[id] = $('img[src="' + url + '"], img[srcset*="' + url + ', img[data-src="' + url + '"]'+selector).first(), // todo check srcset
-                window[id] = window[id].length ? window[id] : $(new Image());
-                window[id].error(l).load(l).attr('src', url+'?'+plugin.nameCSS);
+                window[id] = $('img[src="' + url + '"], img[srcset*="' + url + '"], img[data-src="' + url + '"]'+selector).first(); // todo check srcset
+
+                var nonExistent = !window[id].length;
+
+                window[id] = nonExistent ? $(new Image()) : window[id];
+
+                if( window[id].is('[src]') )
+                    window[id].error(l).load(l).attr('src', url);
+                else
+                    window[id].error(l).load(l).attr('src', url+'?'+plugin.nameCSS);
 
             }
 
             if( isVid(url) ){
 
-                window[id] = $('video').filter(function(){ return $(this).find('source[src="' + url + '"]').length; }).first();
+                var selector = '';
 
-                var nonExistent = !window[id].length,
-                    l_          = function () {
+                if( $.heavy.preloader.customAttrs.length )
+                    for( var k in $.heavy.preloader.customAttrs )
+                        selector += ', source['+$.heavy.preloader.customAttrs[k]+'="'+ url +'"]';
 
-                        window[id][0].currentTime = 0;
+                window[id] = $('video').filter(function(){ return $(this).find('source[src="' + url + '"], source[data-src="' + url + '"]'+selector).length; }).first();
 
-                        window[id].off('.' + plugin.nameCSS);
-
-                        if( nonExistent )
-                            window[id].remove();
-
-                        delete window[id];
-
-                        l();
-
-                    };
+                var nonExistent = !window[id].length;
 
                 if( nonExistent ){
 
@@ -145,23 +157,42 @@
                         visibility  : 'hidden',
                         position    : 'absolute',
                         left        : -9999,
-                        top         : -9999
+                        top         : -9999,
+                        'z-index'   : -1
                     }) );
 
+                }else{
+                    var $src = window[id].find('source[src="' + url + '"], source[data-src="' + url + '"]'+selector);
+                    if( !$src.is('[src]') ) {
+                        $src.attr('src', url + '?' + plugin.nameCSS);
+                        window[id].load();
+                    }
                 }
 
+                var l_          = function () {
+
+                    this.currentTime = 0;
+
+                    $(this).off('.' + plugin.nameCSS);
+
+                    if( nonExistent )
+                        this.remove();
+
+                    delete window[id];
+
+                    l();
+
+                };
+
                 window[id]
-                    .on('loadedmetadata', function(){ // init
+                    .on('loadedmetadata', function () { // init
 
                         this.currentTime++;
 
                     })
-                    .on('load', function(){
-
-                    })
                     .on('progress.' + plugin.nameCSS, function (e) {
 
-                        if( this.readyState > 0 && !this.duration ) { // probably an error occurred!
+                        if (this.readyState > 0 && !this.duration) { // probably an error occurred!
 
                             l_();
 
@@ -180,7 +211,7 @@
                     .on('error.' + plugin.nameCSS, l_)
                     .on('canplaythrough.' + plugin.nameCSS, l_);
 
-                if( !isNaN(window[id][0].duration) ) // modern browsers ? // todo: check if still needed cuz loadedmetadata
+                if (!isNaN(window[id][0].duration)) // modern browsers ? // todo: check if still needed cuz loadedmetadata
                     window[id][0].currentTime++;
 
             }
@@ -263,7 +294,7 @@
                 });
 
             }
-       
+
             // se this ha un background
             if( o.backgrounds && document !== t && $t.css('background-image') != 'none' )
                 g( $t.css('background-image') );
@@ -355,6 +386,5 @@
 
         });
     };
-
 
 })(window, document, jQuery);
