@@ -26,14 +26,14 @@
             return /([^\s]+(?=\.(mp3|ogg))\.\2)/gi.test(s);
         };
 
-    if( mediaSupport('video', 'mp4') )
-        $.heavy.videoSupport = 'mp4';
     if( mediaSupport('video', 'ogg') )
         $.heavy.videoSupport = 'ogg';
     if( mediaSupport('video', 'ogv') )
         $.heavy.videoSupport = 'ogv';
     if( mediaSupport('video', 'webm') )
         $.heavy.videoSupport = 'webm';
+    if( mediaSupport('video', 'mp4') )
+        $.heavy.videoSupport = 'mp4';
     if( mediaSupport('audio', 'ogg') )
         $.heavy.audioSupport = 'ogg';
     if( mediaSupport('audio', 'mp3') )
@@ -60,10 +60,11 @@
             };
 
         // rimuove duplicati
-        var dupes = o.urls;
-        o.urls = dupes.filter(function(elem, pos) {
-            return dupes.indexOf(elem) == pos;
-        });
+        var dupes = o.urls,
+            cleans = dupes.filter(function(elem, pos) {
+                return dupes.indexOf(elem) == pos;
+            });
+        o.urls = cleans;
 
         var j = o.urls.length,
             i = 0,
@@ -84,6 +85,8 @@
                 if( $.isFunction(o.onProgress) )
                     o.onProgress();
 
+                //console.log(i, j)
+
                 // esegue la callback se il totale viene raggiunto (o superato -> se non ci sono cose da caricare viene forzata la condizione)
                 if( i >= j )
                     c();
@@ -96,12 +99,64 @@
             var url = o.urls[k],
                 id = $.heavy.preloader.name + 'Vid' + Math.floor( Math.random() * 99999),
                 vidExt = url.match(/mp4|ogv|ogg|webm/gi),
-                wasCached = $.inArray(url.replace('?'+plugin.nameCSS, ''), $.heavy.preloader.cache) > -1;
+                audExt = url.match(/mp3|ogg/gi),
+                wasCached = $.inArray(url.replace('?'+plugin.nameCSS, ''), $.heavy.preloader.cache) > -1,
 
+                nonExistent = false,
+
+                selector = '';
+
+
+            // PRELIMINAR OPERATIONS
+            if( isImg(url) ){
+
+                if( $.heavy.preloader.customAttrs.length )
+                    for( var k in $.heavy.preloader.customAttrs )
+                        selector += ',img['+$.heavy.preloader.customAttrs[k]+'="'+ url +'"]';
+
+                window[id] = $('img[src="' + url + '"], img[srcset*="' + url + '"], img[data-src="' + url + '"]'+selector).not('.heavy-preloaded').first().addClass('heavy-preloaded'); // todo check srcset
+
+                nonExistent = !window[id].length;
+
+            }
+
+            if( isVid(url) || isAud(url) ) {
+
+                if( $.heavy.preloader.customAttrs.length )
+                    for( var k in $.heavy.preloader.customAttrs )
+                        selector += ', source['+$.heavy.preloader.customAttrs[k]+'="'+ url +'"]';
+
+                window[id] = $( isVid(url) ? 'video' : 'audio' ).filter(function(){ return $(this).find('source[src="' + url + '"], source[data-src="' + url + '"]'+selector).length; }).not('.heavy-preloaded').first().addClass('heavy-preloaded');
+
+                nonExistent = !window[id].length;
+
+            }
+
+
+            // CACHE IT
             if( !wasCached )
                 $.heavy.preloader.cache.push(url);
 
-            if( wasCached || ( isVid(url) && !mediaSupport('video', vidExt) ) ){
+
+            // CONTINUE
+            if( wasCached || ( isVid(url) && !mediaSupport('video', vidExt) ) || ( isAud(url) && !mediaSupport('audio', audExt) ) ){
+
+                if( !nonExistent ){
+
+                    if( isImg(url) && !window[id].is('[src]') )
+                        window[id].attr('src', url+'?'+plugin.nameCSS);
+
+                    if( ( isVid(url) && mediaSupport('video', vidExt) ) || ( isAud(url) && mediaSupport('audio', audExt) ) ){
+                        var $src = window[id].find('source[src="' + url + '"], source[data-src="' + url + '"]'+selector);
+                        if( !$src.is('[src]') ) {
+                            $src.attr('src', url + '?' + plugin.nameCSS);
+                            window[id].load();
+                        }
+                    }
+
+                }
+
+                delete window[id];
 
                 l();
 
@@ -109,44 +164,33 @@
 
             }
 
+            // PRELOAD!
             if( isImg(url) ){
-
-                var selector = '';
-
-                if( $.heavy.preloader.customAttrs.length )
-                    for( var k in $.heavy.preloader.customAttrs )
-                        selector += ',img['+$.heavy.preloader.customAttrs[k]+'="'+ url +'"]';
-
-                window[id] = $('img[src="' + url + '"], img[srcset*="' + url + '"], img[data-src="' + url + '"]'+selector).first(); // todo check srcset
-
-                var nonExistent = !window[id].length;
 
                 window[id] = nonExistent ? $(new Image()) : window[id];
 
-                if( window[id].is('[src]') )
-                    window[id].error(l).load(l).attr('src', url);
-                else
-                    window[id].error(l).load(l).attr('src', url+'?'+plugin.nameCSS);
+                var l_          = function () {
+
+                    delete window[id];
+
+                    l();
+
+                };
+
+                //if( window[id].is('[src]') ) // ok questa cosa rompe ios non so perchè ma lo fa // todo check!
+                //    window[id].error(l_).load(l_).attr('src', url);
+                //else
+                    window[id].error(l_).load(l_).attr('src', url+'?'+plugin.nameCSS);
 
             }
 
-            if( isVid(url) ){
-
-                var selector = '';
-
-                if( $.heavy.preloader.customAttrs.length )
-                    for( var k in $.heavy.preloader.customAttrs )
-                        selector += ', source['+$.heavy.preloader.customAttrs[k]+'="'+ url +'"]';
-
-                window[id] = $('video').filter(function(){ return $(this).find('source[src="' + url + '"], source[data-src="' + url + '"]'+selector).length; }).first();
-
-                var nonExistent = !window[id].length;
+            if( isVid(url) || isAud(url) ){
 
                 if( nonExistent ){
 
-                    window[id] = $('<video />', {
+                    window[id] = $('<'+( isVid(url) ? 'video' : 'audio' )+' />', {
                         src: url + '?' + plugin.nameCSS,
-                        type: 'video/' + vidExt,
+                        type: ( isVid(url) ? 'video' : 'audio' ) + '/' + ( isVid(url) ? vidExt : audExt ),
                         muted: true,
                         preload: 'metadata'
                     });
@@ -216,11 +260,6 @@
 
             }
 
-            if( isAud(url) ){
-
-                l(); // todo.....
-
-            }
 
         }
 
