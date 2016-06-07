@@ -9,7 +9,7 @@
     // heavy freamwork
     //----------------
     $.heavy             = undefined === $.heavy ? {} : $.heavy;
-    $.heavy.preloader   = { name : 'HeavyPreloader', version : '2.0-beta', method : 'heavyPreload', nameCSS : 'heavy-preloader' };
+    $.heavy.preloader   = { name : 'HeavyPreloader', version : '1.4-beta', method : 'heavyPreload', nameCSS : 'heavy-preloader' };
 
     var mediaSupport = function(type, extension){
 
@@ -36,6 +36,18 @@
 
     if( mediaSupport('audio', 'mp3') )
         $.heavy.audioSupport = 'mp3';
+
+    $.heavy.preloader.preload      = function(urls, callback){
+
+        if( !$.isArray(urls) )
+            return;
+
+        // todo
+
+        if( $.isFunction(callback) )
+            callback();
+
+    }
 
     $[$.heavy.preloader.method]    = function(element, options, callback){
 
@@ -89,11 +101,13 @@
 
                             if( isImage(url) ) {
 
+                                var ext = url.match(/jp[e]?g|gif|png|tif[f]?|bmp/gi);
+
                                 collection.push({
                                     $el: $element,
                                     url: url,
                                     type: type,
-                                    ext: url.match(/jp[e]?g|gif|png|tif[f]?|bmp/gi)
+                                    ext: ext[0]
                                 });
 
                             }
@@ -110,7 +124,7 @@
                                     $el: $element,
                                     url: url,
                                     type: type,
-                                    ext: ext
+                                    ext: ext[0]
                                 });
 
                             }
@@ -123,7 +137,7 @@
                                     $el: $element,
                                     url: url,
                                     type: type,
-                                    ext: ext
+                                    ext: ext[0]
                                 });
 
                             }
@@ -143,7 +157,9 @@
 
         plugin.destroy = function(){
 
-            $collection.off('.'+ $.heavy.preloader.name);
+            // todo
+
+            collection = [];
 
         }
 
@@ -181,7 +197,7 @@
 
                     var interrupt = false;
 
-                    if( $(this).is('[data-src]') ) {
+                    if( $(this).is('[src]') ) {
                         collect($(this).attr('src'), plugin.element, 'audio/video');
                         interrupt = true;
                     }
@@ -274,7 +290,7 @@
                     }
 
                 if( !interrupt && plugin.element.is('[data-src]') )
-                    collect( plugin.element.attr('data-src'), plugin.element, 'image' );
+                    collect( plugin.element.data('src'), plugin.element, 'image' );
 
             }
             // cerca immagini
@@ -351,12 +367,15 @@
 
                             var $target = !v.$el ? $(new Image()) : v.$el;
 
+                            // todo !!! iOS has a bug with gifs ;( they won't load.. they will take forever ... add a timer fallback?
+                            if( v.ext === 'gif' && ( navigator.userAgent.indexOf('Safari') > -1 || (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) ) )
+                                progress();
+
                             $target
                                 .error(progress)
                                 .load(progress)
-                                .not('[src]')
-                                    .attr('src', v.url+'?'+ $.heavy.preloader.nameCSS)
-                                    .removeAttr('data-src');
+                                .attr('src', v.url+'?'+ $.heavy.preloader.nameCSS)
+                                .removeAttr('data-src');
 
                         break;
 
@@ -379,10 +398,8 @@
                                 v.$el
 
                                     .find('source[type*="/'+ v.ext +'"], source[src*=".'+ v.ext +'"], source[data-src*=".'+ v.ext +'"]')
-                                        .not('[src]')
-                                            .attr('src', v.url+'?'+ $.heavy.preloader.nameCSS)
-                                            .removeAttr('data-src')
-                                        .end()
+                                        .attr('src', v.url+'?'+ $.heavy.preloader.nameCSS)
+                                        .removeAttr('data-src')
                                     .end()
 
                                     .load()
