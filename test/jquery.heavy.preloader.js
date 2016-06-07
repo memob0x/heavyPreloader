@@ -2,10 +2,6 @@
 (function(window, document, $, undefined){
     'use strict';
 
-    // TODO support <picture>
-    // TODO support <iframe>
-    // TODO make srcset to load only one pic (the current one) --> done?
-
     // heavy freamwork
     //----------------
     $.heavy             = undefined === $.heavy ? {} : $.heavy;
@@ -13,11 +9,117 @@
 
     var mediaSupport = function(type, extension){
 
-        var tmpVid = document.createElement(type);
+            var tmpVid = document.createElement(type);
 
-        return tmpVid.canPlayType(type+'/'+extension);
+            return tmpVid.canPlayType(type+'/'+extension);
 
-    };
+        },
+
+        isImage = function( url ){
+
+            if( /([^\s]+(?=\.(jp[e]?g|gif|png|tif[f]?|bmp))\.\2)/gi.test( url ) )
+                return url.match(/jp[e]?g|gif|png|tif[f]?|bmp/gi);
+            else
+                return false;
+
+        },
+        isAudio = function( url ){
+
+            if( /([^\s]+(?=\.(mp3|ogg))\.\2)/gi.test( url ) )
+                return url.match(/mp3|ogg/gi);
+            else
+                return false;
+
+        },
+        isVideo = function( url ){
+
+            if( /([^\s]+(?=\.(mp4|ogv|webm|ogg))\.\2)/gi.test( url ) )
+                return url.match(/mp4|ogv|ogg|webm/gi);
+            else
+                return false;
+
+        },
+
+        __preloadImage = function($el, url, ext, cb){
+
+            // todo !!! iOS has a bug with gifs ;( they won't load.. they will take forever ... add a timer fallback?
+            if( ext === 'gif' && ( navigator.userAgent.indexOf('Safari') > -1 || (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) ) )
+                cb();
+
+            $el
+                .error(cb)
+                .load(cb)
+                .attr('src', url+'?'+ $.heavy.preloader.nameCSS)
+                .removeAttr('data-src');
+
+        },
+        __fakeMedia    = function(url, type, ext){
+
+            var $el = $('<'+type+' />', {
+                src: url + '?' + $.heavy.preloader.nameCSS,
+                type: type + '/' + ext,
+                muted: true,
+                preload: 'metadata'
+            });
+
+            $('body').append( $el.addClass($.heavy.preloader.nameCSS+'-temp').css({
+                width       : 2,
+                height      : 1,
+                visibility  : 'hidden',
+                position    : 'absolute',
+                left        : -9999,
+                top         : -9999,
+                'z-index'   : -1
+            }) );
+
+            return $el;
+
+        },
+        __preloadMedia = function($el, cb){
+
+            var done = function () {
+
+                if( this.paused )
+                    this.currentTime = 0;
+
+                $el.off('.'+ $.heavy.preloader.name);
+
+                cb();
+
+                if( $el.hasClass($.heavy.preloader.nameCSS+'-temp') )
+                    $el.remove();
+
+            };
+
+            $el
+
+                .load()
+
+                .on('canplaythrough.' + $.heavy.preloader.name, done)
+
+                .on('loadedmetadata.' + $.heavy.preloader.name, function () {
+
+                    if( this.paused )
+                        this.currentTime++;
+
+                })
+
+                .on('progress.' + $.heavy.preloader.name, function () {
+
+                    if (this.readyState > 0 && !this.duration) { // error!
+
+                        done();
+
+                        return;
+
+                    }
+
+                    if( this.paused )
+                        this.currentTime++; // force
+
+                });
+
+        };
 
     if( mediaSupport('video', 'ogg') )
         $.heavy.videoSupport = 'ogg';
@@ -37,15 +139,37 @@
     if( mediaSupport('audio', 'mp3') )
         $.heavy.audioSupport = 'mp3';
 
-    $.heavy.preloader.preload      = function(urls, callback){
+    // shorthand
+    $.heavy.preload = function(urls, callback){
 
         if( !$.isArray(urls) )
             return;
 
-        // todo
+        var count  = 0,
+            length = urls.length,
+            progress = function(){
 
-        if( $.isFunction(callback) )
-            callback();
+                count++;
+
+                if( count === length && $.isFunction(callback) )
+                    callback();
+
+            };
+
+        for( var k in urls ){
+
+            var url = urls[k];
+
+            if( isImage(url) )
+                __preloadImage($(new Image()), url, isImage(url), progress);
+
+            if( isAudio(url) )
+                __preloadMedia(__fakeMedia(url, 'audio', isAudio(url)), progress);
+
+            if( isVideo(url) )
+                __preloadMedia(__fakeMedia(url, 'video', isVideo(url)), progress);
+
+        }
 
     }
 
@@ -63,25 +187,10 @@
             collection = [],
 
             defaults = {
+                pipeline   : false,
                 attrs        : [],
                 backgrounds  : false,
-                onProgress   : null
-            },
-
-            isImage = function( url ){
-
-                return /([^\s]+(?=\.(jp[e]?g|gif|png|tif[f]?|bmp))\.\2)/gi.test( url );
-
-            },
-            isAudio = function( url ){
-
-                return /([^\s]+(?=\.(mp3|ogg))\.\2)/gi.test( url );
-
-            },
-            isVideo = function( url ){
-
-                return /([^\s]+(?=\.(mp4|ogv|webm|ogg))\.\2)/gi.test( url );
-
+                onProgress   : null // todo check!
             },
 
             collect = function(urls, $element, type){
@@ -99,15 +208,15 @@
 
                         case 'image':
 
-                            if( isImage(url) ) {
+                            var extImage = isImage(url);
 
-                                var ext = url.match(/jp[e]?g|gif|png|tif[f]?|bmp/gi);
+                            if( extImage ) {
 
                                 collection.push({
                                     $el: $element,
                                     url: url,
                                     type: type,
-                                    ext: ext[0]
+                                    ext: extImage[0]
                                 });
 
                             }
@@ -116,28 +225,28 @@
 
                         case 'audio/video':
 
-                            if( isAudio(url) ) {
+                            var extAudio = isAudio(url);
 
-                                var ext = url.match(/mp3|ogg/gi);
+                            if( extAudio ) {
 
-                                if( mediaSupport('audio', ext) ) collection.push({
+                                if( mediaSupport('audio', extAudio) ) collection.push({
                                     $el: $element,
                                     url: url,
                                     type: type,
-                                    ext: ext[0]
+                                    ext: extAudio[0]
                                 });
 
                             }
 
-                            if( isVideo(url) ) {
+                            var extVideo = isVideo(url);
 
-                                var ext = url.match(/mp4|ogv|ogg|webm/gi);
+                            if( extVideo ) {
 
-                                if( mediaSupport('video', ext) ) collection.push({
+                                if( mediaSupport('video', extVideo) ) collection.push({
                                     $el: $element,
                                     url: url,
                                     type: type,
-                                    ext: ext[0]
+                                    ext: extVideo[0]
                                 });
 
                             }
@@ -157,7 +266,7 @@
 
         plugin.destroy = function(){
 
-            // todo
+            // todo --> do it...
 
             collection = [];
 
@@ -166,6 +275,10 @@
         plugin.settings.attrs = typeof plugin.settings.attrs === 'string' ? [plugin.settings.attrs] : plugin.settings.attrs;
 
         plugin.init = function(){
+
+            // TODO support <picture>
+            // TODO support <iframe>
+            // TODO make srcset to load only one pic (the current one) --> done?
 
             // custom attrs in other tags
             if( plugin.settings.attrs && !plugin.element.is('img') && !plugin.element.is('audio') && !plugin.element.is('video') && !plugin.element.is('source') )
@@ -339,27 +452,39 @@
                     collect( $(this).css('background-image'), null, 'image' );
 
                 });
-
+            
+            // LOAD!
             var count  = 0,
+                pipe   = 0,
+                percentage = 0,
                 length = collection.length,
                 progress = function(){
 
                     count++;
 
-                    plugin.progress = count / length * 100;
+                    percentage = count / length * 100;
 
-                    if( $.isFunction(plugin.onProgress) )
-                        plugin.onProgress();
+                    if( $.isFunction(plugin.settings.onProgress) )
+                        plugin.settings.onProgress.call($.extend(false, plugin, { percentage : percentage, thisElement : this })); // shallowcopy --> todo : shouldn't be like that?
 
-                    if( count === length )
+                    if( count === length ) {
+
                         callback();
 
-                }
+                        return;
 
+                    }
 
-            if( length ){
+                    if( plugin.settings.pipeline === true ){
 
-                $.each(collection, function(i, v){
+                        pipe++;
+
+                        logic(pipe, collection[pipe]);
+
+                    }
+
+                },
+                logic = function(i, v){
 
                     switch( v.type ){
 
@@ -367,76 +492,45 @@
 
                             var $target = !v.$el ? $(new Image()) : v.$el;
 
-                            // todo !!! iOS has a bug with gifs ;( they won't load.. they will take forever ... add a timer fallback?
-                            if( v.ext === 'gif' && ( navigator.userAgent.indexOf('Safari') > -1 || (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) ) )
-                                progress();
+                            __preloadImage($target, v.url, v.ext, function(){ progress.call($target); });
 
-                            $target
-                                .error(progress)
-                                .load(progress)
-                                .attr('src', v.url+'?'+ $.heavy.preloader.nameCSS)
-                                .removeAttr('data-src');
-
-                        break;
+                            break;
 
                         case 'audio/video' :
 
-                            if( v.$el ){
+                            var $target = v.$el;
 
-                                var done = function () {
+                            if( !$target ) {
 
-                                    if( this.paused )
-                                        this.currentTime = 0;
+                                $target = __fakeMedia(v.url, isAudio(v.url) ? 'audio' : 'video', v.ext);
 
-                                    v.$el.off('.'+ $.heavy.preloader.name);
+                            }else{
 
-                                    progress();
-
-                                };
-
-
-                                v.$el
-
+                                $target
                                     .find('source[type*="/'+ v.ext +'"], source[src*=".'+ v.ext +'"], source[data-src*=".'+ v.ext +'"]')
-                                        .attr('src', v.url+'?'+ $.heavy.preloader.nameCSS)
-                                        .removeAttr('data-src')
-                                    .end()
-
-                                    .load()
-
-                                    .on('canplaythrough.' + $.heavy.preloader.name, done)
-
-                                    .on('loadedmetadata.' + $.heavy.preloader.name, function () {
-
-                                        if( this.paused )
-                                            this.currentTime++;
-
-                                    })
-
-                                    .on('progress.' + $.heavy.preloader.name, function () {
-
-                                        if (this.readyState > 0 && !this.duration) { // error!
-
-                                            done();
-
-                                            return;
-
-                                        }
-
-                                        if( this.paused )
-                                            this.currentTime++; // force
-
-                                    });
+                                    .attr('src', v.url+'?'+ $.heavy.preloader.nameCSS)
+                                    .removeAttr('data-src');
 
                             }
 
-                        break;
+                            __preloadMedia($target, function(){ progress.call($target); });
+
+                            break;
 
 
                     }
 
 
-                });
+                };
+
+
+            if( length ){
+
+                if( plugin.settings.pipeline === true )
+                    logic(pipe, collection[pipe]);
+
+                else
+                    $.each(collection, logic);
 
             }else
                 callback();
@@ -475,31 +569,3 @@
     };
 
 })(window, document, jQuery);
-
-
-/*
-todo
-
-$(new Image())
-
-e
-
-var $tmp = $('<'+( isVideo(url) ? 'video' : 'audio' )+' />', {
- src: url + '?' + $.heavy.preloader.nameCSS,
- type: ( isVideo(url) ? 'video' : 'audio' ) + '/' + ( isVideo(url) ? vidExt : audExt ),
- muted: true,
- preload: 'metadata'
-});
-
-$('body').append( $tmp.css({
- width       : 2,
- height      : 1,
- visibility  : 'hidden',
- position    : 'absolute',
- left        : -9999,
- top         : -9999,
- 'z-index'   : -1
-}) );
-
-
- */
