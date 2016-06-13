@@ -93,9 +93,9 @@
 
             };
 
-            $el
+            $el[0].load();
 
-                .load()
+            $el
 
                 .on('canplaythrough.' + $.heavy.preloader.name, done)
 
@@ -184,7 +184,7 @@
 
         var plugin = this,
 
-            eventID = Math.floor( Math.random() * 99999),
+            //eventID = Math.floor( Math.random() * 99999),
 
             $element = $(element),
 
@@ -307,9 +307,10 @@
 
         plugin.init = function(){
 
-            // TODO support <picture>
-            // TODO support <iframe>
+            // TODO support <picture> ?
+            // TODO support <iframe> --> $iframe[0].load();
             // TODO make srcset to load only one pic (the current one) --> done?
+            // TODO preload video poster ?
 
             // custom attrs in other tags
             if( plugin.settings.attrs && !plugin.element.is('img') && !plugin.element.is('audio') && !plugin.element.is('video') && !plugin.element.is('source') )
