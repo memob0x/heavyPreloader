@@ -44,7 +44,7 @@
 
             $el
                 .one('load.'+ $.heavy.preloader.name+' error.'+ $.heavy.preloader.name, cb)
-                .attr('src', url+'?'+ $.heavy.preloader.nameCSS)
+                .attr('src', url)
                 .removeAttr('data-src');
 
             if( $el[0].complete === true ) // todo: check --> this should solve iOS gif bug
@@ -58,7 +58,7 @@
         __fakeMedia    = function(url, type, ext){
 
             var $el = $('<'+type+' />', {
-                src: url + '?' + $.heavy.preloader.nameCSS,
+                src: url,
                 type: type + '/' + ext,
                 muted: true,
                 preload: 'metadata'
@@ -163,13 +163,13 @@
             var url = urls[k];
 
             if( isImage(url) )
-                __preloadImage($(new Image()), url, isImage(url), progress);
+                __preloadImage($(new Image()), url+'?'+ $.heavy.preloader.nameCSS, isImage(url), progress);
 
             if( isAudio(url) )
-                __preloadMedia(__fakeMedia(url, 'audio', isAudio(url)), progress);
+                __preloadMedia(__fakeMedia(url+'?'+ $.heavy.preloader.nameCSS, 'audio', isAudio(url)), progress);
 
             if( isVideo(url) )
-                __preloadMedia(__fakeMedia(url, 'video', isVideo(url)), progress);
+                __preloadMedia(__fakeMedia(url+'?'+ $.heavy.preloader.nameCSS, 'video', isVideo(url)), progress);
 
         }
 
@@ -525,9 +525,10 @@
 
                         case 'image' :
 
-                            var $target = !v.$el ? $(new Image()) : v.$el;
+                            var isFake  = !v.$el,
+                                $target = isFake ? $(new Image()) : v.$el;
 
-                            __preloadImage($target, v.url, v.ext, function(){ progress.call($target); });
+                            __preloadImage($target, isFake ? v.url+'?'+ $.heavy.preloader.nameCSS : v.url, v.ext, function(){ progress.call($target); });
 
                             break;
 
@@ -537,13 +538,13 @@
 
                             if( !$target ) {
 
-                                $target = __fakeMedia(v.url, isAudio(v.url) ? 'audio' : 'video', v.ext);
+                                $target = __fakeMedia(v.url+'?'+ $.heavy.preloader.nameCSS, isAudio(v.url) ? 'audio' : 'video', v.ext);
 
                             }else{
 
                                 $target
                                     .find('source[type*="/'+ v.ext +'"], source[src*=".'+ v.ext +'"], source[data-src*=".'+ v.ext +'"]')
-                                    .attr('src', v.url+'?'+ $.heavy.preloader.nameCSS)
+                                    .attr('src', v.url)
                                     .removeAttr('data-src');
 
                             }
