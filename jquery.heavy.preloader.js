@@ -5,7 +5,7 @@
     // heavy freamwork
     //----------------
     $.heavy             = undefined === $.heavy ? {} : $.heavy;
-    $.heavy.preloader   = { name : 'HeavyPreloader', version : '1.4-beta', method : 'heavyPreload', nameCSS : 'heavy-preloader' };
+    $.heavy.preloader   = { name : 'HeavyPreloader', version : '1.4.1-beta', method : 'heavyPreload', nameCSS : 'heavy-preloader' };
 
     var mediaSupport = function(type, extension){
 
@@ -218,7 +218,7 @@
 
                                 extImage = extImage[0];
 
-                                if( !$.data($element[0], $.heavy.preloader.name) ){
+                                if( null === $element || !$.data($element[0], $.heavy.preloader.name) ){
 
                                     var obj = {
                                         url: url,
@@ -226,9 +226,10 @@
                                         ext: extImage
                                     };
 
-                                    collection.push( $.extend(true, {
-                                        $el: $element.data($.heavy.preloader.name, obj),
-                                    }, obj) );
+                                    if( null !== $element )
+                                        $element.data($.heavy.preloader.name, obj);
+
+                                    collection.push( $.extend(true, { $el: $element }, obj) );
 
                                 }
 
@@ -244,7 +245,7 @@
 
                                 extAudio = extAudio[0];
 
-                                if( mediaSupport('audio', extAudio) && !$.data($element[0], $.heavy.preloader.name) ){
+                                if( mediaSupport('audio', extAudio) && ( null === $element || !$.data($element[0], $.heavy.preloader.name) ) ){
 
                                     var obj = {
                                         url: url,
@@ -252,9 +253,10 @@
                                         ext: extAudio
                                     };
 
-                                    collection.push( $.extend(true, {
-                                        $el: $element.data($.heavy.preloader.name, obj)
-                                    }, obj) );
+                                    if( null !== $element )
+                                        $element.data($.heavy.preloader.name, obj);
+
+                                    collection.push( $.extend(true, { $el: $element }, obj) );
 
                                 }
 
@@ -266,7 +268,7 @@
 
                                 extVideo = extVideo[0];
 
-                                if( mediaSupport('video', extVideo) && !$.data($element[0], $.heavy.preloader.name) ) {
+                                if( mediaSupport('video', extVideo) && ( null === $element || !$.data($element[0], $.heavy.preloader.name) ) ) {
 
                                     var obj = {
                                         url: url,
@@ -274,9 +276,10 @@
                                         ext: extVideo
                                     };
 
-                                    collection.push( $.extend(true, {
-                                        $el: $element.data($.heavy.preloader.name, obj)
-                                    }, obj) );
+                                    if( null !== $element )
+                                        $element.data($.heavy.preloader.name, obj);
+
+                                    collection.push( $.extend(true, { $el: $element }, obj) );
 
                                 }
 
