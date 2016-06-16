@@ -493,14 +493,19 @@
                 pipe   = 0,
                 percentage = 0,
                 length = collection.length,
+                onProgressCallback = function(n, context){
+
+                    if( $.isFunction(plugin.settings.onProgress) )
+                        plugin.settings.onProgress.call($.extend(false, plugin, { percentage : n, thisElement : context })); // shallowcopy --> todo : shouldn't be like that?
+
+                },
                 progress = function(){
 
                     count++;
 
                     percentage = count / length * 100;
 
-                    if( $.isFunction(plugin.settings.onProgress) )
-                        plugin.settings.onProgress.call($.extend(false, plugin, { percentage : percentage, thisElement : this })); // shallowcopy --> todo : shouldn't be like that?
+                    onProgressCallback(percentage, this);
 
                     if( count === length ) {
 
@@ -559,6 +564,7 @@
 
                 };
 
+            onProgressCallback(0, $element);
 
             if( length ){
 
@@ -568,8 +574,13 @@
                 else
                     $.each(collection, logic);
 
-            }else
+            }else {
+
+                onProgressCallback(100, $element);
+
                 callback();
+
+            }
 
         }
 
