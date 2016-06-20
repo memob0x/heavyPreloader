@@ -5,7 +5,7 @@
     // heavy freamwork
     //----------------
     $.heavy             = undefined === $.heavy ? {} : $.heavy;
-    $.heavy.preloader   = { name : 'HeavyPreloader', version : '1.4.1-beta', method : 'heavyPreload', nameCSS : 'heavy-preloader' };
+    $.heavy.preloader   = { name : 'HeavyPreloader', version : '1.4.1d', method : 'heavyPreload', nameCSS : 'heavy-preloader' };
 
     var mediaSupport = function(type, extension){
 
@@ -43,12 +43,22 @@
         __preloadImage = function($el, url, ext, cb){
 
             $el
-                .one('load.'+ $.heavy.preloader.name+' error.'+ $.heavy.preloader.name, cb)
+                .one('load.'+ $.heavy.preloader.name+' error.'+ $.heavy.preloader.name, function(){
+
+                    cb.call({
+                        type : 'image',
+                        naturalWidth : this.naturalWidth,
+                        naturalHeight : this.naturalHeight
+                    });
+
+                })
                 .attr('src', url)
                 .removeAttr('data-src');
 
             if( $el[0].complete === true ) // todo: check --> this should solve iOS gif bug
                 $el.trigger('load.'+ $.heavy.preloader.name);
+
+            return $el;
 
             // todo !!! iOS has a bug with gifs ;( they won't load.. they will take forever ... add a timer fallback?
             //if( ext === 'gif' && ( navigator.userAgent.indexOf('Safari') > -1 || (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) ) )
@@ -79,21 +89,26 @@
         },
         __preloadMedia = function($el, cb){
 
-            var done = function () {
+            var el   = $el[0],
+                wasPaused = el.paused,
+                done = function () {
 
-                if( this.paused )
-                    this.currentTime = 0;
+                    if( wasPaused )
+                        el.currentTime = 0;
 
-                $el.off('.'+ $.heavy.preloader.name);
+                    $el.off('.'+ $.heavy.preloader.name);
 
-                cb();
+                    cb.call({
+                        type : 'image',
+                        duration : el.duration // todo --> find useful data...
+                    });
 
-                if( $el.hasClass($.heavy.preloader.nameCSS+'-temp') )
-                    $el.remove();
+                    if( $el.hasClass($.heavy.preloader.nameCSS+'-temp') )
+                        $el.remove();
 
-            };
+                };
 
-            $el[0].load();
+            el.load();
 
             $el
 
@@ -101,14 +116,14 @@
 
                 .on('loadedmetadata.' + $.heavy.preloader.name, function () {
 
-                    if( this.paused )
-                        this.currentTime++;
+                    if( wasPaused )
+                        el.currentTime++;
 
                 })
 
                 .on('progress.' + $.heavy.preloader.name, function () {
 
-                    if (this.readyState > 0 && !this.duration) { // error!
+                    if ( el.readyState > 0 && !el.duration ) { // error!
 
                         done();
 
@@ -116,10 +131,12 @@
 
                     }
 
-                    if( this.paused )
-                        this.currentTime++; // force
+                    if( wasPaused )
+                        el.currentTime++; // force
 
                 });
+
+            return $el;
 
         };
 
@@ -142,34 +159,68 @@
         $.heavy.audioSupport = 'mp3';
 
     // shorthand
-    $.heavy.preload = function(urls, callback){
+    $.heavy.preload = function(urls, onProgress, callback /*, todo pipeline */ ){
 
         if( !$.isArray(urls) )
             return;
 
-        var count  = 0,
+        var pg = function(){
+
+                if( $.isFunction(onProgress) )
+                    onProgress.call(this);
+
+            },
+            cb = function(){
+
+                if( $.isFunction(callback) )
+                    callback.call(this);
+
+            },
+
+            datas = [],
+
+            count  = 0,
             length = urls.length,
             progress = function(){
 
                 count++;
 
-                if( count === length && $.isFunction(callback) )
-                    callback();
+                pg.call(this);
+
+                if( count === length )
+                    cb.call(datas);
 
             };
 
-        for( var k in urls ){
+        pg.call(null);
+
+        if( length ) for( var k in urls ){
 
             var url = urls[k];
 
             if( isImage(url) )
-                __preloadImage($(new Image()), url+'?'+ $.heavy.preloader.nameCSS, isImage(url), progress);
+                __preloadImage($(new Image()), url + '?' + $.heavy.preloader.nameCSS, isImage(url), function(){
+                    datas.push(this);
+                    progress.call(this);
+                });
 
             if( isAudio(url) )
-                __preloadMedia(__fakeMedia(url+'?'+ $.heavy.preloader.nameCSS, 'audio', isAudio(url)), progress);
+                __preloadMedia(__fakeMedia(url + '?' + $.heavy.preloader.nameCSS, 'audio', isAudio(url)), function(){ 
+                    datas.push(this);
+                    progress.call(this);
+                });
 
             if( isVideo(url) )
-                __preloadMedia(__fakeMedia(url+'?'+ $.heavy.preloader.nameCSS, 'video', isVideo(url)), progress);
+                __preloadMedia(__fakeMedia(url+'?'+ $.heavy.preloader.nameCSS, 'video', isVideo(url)), function(){
+                    datas.push(this);
+                    progress.call(this);
+                });
+
+        } else{
+
+            pg.call(null);
+
+            cb();
 
         }
 
@@ -184,7 +235,7 @@
 
         var plugin = this,
 
-            //eventID = Math.floor( Math.random() * 99999),
+        //eventID = Math.floor( Math.random() * 99999),
 
             $element = $(element),
 
@@ -493,10 +544,10 @@
                 pipe   = 0,
                 percentage = 0,
                 length = collection.length,
-                onProgressCallback = function(n, context){
+                onProgressCallback = function(n, context, data){
 
                     if( $.isFunction(plugin.settings.onProgress) )
-                        plugin.settings.onProgress.call($.extend(false, plugin, { percentage : n, thisElement : context })); // shallowcopy --> todo : shouldn't be like that?
+                        plugin.settings.onProgress.call($.extend(false, plugin, { percentage : n, thisElement : context, data : data })); // shallowcopy --> todo : shouldn't be like that?
 
                 },
                 progress = function(){
@@ -505,7 +556,7 @@
 
                     percentage = count / length * 100;
 
-                    onProgressCallback(percentage, this);
+                    onProgressCallback(percentage, this.target, this.data);
 
                     if( count === length ) {
 
@@ -533,7 +584,7 @@
                             var isFake  = !v.$el,
                                 $target = isFake ? $(new Image()) : v.$el;
 
-                            __preloadImage($target, isFake ? v.url+'?'+ $.heavy.preloader.nameCSS : v.url, v.ext, function(){ progress.call($target); });
+                            __preloadImage($target, isFake ? v.url+'?'+ $.heavy.preloader.nameCSS : v.url, v.ext, function(){ progress.call({ target : $target, data : this }); });
 
                             break;
 
@@ -554,7 +605,7 @@
 
                             }
 
-                            __preloadMedia($target, function(){ progress.call($target); });
+                            __preloadMedia($target, function(){ progress.call({ target : $target, data : this }); });
 
                             break;
 
@@ -564,7 +615,7 @@
 
                 };
 
-            onProgressCallback(0, $element);
+            onProgressCallback(0, null, null);
 
             if( length ){
 
@@ -576,7 +627,7 @@
 
             }else {
 
-                onProgressCallback(100, $element);
+                onProgressCallback(100, null, null);
 
                 callback();
 
