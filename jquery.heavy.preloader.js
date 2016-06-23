@@ -5,7 +5,7 @@
     // heavy freamwork
     //----------------
     $.heavy             = undefined === $.heavy ? {} : $.heavy;
-    $.heavy.preloader   = { name : 'HeavyPreloader', version : '1.4.1d', method : 'heavyPreload', nameCSS : 'heavy-preloader' };
+    $.heavy.preloader   = { name : 'HeavyPreloader', version : '1.4.1e', method : 'heavyPreload', nameCSS : 'heavy-preloader' };
 
     var mediaSupport = function(type, extension){
 
@@ -250,7 +250,7 @@
 
             collect = function(urls, $element, type){
 
-                if( undefined === urls || urls === false )
+                if( undefined === urls || urls === false || ( typeof $element.data('heavyPreloader') !== 'undefined' && $element.data('heavyPreloader').ignore === true ) )
                     return;
 
                 var urls = urls.split(/,|\s/);
