@@ -5,7 +5,7 @@
     // heavy freamwork
     //----------------
     $.heavy             = undefined === $.heavy ? {} : $.heavy;
-    $.heavy.preloader   = { name : 'HeavyPreloader', version : '1.4.2', method : 'heavyPreload', nameCSS : 'heavy-preloader' };
+    $.heavy.preloader   = { name : 'HeavyPreloader', version : '1.4.2', method : 'heavyPreload', nameCSS : 'heavy-preloader', busy : false };
 
     var mediaSupport = function(type, extension){
 
@@ -561,6 +561,8 @@
                 },
                 progress = function(){
 
+                    $.heavy.preloader.busy = true;
+
                     count++;
 
                     percentage = count / length * 100;
@@ -568,6 +570,8 @@
                     onProgressCallback(percentage, this.target, this.data);
 
                     if( count === length ) {
+
+                        $.heavy.preloader.busy = false;
 
                         callback();
 
