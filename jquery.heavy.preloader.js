@@ -663,7 +663,8 @@
 
             var t = this,
                 c = function(){
-                    callback.call(t);
+                    if( $.isFunction(callback) )
+                        callback.call(t);
                 };
 
             // loop
