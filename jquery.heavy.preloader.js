@@ -41,7 +41,7 @@
                     matches.shift();
                     return matches;
                 }else
-                    url.match( new RegExp(formats[ format ], 'gi') );
+                    return url.match( new RegExp(formats[ format ], 'gi') );
             }else
                 return false;
 
