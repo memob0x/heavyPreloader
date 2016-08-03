@@ -5,7 +5,7 @@
     // heavy freamwork
     //----------------
     $.heavy             = undefined === $.heavy ? {} : $.heavy;
-    $.heavy.preloader   = { name : 'HeavyPreloader', version : '1.4.2', method : 'heavyPreload', nameCSS : 'heavy-preloader', busy : false };
+    $.heavy.preloader   = { name : 'HeavyPreloader', version : '1.4.2b', method : 'heavyPreload', nameCSS : 'heavy-preloader', busy : false };
 
     var mediaSupport = function(type, extension){
 
@@ -21,11 +21,28 @@
             video  : 'mp4|ogv|ogg|webm'
         },
 
+        __queryUrl = function( url ){
+
+            if( /^data:/gi.test( url ) )
+                return '';
+            else
+                return '?'+ $.heavy.preloader.nameCSS;
+
+        },
+
         __is     = function( url, format ){
 
-            if( new RegExp('([^\s]+(?=\.(' + formats[ format ] + '))\.' + formats[ format ] /* /2 <-- dava octal strict mode error */ + ')', 'gi').test( url ) )
-                return url.match( new RegExp(formats[ format ], 'gi') );
-            else
+            var base64 = '^data:'+format+'\/(?=(' + formats[ format ] + '))',
+                base64r = new RegExp(base64, 'gi');
+
+            if( new RegExp('([^\s]+(?=\.(' + formats[ format ] + '))\.' + formats[ format ] /* /2 <-- dava octal strict mode error */ + ')|'+base64, 'gi').test( url ) ){
+                if( base64r.test( url ) ){
+                    var matches = url.match(base64r);
+                    matches.shift();
+                    return matches;
+                }else
+                    url.match( new RegExp(formats[ format ], 'gi') );
+            }else
                 return false;
 
         },
@@ -189,19 +206,19 @@
             var url = urls[k];
 
             if( __is(url, 'image') )
-                __preloadImage($(new Image()), url + '?' + $.heavy.preloader.nameCSS, __is(url, 'image'), function(){
+                __preloadImage($(new Image()), url + __queryUrl(url), __is(url, 'image'), function(){
                     datas.push(this);
                     progress.call(this);
                 });
 
             if( __is(url, 'audio') )
-                __preloadMedia(__fakeMedia(url + '?' + $.heavy.preloader.nameCSS, 'audio', __is(url, 'audio')), function(){ 
+                __preloadMedia(__fakeMedia(url + __queryUrl(url), 'audio', __is(url, 'audio')), function(){
                     datas.push(this);
                     progress.call(this);
                 });
 
             if( __is(url, 'video') )
-                __preloadMedia(__fakeMedia(url+'?'+ $.heavy.preloader.nameCSS, 'video', __is(url, 'video')), function(){
+                __preloadMedia(__fakeMedia(url + __queryUrl(url), 'video', __is(url, 'video')), function(){
                     datas.push(this);
                     progress.call(this);
                 });
@@ -225,7 +242,7 @@
 
         var plugin = this,
 
-            //eventID = Math.floor( Math.random() * 99999),
+        //eventID = Math.floor( Math.random() * 99999),
 
             $element = $(element),
 
@@ -281,7 +298,7 @@
 
                             }
 
-                        break;
+                            break;
 
                         case 'audio/video':
 
@@ -331,7 +348,7 @@
 
                             }
 
-                        break;
+                            break;
 
                     }
 
@@ -449,31 +466,31 @@
                 .end()
                 .not('[src]').children('source').each(function(){
 
-                    var interrupt = false;
+                var interrupt = false;
 
-                    if( $(this).is('[src]') ) {
-                        collect($(this).attr('src'), $(this).parent(), 'audio/video');
+                if( $(this).is('[src]') ) {
+                    collect($(this).attr('src'), $(this).parent(), 'audio/video');
+                    interrupt = true;
+                }
+
+                if( interrupt )
+                    return true;
+
+                if( plugin.settings.attrs ) for( var k in plugin.settings.attrs )
+                    if( $(this).is('['+plugin.settings.attrs[k]+']') ) {
+                        collect($(this).attr(plugin.settings.attrs[k]), $(this).parent(), 'audio/video');
                         interrupt = true;
                     }
 
-                    if( interrupt )
-                        return true;
+                if( interrupt )
+                    return true;
 
-                    if( plugin.settings.attrs ) for( var k in plugin.settings.attrs )
-                        if( $(this).is('['+plugin.settings.attrs[k]+']') ) {
-                            collect($(this).attr(plugin.settings.attrs[k]), $(this).parent(), 'audio/video');
-                            interrupt = true;
-                        }
-
-                    if( interrupt )
-                        return true;
-
-                    if( $(this).is('[data-src]') ) {
-                        collect( $(this).data('src'), $(this).parent(), 'audio/video' );
-                    }
+                if( $(this).is('[data-src]') ) {
+                    collect( $(this).data('src'), $(this).parent(), 'audio/video' );
+                }
 
 
-                })
+            })
 
             // se this è un immagine
             if( plugin.element.is('img') ){ // todo check priorities
@@ -597,7 +614,7 @@
                             var isFake  = !v.$el,
                                 $target = isFake ? $(new Image()) : v.$el;
 
-                            __preloadImage($target, isFake ? v.url+'?'+ $.heavy.preloader.nameCSS : v.url, v.ext, function(){ progress.call({ target : $target, data : this }); });
+                            __preloadImage($target, isFake ? v.url + __queryUrl(v.url) : v.url, v.ext, function(){ progress.call({ target : $target, data : this }); });
 
                             break;
 
@@ -607,7 +624,7 @@
 
                             if( !$target ) {
 
-                                $target = __fakeMedia(v.url+'?'+ $.heavy.preloader.nameCSS, __is(v.url, 'audio') ? 'audio' : 'video', v.ext);
+                                $target = __fakeMedia(v.url + __queryUrl(v.url), __is(v.url, 'audio') ? 'audio' : 'video', v.ext);
 
                             }else{
 
@@ -652,32 +669,32 @@
 
     },
 
-    $.fn[$.heavy.preloader.method] = function(options, callback){
+        $.fn[$.heavy.preloader.method] = function(options, callback){
 
-        return this.each(function(){
+            return this.each(function(){
 
-            if( $.isFunction(options) && undefined === callback ){
-                callback = options;
-                options = {};
-            }
+                if( $.isFunction(options) && undefined === callback ){
+                    callback = options;
+                    options = {};
+                }
 
-            var t = this,
-                c = function(){
-                    if( $.isFunction(callback) )
-                        callback.call(t);
-                };
+                var t = this,
+                    c = function(){
+                        if( $.isFunction(callback) )
+                            callback.call(t);
+                    };
 
-            // loop
-            if( undefined == $(this).data($.heavy.preloader.name) ){
+                // loop
+                if( undefined == $(this).data($.heavy.preloader.name) ){
 
-                var plugin = new $[$.heavy.preloader.method](this, options, c)
+                    var plugin = new $[$.heavy.preloader.method](this, options, c)
 
-                $(this).data($.heavy.preloader.name, plugin);
+                    $(this).data($.heavy.preloader.name, plugin);
 
-            }else
-                c(); // todo check modo più elegante?
+                }else
+                    c(); // todo check modo più elegante?
 
-        });
-    };
+            });
+        };
 
 })(window, document, jQuery);
