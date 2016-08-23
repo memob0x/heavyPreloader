@@ -5,7 +5,7 @@
     // heavy freamwork
     //----------------
     $.heavy             = undefined === $.heavy ? {} : $.heavy;
-    $.heavy.preloader   = { name : 'HeavyPreloader', version : '1.4.2b', method : 'heavyPreload', nameCSS : 'heavy-preloader', busy : false };
+    $.heavy.preloader   = { name : 'HeavyPreloader', version : '1.4.3', method : 'heavyPreload', nameCSS : 'heavy-preloader', busy : false };
 
     var mediaSupport = function(type, extension){
 
@@ -94,36 +94,38 @@
             return $el;
 
         },
-        __preloadMedia = function($el, cb){
+        __preloadMedia = function($el, cb, load){
 
             var el   = $el[0],
-                wasPaused = el.paused,
                 done = function () {
 
-                    if( wasPaused )
+                    if( paused )
                         el.currentTime = 0;
 
                     $el.off('.'+ $.heavy.preloader.name);
 
                     cb.call({
-                        type : 'image',
+                        type : 'audio/video',
                         duration : el.duration // todo --> find useful data...
                     });
 
                     if( $el.hasClass($.heavy.preloader.nameCSS+'-temp') )
                         $el.remove();
 
-                };
+                },
+                paused = el.paused;
 
-            el.load();
+            if( true === load && paused )
+                el.load();
 
             $el
-
                 .on('canplaythrough.' + $.heavy.preloader.name, done)
 
                 .on('loadedmetadata.' + $.heavy.preloader.name, function () {
 
-                    if( wasPaused )
+                    paused = el.paused;
+
+                    if( paused )
                         el.currentTime++;
 
                 })
@@ -138,7 +140,9 @@
 
                     }
 
-                    if( wasPaused )
+                    paused = el.paused;
+
+                    if( paused )
                         el.currentTime++; // force
 
                 });
@@ -215,13 +219,13 @@
                 __preloadMedia(__fakeMedia(url + __queryUrl(url), 'audio', __is(url, 'audio')), function(){
                     datas.push(this);
                     progress.call(this);
-                });
+                }, true);
 
             if( __is(url, 'video') )
                 __preloadMedia(__fakeMedia(url + __queryUrl(url), 'video', __is(url, 'video')), function(){
                     datas.push(this);
                     progress.call(this);
-                });
+                }, true);
 
         } else{
 
@@ -266,6 +270,16 @@
                 var splitter = '_' + Math.round( new Date().getTime() + ( Math.random() * 100 ) ) + '_';
 
                 urls = urls.replace(new RegExp('(' + formats.image + '|' + formats.audio + '|' + formats.video + ')(\s|$|\,)', 'igm'), function(match, p1, p2){ return p1 + splitter; }).split(new RegExp(splitter, 'igm'));
+
+                var cleanMedia = function( mime ){
+
+                    if( $element.is('video') || $element.is('audio') )
+                        $element.find('source[type="'+mime+'"]').siblings().remove();
+
+                    if( $element.is('source') )
+                        $element.siblings().remove();
+
+                };
 
                 for( var k in urls ) {
 
@@ -321,6 +335,8 @@
 
                                     collection.push( $.extend(true, { $el: $element }, obj) );
 
+                                    cleanMedia('audio/'+extAudio);
+
                                 }
 
                             }
@@ -343,6 +359,8 @@
                                         $element.data($.heavy.preloader.name, obj);
 
                                     collection.push( $.extend(true, { $el: $element }, obj) );
+
+                                    cleanMedia('video/'+extVideo);
 
                                 }
 
@@ -620,22 +638,35 @@
 
                         case 'audio/video' :
 
-                            var $target = v.$el;
+                            var $target = v.$el,
+                                load = false;
 
                             if( !$target ) {
 
                                 $target = __fakeMedia(v.url + __queryUrl(v.url), __is(v.url, 'audio') ? 'audio' : 'video', v.ext);
 
-                            }else{
+                                load = true;
 
-                                $target
-                                    .find('source[type*="/'+ v.ext +'"], source[src*=".'+ v.ext +'"], source[data-src*=".'+ v.ext +'"]')
-                                    .attr('src', v.url)
-                                    .removeAttr('data-src');
+                            }else{
+                                
+                                var $sources = $target.find('source[type="audio/'+ v.ext +'"], source[type="video/'+ v.ext +'"]')
+
+                                if( !$sources.length )
+                                    $sources = $target.find('source[src*=".'+ v.ext +'"], source[data-src*=".'+ v.ext +'"]');
+
+                                if( !$sources.is('[src]') ){
+
+                                    $sources
+                                        .attr('src', v.url)
+                                        .removeAttr('data-src');
+
+                                    load = true;
+
+                                }
 
                             }
 
-                            __preloadMedia($target, function(){ progress.call({ target : $target, data : this }); });
+                            __preloadMedia($target, function(){ progress.call({ target : $target, data : this }); }, load);
 
                             break;
 
