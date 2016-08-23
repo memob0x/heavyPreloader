@@ -295,7 +295,7 @@
 
                                 extImage = extImage[0];
 
-                                if( null === $element || !$.data($element[0], $.heavy.preloader.name) ){
+                                if( typeof $element !== 'undefined' && ( null === $element || !$.data($element[0], $.heavy.preloader.name) ) ){
 
                                     var obj = {
                                         url: url,
@@ -322,7 +322,9 @@
 
                                 extAudio = extAudio[0];
 
-                                if( mediaSupport('audio', extAudio) && ( null === $element || !$.data($element[0], $.heavy.preloader.name) ) ){
+                                // check for undefined is cuz cleanMedia --> remose useless <source />
+
+                                if( typeof $element[0] !== 'undefined' && ( mediaSupport('audio', extAudio) && ( null === $element || !$.data($element[0], $.heavy.preloader.name) ) ) ){
 
                                     var obj = {
                                         url: url,
@@ -347,7 +349,7 @@
 
                                 extVideo = extVideo[0];
 
-                                if( mediaSupport('video', extVideo) && ( null === $element || !$.data($element[0], $.heavy.preloader.name) ) ) {
+                                if( typeof $element[0] !== 'undefined' && mediaSupport('video', extVideo) && ( null === $element || !$.data($element[0], $.heavy.preloader.name) ) ) {
 
                                     var obj = {
                                         url: url,
@@ -648,7 +650,7 @@
                                 load = true;
 
                             }else{
-                                
+
                                 var $sources = $target.find('source[type="audio/'+ v.ext +'"], source[type="video/'+ v.ext +'"]')
 
                                 if( !$sources.length )
@@ -700,32 +702,32 @@
 
     },
 
-        $.fn[$.heavy.preloader.method] = function(options, callback){
+    $.fn[$.heavy.preloader.method] = function(options, callback){
 
-            return this.each(function(){
+        return this.each(function(){
 
-                if( $.isFunction(options) && undefined === callback ){
-                    callback = options;
-                    options = {};
-                }
+            if( $.isFunction(options) && undefined === callback ){
+                callback = options;
+                options = {};
+            }
 
-                var t = this,
-                    c = function(){
-                        if( $.isFunction(callback) )
-                            callback.call(t);
-                    };
+            var t = this,
+                c = function(){
+                    if( $.isFunction(callback) )
+                        callback.call(t);
+                };
 
-                // loop
-                if( undefined == $(this).data($.heavy.preloader.name) ){
+            // loop
+            if( undefined == $(this).data($.heavy.preloader.name) ){
 
-                    var plugin = new $[$.heavy.preloader.method](this, options, c)
+                var plugin = new $[$.heavy.preloader.method](this, options, c)
 
-                    $(this).data($.heavy.preloader.name, plugin);
+                $(this).data($.heavy.preloader.name, plugin);
 
-                }else
-                    c(); // todo check modo più elegante?
+            }else
+                c(); // todo check modo più elegante?
 
-            });
-        };
+        });
+    };
 
 })(window, document, jQuery);
