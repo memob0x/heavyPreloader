@@ -21,27 +21,31 @@
             video  : 'mp4|ogv|ogg|webm'
         },
 
-        __queryUrl = function( url ){
+        __urlSuffix = function( url ){
 
             if( /^data:/gi.test( url ) )
                 return '';
             else
-                return '?'+ $.heavy.preloader.nameCSS;
+                return '#!'+ $.heavy.preloader.nameCSS;
 
         },
 
         __is     = function( url, format ){
 
-            var base64 = '^data:'+format+'\/(?=(' + formats[ format ] + '))',
+            var base64 = '^data:'+format+'\/(' + formats[ format ] + ')',
                 base64r = new RegExp(base64, 'gi');
 
             if( new RegExp('([^\s]+(?=\.(' + formats[ format ] + '))\.' + formats[ format ] /* /2 <-- dava octal strict mode error */ + ')|'+base64, 'gi').test( url ) ){
                 if( base64r.test( url ) ){
                     var matches = url.match(base64r);
-                    matches.shift();
-                    return matches;
-                }else
-                    return url.match( new RegExp(formats[ format ], 'gi') );
+                    if( !matches )
+                        return false;
+                    matches = matches[0];
+                    return matches.replace('data:'+format+'/','');
+                }else{
+                    var matches = url.match( new RegExp(formats[ format ], 'gi') );
+                    return matches ? matches[0] : false;
+                }
             }else
                 return false;
 
@@ -54,6 +58,8 @@
 
                     cb.call({
                         type : 'image',
+                        url  : url,
+                        extension : ext,
                         naturalWidth : this.naturalWidth,
                         naturalHeight : this.naturalHeight
                     });
@@ -94,7 +100,7 @@
             return $el;
 
         },
-        __preloadMedia = function($el, cb, load){
+        __preloadMedia = function($el, url, ext,  cb, load){
 
             var el   = $el[0],
                 done = function () {
@@ -106,6 +112,8 @@
 
                     cb.call({
                         type : 'audio/video',
+                        url  : '',
+                        extension : '',
                         duration : el.duration // todo --> find useful data...
                     });
 
@@ -180,11 +188,17 @@
                 if( $.isFunction(onProgress) )
                     onProgress.call(this);
 
+                if( $.isFunction($.heavy.preloader.onProgress) )
+                    $.heavy.preloader.onProgress.call( this ? $.extend(true, this, { context : null }) : null );
+
             },
             cb = function(){
 
                 if( $.isFunction(callback) )
                     callback.call(this);
+
+                if( $.isFunction($.heavy.preloader.callback) )
+                    $.heavy.preloader.callback.call( $() );
 
             },
 
@@ -209,20 +223,24 @@
 
             var url = urls[k];
 
-            if( __is(url, 'image') )
-                __preloadImage($(new Image()), url + __queryUrl(url), __is(url, 'image'), function(){
+            var extImg = __is(url, 'image'),
+                extAud = __is(url, 'audio'),
+                extVid = __is(url, 'video');
+
+            if( extImg )
+                __preloadImage($(new Image()), url + __urlSuffix(url), extImg, function(){
                     datas.push(this);
                     progress.call(this);
                 });
 
-            if( __is(url, 'audio') )
-                __preloadMedia(__fakeMedia(url + __queryUrl(url), 'audio', __is(url, 'audio')), function(){
+            if( extAud )
+                __preloadMedia(__fakeMedia(url + __urlSuffix(url), 'audio', extAud), url + __urlSuffix(url), extAud, function(){
                     datas.push(this);
                     progress.call(this);
                 }, true);
 
-            if( __is(url, 'video') )
-                __preloadMedia(__fakeMedia(url + __queryUrl(url), 'video', __is(url, 'video')), function(){
+            if( extVid )
+                __preloadMedia(__fakeMedia(url + __urlSuffix(url), 'video', extVid), url + __urlSuffix(url), extVid, function(){
                     datas.push(this);
                     progress.call(this);
                 }, true);
@@ -293,8 +311,6 @@
 
                             if( extImage ) {
 
-                                extImage = extImage[0];
-
                                 if( typeof $element !== 'undefined' && ( null === $element || !$.data($element[0], $.heavy.preloader.name) ) ){
 
                                     var obj = {
@@ -320,8 +336,6 @@
 
                             if( extAudio ) {
 
-                                extAudio = extAudio[0];
-
                                 // check for undefined is cuz cleanMedia --> remose useless <source />
 
                                 if( typeof $element[0] !== 'undefined' && ( mediaSupport('audio', extAudio) && ( null === $element || !$.data($element[0], $.heavy.preloader.name) ) ) ){
@@ -346,8 +360,6 @@
                             var extVideo = __is(url, 'video');
 
                             if( extVideo ) {
-
-                                extVideo = extVideo[0];
 
                                 if( typeof $element[0] !== 'undefined' && mediaSupport('video', extVideo) && ( null === $element || !$.data($element[0], $.heavy.preloader.name) ) ) {
 
@@ -592,8 +604,14 @@
                 length = collection.length,
                 onProgressCallback = function(n, context, data){
 
+                    var processing = { percentage : n, thisElement : context, data : data };
+
                     if( $.isFunction(plugin.settings.onProgress) )
-                        plugin.settings.onProgress.call($.extend(false, plugin, { percentage : n, thisElement : context, data : data })); // shallowcopy --> todo : shouldn't be like that?
+                        plugin.settings.onProgress.call($.extend(false, plugin, processing)); // shallowcopy --> todo : shouldn't be like that?
+
+                    if( $.isFunction($.heavy.preloader.onProgress) )
+                        $.heavy.preloader.onProgress.call( data && context ? $.extend(true, processing.data, { context : context }) : null );
+
 
                 },
                 progress = function(){
@@ -634,7 +652,7 @@
                             var isFake  = !v.$el,
                                 $target = isFake ? $(new Image()) : v.$el;
 
-                            __preloadImage($target, isFake ? v.url + __queryUrl(v.url) : v.url, v.ext, function(){ progress.call({ target : $target, data : this }); });
+                            __preloadImage($target, isFake ? v.url + __urlSuffix(v.url) : v.url, v.ext, function(){ progress.call({ target : $target, data : this }); });
 
                             break;
 
@@ -645,7 +663,7 @@
 
                             if( !$target ) {
 
-                                $target = __fakeMedia(v.url + __queryUrl(v.url), __is(v.url, 'audio') ? 'audio' : 'video', v.ext);
+                                $target = __fakeMedia(v.url + __urlSuffix(v.url), __is(v.url, 'audio') ? 'audio' : 'video', v.ext);
 
                                 load = true;
 
@@ -668,7 +686,7 @@
 
                             }
 
-                            __preloadMedia($target, function(){ progress.call({ target : $target, data : this }); }, load);
+                            __preloadMedia($target, v.url, v.ext, function(){ progress.call({ target : $target, data : this }); }, load);
 
                             break;
 
@@ -702,32 +720,37 @@
 
     },
 
-    $.fn[$.heavy.preloader.method] = function(options, callback){
+        $.fn[$.heavy.preloader.method] = function(options, callback){
 
-        return this.each(function(){
+            return this.each(function(){
 
-            if( $.isFunction(options) && undefined === callback ){
-                callback = options;
-                options = {};
-            }
+                if( $.isFunction(options) && undefined === callback ){
+                    callback = options;
+                    options = {};
+                }
 
-            var t = this,
-                c = function(){
-                    if( $.isFunction(callback) )
-                        callback.call(t);
-                };
+                var t = this,
+                    c = function(){
 
-            // loop
-            if( undefined == $(this).data($.heavy.preloader.name) ){
+                        if( $.isFunction(callback) )
+                            callback.call(t);
 
-                var plugin = new $[$.heavy.preloader.method](this, options, c)
+                        if( $.isFunction($.heavy.preloader.callback) )
+                            $.heavy.preloader.callback.call( t );
 
-                $(this).data($.heavy.preloader.name, plugin);
+                    };
 
-            }else
-                c(); // todo check modo più elegante?
+                // loop
+                if( undefined == $(this).data($.heavy.preloader.name) ){
 
-        });
-    };
+                    var plugin = new $[$.heavy.preloader.method](this, options, c)
+
+                    $(this).data($.heavy.preloader.name, plugin);
+
+                }else
+                    c(); // todo check modo più elegante?
+
+            });
+        };
 
 })(window, document, jQuery);
