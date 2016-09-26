@@ -564,7 +564,7 @@
                 }
 
                 if( !interrupt && plugin.element.is('[srcset]') ) {
-                    collect(plugin.element.attr('srcset'), plugin.element, 'image');
+                    collect(plugin.element.prop('currentSrc') || plugin.element.prop('src'), plugin.element, 'image');
                     interrupt = true;
                 }
 
@@ -592,7 +592,7 @@
                     return true;
 
                 if( $(this).is('[srcset]') ){
-                    collect( $(this).attr('srcset'), $(this), 'image' );
+                    collect( this.currentSrc || this.src, $(this), 'image' );
                     interrupt = true;
                 }
 
