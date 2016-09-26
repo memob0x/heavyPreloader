@@ -5,7 +5,7 @@
     // heavy freamwork
     //----------------
     $.heavy             = undefined === $.heavy ? {} : $.heavy;
-    $.heavy.preloader   = { name : 'HeavyPreloader', version : '1.4.3', method : 'heavyPreload', nameCSS : 'heavy-preloader', busy : false };
+    $.heavy.preloader   = { name : 'HeavyPreloader', version : '1.4.4', method : 'heavyPreload', nameCSS : 'heavy-preloader', busy : false };
 
     var mediaSupport = function(type, extension){
 
@@ -32,13 +32,12 @@
 
         __is     = function( url, format ){
 
-            var base64 = '^data:'+format+'\/(' + formats[ format ] + ')',
-                base64r = new RegExp(base64, 'gi');
+            var base64 = '\;base64\,';
 
-            if( new RegExp('([^\s]+(?=\.(' + formats[ format ] + '))\.' + formats[ format ] /* /2 <-- dava octal strict mode error */ + ')|'+base64, 'gi').test( url ) ){
-                if( base64r.test( url ) ){
-                    var matches = url.match(base64r);
-                    if( !matches )
+            if( new RegExp('([^\s]+(?=\.(' + formats[ format ] + '))\.' + formats[ format ] + ')|'+base64, 'gi').test( url ) ){
+                if( new RegExp(base64, 'g').test( url ) ){
+                    var matches = url.match(new RegExp('^data:'+format+'\/(' + formats[ format ] + ')', 'gi'));
+                    if( !matches || null === matches )
                         return false;
                     matches = matches[0];
                     return matches.replace('data:'+format+'/','');
@@ -112,8 +111,8 @@
 
                     cb.call({
                         type : 'audio/video',
-                        url  : '',
-                        extension : '',
+                        url  : url,
+                        extension : ext,
                         duration : el.duration // todo --> find useful data...
                     });
 
@@ -227,23 +226,53 @@
                 extAud = __is(url, 'audio'),
                 extVid = __is(url, 'video');
 
-            if( extImg )
-                __preloadImage($(new Image()), url + __urlSuffix(url), extImg, function(){
+            if( extImg ) {
+
+                __preloadImage($(new Image()), url + __urlSuffix(url), extImg, function () {
                     datas.push(this);
                     progress.call(this);
                 });
 
-            if( extAud )
-                __preloadMedia(__fakeMedia(url + __urlSuffix(url), 'audio', extAud), url + __urlSuffix(url), extAud, function(){
+                continue;
+
+            }
+
+            if( extAud ) {
+
+                __preloadMedia(__fakeMedia(url + __urlSuffix(url), 'audio', extAud), url + __urlSuffix(url), extAud, function () {
                     datas.push(this);
                     progress.call(this);
                 }, true);
 
-            if( extVid )
-                __preloadMedia(__fakeMedia(url + __urlSuffix(url), 'video', extVid), url + __urlSuffix(url), extVid, function(){
+                continue;
+
+            }
+
+            if( extVid ) {
+
+                __preloadMedia(__fakeMedia(url + __urlSuffix(url), 'video', extVid), url + __urlSuffix(url), extVid, function () {
                     datas.push(this);
                     progress.call(this);
                 }, true);
+
+                continue;
+
+            }
+
+            if( undefined !== console && 'warn' in console )
+                console.warn($.heavy.preloader.name+' couldn\'t recognize ' + url + ' media type!');
+
+            var nothing = {
+                type : null,
+                url  : url,
+                extension : null,
+                naturalWidth : null,
+                naturalHeight : null,
+                duration : null
+            };
+
+            datas.push(nothing);
+            progress.call(nothing);
 
         } else{
 
@@ -336,7 +365,7 @@
 
                             if( extAudio ) {
 
-                                // check for undefined is cuz cleanMedia --> remose useless <source />
+                                // check for undefined is cuz cleanMedia --> remove useless <source />
 
                                 if( typeof $element[0] !== 'undefined' && ( mediaSupport('audio', extAudio) && ( null === $element || !$.data($element[0], $.heavy.preloader.name) ) ) ){
 
