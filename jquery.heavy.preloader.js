@@ -50,6 +50,18 @@
 
         },
 
+        consoleWarn = function(message){
+
+            if( undefined === console )
+                return;
+
+            if( 'warn' in console )
+                console.warn(message);
+            else
+                console.log(message);
+
+        },
+
         __preloadImage = function($el, url, ext, cb){
 
             $el
@@ -308,7 +320,7 @@
 
             collect = function(urls, $element, type){
 
-                if( undefined === urls || urls === false || ( typeof $element.data('heavyPreloader') !== 'undefined' && $element.data('heavyPreloader').ignore === true ) )
+                if( undefined === urls || urls === false /*|| ( typeof $element.data('heavyPreloader') !== 'undefined' && $element.data('heavyPreloader').ignore === true )*/ )
                     return;
 
                 if( plugin.settings.backgrounds )
@@ -776,8 +788,21 @@
 
                     $(this).data($.heavy.preloader.name, plugin);
 
-                }else
-                    c(); // todo check modo più elegante?
+                }else{
+
+                    if( true === $(this).data($.heavy.preloader.name).ignore ) {
+
+                        consoleWarn($.heavy.preloader.name + ': callback aborted cuz another plugin is preloading the same thing.');
+
+                    }else {
+
+                        consoleWarn($.heavy.preloader.name + ': executing callback cuz plugin has already registered for this element');
+
+                        c();
+
+                    }
+
+                } // todo check modo più elegante?
 
             });
         };
