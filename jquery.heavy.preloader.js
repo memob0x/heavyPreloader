@@ -501,8 +501,8 @@
                         if( interrupt )
                             return true;
 
-                        if( $(this).is('[data-src]') ) {
-                            collect( $(this).data('src'), plugin.element, 'audio/video' );
+                        if( undefined !== $.data(this, 'src') || $(this).is('[data-src]') ) {
+                            collect( $(this).data('src') || $(this).attr('data-src'), plugin.element, 'audio/video' );
                         }
 
                     });
@@ -524,8 +524,8 @@
                         interrupt = true;
                     }
 
-                if( !interrupt && plugin.element.is('[data-src]') )
-                    collect( plugin.element.data('src'), plugin.element.closest('audio, video'), 'audio/video' );
+                if( !interrupt && ( undefined !== $.data(plugin.element, 'src') || plugin.element.is('[data-src]') ) )
+                    collect( plugin.element.data('src') || plugin.element.attr('data-src'), plugin.element.closest('audio, video'), 'audio/video' );
 
             }
 
@@ -558,8 +558,8 @@
                 if( interrupt )
                     return true;
 
-                if( $(this).is('[data-src]') ) {
-                    collect( $(this).data('src'), $(this).parent(), 'audio/video' );
+                if( undefined !== $.data(this, 'src') || $(this).is('[data-src]') ) {
+                    collect( $(this).data('src') || $(this).attr('data-src'), $(this).parent(), 'audio/video' );
                 }
 
 
@@ -586,8 +586,8 @@
                         interrupt = true;
                     }
 
-                if( !interrupt && plugin.element.is('[data-src]') )
-                    collect( plugin.element.data('src'), plugin.element, 'image' );
+                if( !interrupt && ( undefined !== $.data(plugin.element, 'src') || plugin.element.is('[data-src]') ) )
+                    collect( plugin.element.data('src') || plugin.element.attr('data-src'), plugin.element, 'image' );
 
             }
             // cerca immagini
@@ -620,8 +620,8 @@
                 if( interrupt )
                     return true;
 
-                if( $(this).is('[data-src]') ){
-                    collect( $(this).data('src'), $(this), 'image' );
+                if( undefined !== $.data(this, 'src') || $(this).is('[data-src]') ){
+                    collect( $(this).data('src') || $(this).attr('data-src'), $(this), 'image' );
                 }
 
             });
@@ -761,50 +761,50 @@
 
     },
 
-        $.fn[$.heavy.preloader.method] = function(options, callback){
+    $.fn[$.heavy.preloader.method] = function(options, callback){
 
-            return this.each(function(){
+        return this.each(function(){
 
-                if( $.isFunction(options) && undefined === callback ){
-                    callback = options;
-                    options = {};
+            if( $.isFunction(options) && undefined === callback ){
+                callback = options;
+                options = {};
+            }
+
+            var t = this,
+                c = function(){
+
+                    if( $.isFunction(callback) )
+                        callback.call(t);
+
+                    if( $.isFunction($.heavy.preloader.callback) )
+                        $.heavy.preloader.callback.call( t );
+
+                };
+
+            // loop
+            if( undefined == $(this).data($.heavy.preloader.name) ){
+
+                var plugin = new $[$.heavy.preloader.method](this, options, c)
+
+                $(this).data($.heavy.preloader.name, plugin);
+
+            }else{
+
+                if( true === $(this).data($.heavy.preloader.name).ignore ) {
+
+                    //consoleWarn($.heavy.preloader.name + ': callback aborted cuz another plugin is preloading the same thing.');
+
+                }else {
+
+                    //consoleWarn($.heavy.preloader.name + ': executing callback cuz plugin has already registered for this element');
+
+                    c();
+
                 }
 
-                var t = this,
-                    c = function(){
+            } // todo check modo più elegante?
 
-                        if( $.isFunction(callback) )
-                            callback.call(t);
-
-                        if( $.isFunction($.heavy.preloader.callback) )
-                            $.heavy.preloader.callback.call( t );
-
-                    };
-
-                // loop
-                if( undefined == $(this).data($.heavy.preloader.name) ){
-
-                    var plugin = new $[$.heavy.preloader.method](this, options, c)
-
-                    $(this).data($.heavy.preloader.name, plugin);
-
-                }else{
-
-                    if( true === $(this).data($.heavy.preloader.name).ignore ) {
-
-                        consoleWarn($.heavy.preloader.name + ': callback aborted cuz another plugin is preloading the same thing.');
-
-                    }else {
-
-                        consoleWarn($.heavy.preloader.name + ': executing callback cuz plugin has already registered for this element');
-
-                        c();
-
-                    }
-
-                } // todo check modo più elegante?
-
-            });
-        };
+        });
+    };
 
 })(window, document, jQuery);
