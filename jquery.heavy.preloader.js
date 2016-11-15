@@ -34,19 +34,39 @@
 
             var base64 = '\;base64\,';
 
-            if( new RegExp('([^\s]+(?=\.(' + formats[ format ] + '))\.' + formats[ format ] + ')|'+base64, 'gi').test( url ) ){
+            url = url.toLowerCase(); // gi nella regex dava problemi ;((((((((
+
+            if( url === '' || url === ' ' )
+                return false;
+
+            if( new RegExp('(\.(' + formats[ format ] + ')$)|' + base64, 'g').test( url ) ){
                 if( new RegExp(base64, 'g').test( url ) ){
-                    var matches = url.match(new RegExp('^data:'+format+'\/(' + formats[ format ] + ')', 'gi'));
-                    if( !matches || null === matches )
+
+                    var matches = url.match(new RegExp('^data:'+format+'\/(' + formats[ format ] + ')', 'g'));
+
+                    if( !matches || null === matches ) {
+
+                        consoleWarn($.heavy.preloader.name+': base64 format not recognized.');
+
                         return false;
+
+                    }
+
                     matches = matches[0];
                     return matches.replace('data:'+format+'/','');
+
                 }else{
-                    var matches = url.match( new RegExp(formats[ format ], 'gi') );
+
+                    var matches = url.match( new RegExp(formats[ format ], 'g') );
                     return matches ? matches[0] : false;
+
                 }
-            }else
+            }else {
+
+                consoleWarn($.heavy.preloader.name+': file not recognized.');
+
                 return false;
+            }
 
         },
 
@@ -169,6 +189,20 @@
             return $el;
 
         };
+
+    var privileges = function( $el, opts ){
+
+        var _privs = $el.data($.heavy.preloader.name + '-privilegeKey');
+
+        if( undefined === _privs )
+            return null; // privileged key is not used
+
+        if( undefined === opts )
+            opts = {};
+
+        return opts.privilegeKey === _privs;
+
+    };
 
     if( mediaSupport('video', 'ogg') )
         $.heavy.videoSupport = 'ogg';
@@ -320,7 +354,7 @@
 
             collect = function(urls, $element, type){
 
-                if( undefined === urls || urls === false /*|| ( typeof $element.data('heavyPreloader') !== 'undefined' && $element.data('heavyPreloader').ignore === true )*/ )
+                if( undefined === urls || urls === false || privileges($element, options) === false )
                     return;
 
                 if( plugin.settings.backgrounds )
@@ -782,7 +816,7 @@
                 };
 
             // loop
-            if( undefined == $(this).data($.heavy.preloader.name) ){
+            if( ( undefined === $(this).data($.heavy.preloader.name) && null === privileges($(this)) ) || privileges($(this), options) ){
 
                 var plugin = new $[$.heavy.preloader.method](this, options, c)
 
@@ -790,15 +824,15 @@
 
             }else{
 
-                if( true === $(this).data($.heavy.preloader.name).ignore ) {
+                if( privileges($(this), options)) {
 
-                    //consoleWarn($.heavy.preloader.name + ': callback aborted cuz another plugin is preloading the same thing.');
+                    // executing callback cuz plugin has already registered for this element
+
+                    c();
 
                 }else {
 
-                    //consoleWarn($.heavy.preloader.name + ': executing callback cuz plugin has already registered for this element');
-
-                    c();
+                    // aborted cuz another plugin is preloading the same thing.
 
                 }
 
