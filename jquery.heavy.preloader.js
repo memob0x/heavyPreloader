@@ -32,21 +32,23 @@
 
         __is     = function( url, format ){
 
-            var base64 = '\;base64\,';
+            url = url   .toLowerCase() // "i" flag nella regex dava problemi ;((((((((
+                        .split('?')[0]; // rimuove query strings
 
-            url = url.toLowerCase(); // gi nella regex dava problemi ;((((((((
-
-            if( url === '' || url === ' ' )
+            if( url === ''  )
                 return false;
 
+            var base64 = '\;base64\,';
+
             if( new RegExp('(\.(' + formats[ format ] + ')$)|' + base64, 'g').test( url ) ){
+
                 if( new RegExp(base64, 'g').test( url ) ){
 
                     var matches = url.match(new RegExp('^data:'+format+'\/(' + formats[ format ] + ')', 'g'));
 
                     if( !matches || null === matches ) {
 
-                        consoleWarn($.heavy.preloader.name+': base64 format not recognized.');
+                        consoleWarn($.heavy.preloader.name+' - '+ url +': base64 format not recognized.');
 
                         return false;
 
@@ -63,7 +65,7 @@
                 }
             }else {
 
-                consoleWarn($.heavy.preloader.name+': file not recognized.');
+                consoleWarn($.heavy.preloader.name+' - '+ url +': file not recognized.');
 
                 return false;
             }
@@ -191,6 +193,9 @@
         };
 
     var privileges = function( $el, opts ){
+
+        if( !$el )
+            return null;
 
         var _privs = $el.data($.heavy.preloader.name + '-privilegeKey');
 
