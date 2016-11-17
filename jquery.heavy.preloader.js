@@ -30,7 +30,11 @@
 
         },
 
-        __is     = function( url, format ){
+        __is     = function( url, format, args ){
+
+            var opts = $.extend({
+                warn : false
+            }, args);
 
             url = url   .toLowerCase() // "i" flag nella regex dava problemi ;((((((((
                         .split('?')[0]; // rimuove query strings
@@ -44,18 +48,19 @@
 
                 if( new RegExp(base64, 'g').test( url ) ){
 
-                    var matches = url.match(new RegExp('^data:'+format+'\/(' + formats[ format ] + ')', 'g'));
+                    var matches64 = url.match(new RegExp('^data:'+format+'\/(' + formats[ format ] + ')', 'g'));
 
-                    if( !matches || null === matches ) {
+                    if( !matches64 || null === matches64 ) {
 
-                        consoleWarn($.heavy.preloader.name+' - '+ url +': base64 format not recognized.');
+                        //if( opts.warn ) // warna sempre problemi con base64
+                            consoleWarn($.heavy.preloader.name+' - '+ url +': base64 '+ format +' format not recognized.');
 
                         return false;
 
                     }
 
-                    matches = matches[0];
-                    return matches.replace('data:'+format+'/','');
+                    matches64 = matches64[0];
+                    return matches64.replace('data:'+format+'/','');
 
                 }else{
 
@@ -65,9 +70,11 @@
                 }
             }else {
 
-                consoleWarn($.heavy.preloader.name+' - '+ url +': file not recognized.');
+                if( opts.warn )
+                    consoleWarn($.heavy.preloader.name+' - '+ url +': file '+ format +' not recognized.');
 
                 return false;
+
             }
 
         },
@@ -387,7 +394,7 @@
 
                         case 'image':
 
-                            var extImage = __is(url, 'image');
+                            var extImage = __is(url, 'image', { warn : true });
 
                             if( extImage ) {
 
@@ -437,7 +444,7 @@
 
                             }
 
-                            var extVideo = __is(url, 'video');
+                            var extVideo = __is(url, 'video', { warn : true });
 
                             if( extVideo ) {
 
