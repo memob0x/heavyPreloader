@@ -53,7 +53,7 @@
                     if( !matches64 || null === matches64 ) {
 
                         //if( opts.warn ) // warna sempre problemi con base64
-                            consoleWarn($.heavy.preloader.name+' - '+ url +': base64 '+ format +' format not recognized.');
+                            consoleWarn(url +': base64 '+ format +' format not recognized.');
 
                         return false;
 
@@ -71,7 +71,7 @@
             }else {
 
                 if( opts.warn )
-                    consoleWarn($.heavy.preloader.name+' - '+ url +': file '+ format +' not recognized.');
+                    consoleWarn(url +': file '+ format +' not recognized.');
 
                 return false;
 
@@ -84,10 +84,7 @@
             if( undefined === console )
                 return;
 
-            if( 'warn' in console )
-                console.warn(message);
-            else
-                console.log(message);
+            console[ 'warn' in console ? 'warn' : 'log' ]( $.heavy.preloader.name+': '+ message );
 
         },
 
@@ -95,6 +92,12 @@
 
             $el
                 .one('load.'+ $.heavy.preloader.name+' error.'+ $.heavy.preloader.name, function(){
+
+                    $el
+                        .off('.'+$.heavy.preloader.name)
+                        .trigger($.heavy.preloader.method);
+
+                    $el.data($.heavy.preloader.name).preloaded = true;
 
                     cb.call({
                         type : 'image',
@@ -128,19 +131,19 @@
             });
 
             $('body').append( $el.addClass($.heavy.preloader.nameCSS+'-temp').css({
-                width       : 2,
-                height      : 1,
-                visibility  : 'hidden',
-                position    : 'absolute',
-                left        : -9999,
-                top         : -9999,
-                'z-index'   : -1
+                width      : 2,
+                height     : 1,
+                visibility : 'hidden',
+                position   : 'absolute',
+                left       : -9999,
+                top        : -9999,
+                zIndex     : -1
             }) );
 
             return $el;
 
         },
-        __preloadMedia = function($el, url, ext,  cb, load){
+        __preloadMedia = function($el, url, ext,  cb, load, playthrough){
 
             var el   = $el[0],
                 done = function () {
@@ -148,14 +151,29 @@
                     if( paused )
                         el.currentTime = 0;
 
-                    $el.off('.'+ $.heavy.preloader.name);
+                    $el
+                        .off('.'+ $.heavy.preloader.name)
+                        .trigger($.heavy.preloader.method);
 
-                    cb.call({
+                    $el.data($.heavy.preloader.name).preloaded = true;
+
+                    var extra = {};
+
+                    if( $el.is('video') ) {
+                        extra = {
+                            naturalWidth: el.videoWidth,
+                            naturalHeight: el.videoHeight
+                        };
+                        el.naturalWidth = extra.naturalWidth;
+                        el.naturalHeight = extra.naturalHeight;
+                    }
+
+                    cb.call($.extend(true, {
                         type : 'audio/video',
                         url  : url,
                         extension : ext,
-                        duration : el.duration // todo --> find useful data...
-                    });
+                        duration : el.duration
+                    }, extra));
 
                     if( $el.hasClass($.heavy.preloader.nameCSS+'-temp') )
                         $el.remove();
@@ -171,6 +189,14 @@
 
                 .on('loadedmetadata.' + $.heavy.preloader.name, function () {
 
+                    if( !playthrough ) {
+
+                        done();
+
+                        return;
+
+                    }
+
                     paused = el.paused;
 
                     if( paused )
@@ -179,6 +205,9 @@
                 })
 
                 .on('progress.' + $.heavy.preloader.name, function () {
+
+                    if( !playthrough )
+                        return;
 
                     if ( el.readyState > 0 && !el.duration ) { // error!
 
@@ -198,23 +227,6 @@
             return $el;
 
         };
-
-    var privileges = function( $el, opts ){
-
-        if( !$el )
-            return null;
-
-        var _privs = $el.data($.heavy.preloader.name + '-privilegeKey');
-
-        if( undefined === _privs )
-            return null; // privileged key is not used
-
-        if( undefined === opts )
-            opts = {};
-
-        return opts.privilegeKey === _privs;
-
-    };
 
     if( mediaSupport('video', 'ogg') )
         $.heavy.videoSupport = 'ogg';
@@ -300,7 +312,7 @@
                 __preloadMedia(__fakeMedia(url + __urlSuffix(url), 'audio', extAud), url + __urlSuffix(url), extAud, function () {
                     datas.push(this);
                     progress.call(this);
-                }, true);
+                }, true, true);
 
                 continue;
 
@@ -311,7 +323,7 @@
                 __preloadMedia(__fakeMedia(url + __urlSuffix(url), 'video', extVid), url + __urlSuffix(url), extVid, function () {
                     datas.push(this);
                     progress.call(this);
-                }, true);
+                }, true, true);
 
                 continue;
 
@@ -358,15 +370,16 @@
             collection = [],
 
             defaults = {
-                pipeline     : false,
-                attrs        : [],
-                backgrounds  : false,
-                onProgress   : null // todo check!
+                pipeline    : false,
+                attrs       : [],
+                backgrounds : false,
+                playthrough : false,
+                onProgress  : null // todo check!
             },
 
             collect = function(urls, $element, type){
 
-                if( undefined === urls || urls === false || privileges($element, options) === false )
+                if( undefined === urls || urls === false )
                     return;
 
                 if( plugin.settings.backgrounds )
@@ -378,13 +391,21 @@
 
                 var cleanMedia = function( mime ){
 
-                    if( $element.is('video') || $element.is('audio') )
-                        $element.find('source[type="'+mime+'"]').siblings().remove();
+                        if( $element.is('video') || $element.is('audio') )
+                            $element.find('source[type="'+mime+'"]').siblings().remove();
 
-                    if( $element.is('source') )
-                        $element.siblings().remove();
+                        if( $element.is('source') )
+                            $element.siblings().remove();
 
-                };
+                    },
+                    eventFallback = function(){
+
+                        return;
+
+                        //potrebbe essere un'altra source dello stesso video etc etc etc
+                        //console.log($element, $element.data($.heavy.preloader.name) )
+
+                    };
 
                 for( var k in urls ) {
 
@@ -403,7 +424,8 @@
                                     var obj = {
                                         url: url,
                                         type: type,
-                                        ext: extImage
+                                        ext: extImage,
+                                        preloaded : false
                                     };
 
                                     if( null !== $element )
@@ -411,7 +433,8 @@
 
                                     collection.push( $.extend(true, { $el: $element }, obj) );
 
-                                }
+                                }else
+                                    eventFallback();
 
                             }
 
@@ -423,14 +446,17 @@
 
                             if( extAudio ) {
 
-                                // check for undefined is cuz cleanMedia --> remove useless <source />
+                                if( !plugin.settings.playthrough )
+                                    consoleWarn('Audio element skipped because "playthrough" option is not true.');
 
-                                if( typeof $element[0] !== 'undefined' && ( mediaSupport('audio', extAudio) && ( null === $element || !$.data($element[0], $.heavy.preloader.name) ) ) ){
+                                else if( typeof $element[0] !== 'undefined' && ( mediaSupport('audio', extAudio) && ( null === $element || !$.data($element[0], $.heavy.preloader.name) ) ) ){
+                                // check for undefined is cuz cleanMedia --> remove useless <source />
 
                                     var obj = {
                                         url: url,
                                         type: type,
-                                        ext: extAudio
+                                        ext: extAudio,
+                                        preloaded : false
                                     };
 
                                     if( null !== $element )
@@ -440,7 +466,8 @@
 
                                     cleanMedia('audio/'+extAudio);
 
-                                }
+                                }else
+                                    eventFallback();
 
                             }
 
@@ -453,7 +480,8 @@
                                     var obj = {
                                         url: url,
                                         type: type,
-                                        ext: extVideo
+                                        ext: extVideo,
+                                        preloaded : false
                                     };
 
                                     if( null !== $element )
@@ -463,7 +491,8 @@
 
                                     cleanMedia('video/'+extVideo);
 
-                                }
+                                }else
+                                    eventFallback();
 
                             }
 
@@ -474,6 +503,8 @@
                 }
 
             };
+
+        plugin.preloaded = false;
 
         plugin.settings = {};
         plugin.settings = $.extend({}, defaults, options);
@@ -494,7 +525,7 @@
 
             // TODO support <picture> ?
             // TODO support <iframe> --> $iframe[0].load();
-            // TODO make srcset to load only one pic (the current one) --> done?
+            // TODO make srcset to load only one pic (the current one) --> done already?
             // TODO preload video poster ?
 
             // custom attrs in other tags
@@ -715,6 +746,8 @@
 
                         $.heavy.preloader.busy = false;
 
+                        plugin.preloaded = true;
+
                         callback();
 
                         return;
@@ -773,7 +806,7 @@
 
                             }
 
-                            __preloadMedia($target, v.url, v.ext, function(){ progress.call({ target : $target, data : this }); }, load);
+                            __preloadMedia($target, v.url, v.ext, function(){ progress.call({ target : $target, data : this }); }, load, plugin.settings.playthrough);
 
                             break;
 
@@ -816,39 +849,53 @@
                 options = {};
             }
 
-            var t = this,
-                c = function(){
+            var _this = this,
+                $this = $(_this),
+                _callback = function(){
 
-                    if( $.isFunction(callback) )
-                        callback.call(t);
+                    if( $.isFunction( callback ) )
+                        callback.call( _this );
 
-                    if( $.isFunction($.heavy.preloader.callback) )
-                        $.heavy.preloader.callback.call( t );
+                    if( $.isFunction($ .heavy.preloader.callback ) )
+                        $.heavy.preloader.callback.call( _this );
+
+                    $(_this).trigger($.heavy.preloader.method);
 
                 };
 
             // loop
-            if( ( undefined === $(this).data($.heavy.preloader.name) && null === privileges($(this)) ) || privileges($(this), options) ){
+            if( undefined === $this.data($.heavy.preloader.name) ){
 
-                var plugin = new $[$.heavy.preloader.method](this, options, c)
+                var plugin = new $[$.heavy.preloader.method](_this, options, _callback)
 
-                $(this).data($.heavy.preloader.name, plugin);
+                $this.data($.heavy.preloader.name, plugin);
 
-            }else{
+            }else if( 'preloaded' in $this.data($.heavy.preloader.name) && !$this.data($.heavy.preloader.name).preloaded ) {
 
-                if( privileges($(this), options)) {
+                var $children = $this.find('img, video'),
+                    j = $children.length,
+                    i = 0;
 
-                    // executing callback cuz plugin has already registered for this element
+                $this
+                    .on($.heavy.preloader.method, _callback);
 
-                    c();
+                $children
+                    .on($.heavy.preloader.method, function(){
 
-                }else {
+                        i++;
 
-                    // aborted cuz another plugin is preloading the same thing.
+                        if( j === i )
+                            _callback();
 
-                }
+                    });
 
-            } // todo check modo più elegante?
+
+            }else if( 'preloaded' in $this.data($.heavy.preloader.name) && $(this).data($.heavy.preloader.name).preloaded ){
+
+                _callback();
+
+            }
+
 
         });
     };
