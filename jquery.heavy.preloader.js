@@ -748,6 +748,8 @@
 
                         plugin.preloaded = true;
 
+                        plugin.element.trigger( $.heavy.preloader.method );
+
                         callback();
 
                         return;
@@ -851,15 +853,13 @@
 
             var _this = this,
                 $this = $(_this),
-                _callback = function(){
+                _callback = function(e){
 
                     if( $.isFunction( callback ) )
                         callback.call( _this );
 
                     if( $.isFunction($ .heavy.preloader.callback ) )
                         $.heavy.preloader.callback.call( _this );
-
-                    $(_this).trigger($.heavy.preloader.method);
 
                 };
 
@@ -870,7 +870,7 @@
 
                 $this.data($.heavy.preloader.name, plugin);
 
-            }else if( 'preloaded' in $this.data($.heavy.preloader.name) && !$this.data($.heavy.preloader.name).preloaded ) {
+            }else if( 'preloaded' in $this.data($.heavy.preloader.name) && $this.data($.heavy.preloader.name).preloaded === false ) {
 
                 var $children = $this.find('img, video'),
                     j = $children.length,
@@ -890,7 +890,7 @@
                     });
 
 
-            }else if( 'preloaded' in $this.data($.heavy.preloader.name) && $(this).data($.heavy.preloader.name).preloaded ){
+            }else if( 'preloaded' in $this.data($.heavy.preloader.name) && $(this).data($.heavy.preloader.name).preloaded === true ){
 
                 _callback();
 
