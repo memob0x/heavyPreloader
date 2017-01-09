@@ -37,7 +37,7 @@
             }, args);
 
             url = url   .toLowerCase() // "i" flag nella regex dava problemi ;((((((((
-                        .split('?')[0]; // rimuove query strings
+                .split('?')[0]; // rimuove query strings
 
             if( url === ''  )
                 return false;
@@ -53,14 +53,14 @@
                     if( !matches64 || null === matches64 ) {
 
                         //if( opts.warn ) // warna sempre problemi con base64
-                            consoleWarn(url +': base64 '+ format +' format not recognized.');
+                        consoleWarn(url +': base64 '+ format +' format not recognized.');
 
                         return false;
 
                     }
 
                     matches64 = matches64[0];
-                    return matches64.replace('data:'+format+'/','');
+                    return matches64.replace('data:'+format+'/g', '');
 
                 }else{
 
@@ -450,7 +450,7 @@
                                     consoleWarn('Audio element skipped because "playthrough" option is not true.');
 
                                 else if( typeof $element[0] !== 'undefined' && ( mediaSupport('audio', extAudio) && ( null === $element || !$.data($element[0], $.heavy.preloader.name) ) ) ){
-                                // check for undefined is cuz cleanMedia --> remove useless <source />
+                                    // check for undefined is cuz cleanMedia --> remove useless <source />
 
                                     var obj = {
                                         url: url,
@@ -842,62 +842,62 @@
 
     },
 
-    $.fn[$.heavy.preloader.method] = function(options, callback){
+        $.fn[$.heavy.preloader.method] = function(options, callback){
 
-        return this.each(function(){
+            return this.each(function(){
 
-            if( $.isFunction(options) && undefined === callback ){
-                callback = options;
-                options = {};
-            }
+                if( $.isFunction(options) && undefined === callback ){
+                    callback = options;
+                    options = {};
+                }
 
-            var _this = this,
-                $this = $(_this),
-                _callback = function(e){
+                var _this = this,
+                    $this = $(_this),
+                    _callback = function(e){
 
-                    if( $.isFunction( callback ) )
-                        callback.call( _this );
+                        if( $.isFunction( callback ) )
+                            callback.call( _this );
 
-                    if( $.isFunction($ .heavy.preloader.callback ) )
-                        $.heavy.preloader.callback.call( _this );
+                        if( $.isFunction($ .heavy.preloader.callback ) )
+                            $.heavy.preloader.callback.call( _this );
 
-                };
+                    };
 
-            // loop
-            if( undefined === $this.data($.heavy.preloader.name) ){
+                // loop
+                if( undefined === $this.data($.heavy.preloader.name) ){
 
-                var plugin = new $[$.heavy.preloader.method](_this, options, _callback)
+                    var plugin = new $[$.heavy.preloader.method](_this, options, _callback)
 
-                $this.data($.heavy.preloader.name, plugin);
+                    $this.data($.heavy.preloader.name, plugin);
 
-            }else if( 'preloaded' in $this.data($.heavy.preloader.name) && $this.data($.heavy.preloader.name).preloaded === false ) {
+                }else if( 'preloaded' in $this.data($.heavy.preloader.name) && $this.data($.heavy.preloader.name).preloaded === false ) {
 
-                var $children = $this.find('img, video'),
-                    j = $children.length,
-                    i = 0;
+                    var $children = $this.find('img, video'),
+                        j = $children.length,
+                        i = 0;
 
-                $this
-                    .on($.heavy.preloader.method, _callback);
+                    $this
+                        .on($.heavy.preloader.method, _callback);
 
-                $children
-                    .on($.heavy.preloader.method, function(){
+                    $children
+                        .on($.heavy.preloader.method, function(){
 
-                        i++;
+                            i++;
 
-                        if( j === i )
-                            _callback();
+                            if( j === i )
+                                _callback();
 
-                    });
-
-
-            }else if( 'preloaded' in $this.data($.heavy.preloader.name) && $(this).data($.heavy.preloader.name).preloaded === true ){
-
-                _callback();
-
-            }
+                        });
 
 
-        });
-    };
+                }else if( 'preloaded' in $this.data($.heavy.preloader.name) && $(this).data($.heavy.preloader.name).preloaded === true ){
+
+                    _callback();
+
+                }
+
+
+            });
+        };
 
 })(window, document, jQuery);
