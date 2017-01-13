@@ -111,14 +111,10 @@
                 .attr('src', url)
                 .removeAttr('data-src');
 
-            if( $el[0].complete === true ) // todo: check --> this should solve iOS gif bug
+            if( $el[0].complete === true )
                 $el.trigger('load.'+ $.heavy.preloader.name);
 
             return $el;
-
-            // todo !!! iOS has a bug with gifs ;( they won't load.. they will take forever ... add a timer fallback?
-            //if( ext === 'gif' && ( navigator.userAgent.indexOf('Safari') > -1 || (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) ) )
-            //    cb();
 
         },
         __fakeMedia    = function(url, type, ext){
@@ -363,8 +359,6 @@
 
         var plugin = this,
 
-        //eventID = Math.floor( Math.random() * 99999),
-
             $element = $(element),
 
             collection = [],
@@ -402,8 +396,9 @@
 
                         return;
 
-                        //potrebbe essere un'altra source dello stesso video etc etc etc
-                        //console.log($element, $element.data($.heavy.preloader.name) )
+                        // todo
+                        // potrebbe essere un'altra source dello stesso video etc etc etc
+                        // console.log($element, $element.data($.heavy.preloader.name) )
 
                     };
 
@@ -513,7 +508,7 @@
 
         plugin.destroy = function(){
 
-            // todo --> do it...
+            // todo ...
 
             collection = [];
 
@@ -525,8 +520,8 @@
 
             // TODO support <picture> ?
             // TODO support <iframe> --> $iframe[0].load();
-            // TODO make srcset to load only one pic (the current one) --> done already?
             // TODO preload video poster ?
+            // TODO make srcset to load only one pic (the current one) --> done already?
 
             // custom attrs in other tags
             if( plugin.settings.attrs && !plugin.element.is('img') && !plugin.element.is('audio') && !plugin.element.is('video') && !plugin.element.is('source') )
