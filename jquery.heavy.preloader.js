@@ -504,7 +504,7 @@
             percentage = 0,
             abort = false,
 
-            length = collection.length;
+            length = collection.length,
 
             onProgressCallback = function(n, context, data){
 
