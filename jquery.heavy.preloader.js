@@ -91,7 +91,7 @@
         __preloadImage = function($el, url, ext, cb){
 
             $el
-                .one('load.'+ $.heavy.preloader.name+' error.'+ $.heavy.preloader.name, function(){
+                .on('load.'+ $.heavy.preloader.name+' error.'+ $.heavy.preloader.name, function(){
 
                     $el
                         .off('.'+$.heavy.preloader.name)
@@ -348,7 +348,7 @@
 
         }
 
-    }
+    };
 
     $[$.heavy.preloader.method]    = function(element, options, callback){
 
@@ -497,6 +497,115 @@
 
                 }
 
+            },
+
+            count  = 0,
+            pipe   = 0,
+            percentage = 0,
+            abort = false,
+
+            length = collection.length;
+
+            onProgressCallback = function(n, context, data){
+
+                var processing = { percentage : n, thisElement : context, data : data };
+
+                if( $.isFunction(plugin.settings.onProgress) )
+                    plugin.settings.onProgress.call($.extend(false, plugin, processing)); // shallowcopy --> todo : shouldn't be like that?
+
+                if( $.isFunction($.heavy.preloader.onProgress) )
+                    $.heavy.preloader.onProgress.call( data && context ? $.extend(true, processing.data, { context : context }) : null );
+
+
+            },
+
+            progress = function(){
+
+                $.heavy.preloader.busy = true;
+
+                count++;
+
+                percentage = count / length * 100;
+
+                onProgressCallback(percentage, this.target, this.data);
+
+                if( count === length ) {
+
+                    $.heavy.preloader.busy = false;
+
+                    plugin.preloaded = true;
+
+                    plugin.element.trigger( $.heavy.preloader.method );
+
+                    callback();
+
+                    return;
+
+                }
+
+                if( plugin.settings.pipeline === true ){
+
+                    pipe++;
+
+                    logic(pipe, collection[pipe]);
+
+                }
+
+            },
+            logic = function(i, v){
+
+                if( abort )
+                    return;
+
+                switch( v.type ){
+
+                    case 'image' :
+
+                        var isFake  = !v.$el,
+                            $target = isFake ? $(new Image()) : v.$el;
+
+                        __preloadImage($target, isFake ? v.url + __urlSuffix(v.url) : v.url, v.ext, function(){ progress.call({ target : $target, data : this }); });
+
+                        break;
+
+                    case 'audio/video' :
+
+                        var $target = v.$el,
+                            load = false;
+
+                        if( !$target ) {
+
+                            $target = __fakeMedia(v.url + __urlSuffix(v.url), __is(v.url, 'audio') ? 'audio' : 'video', v.ext);
+
+                            load = true;
+
+                        }else{
+
+                            var $sources = $target.find('source[type="audio/'+ v.ext +'"], source[type="video/'+ v.ext +'"]')
+
+                            if( !$sources.length )
+                                $sources = $target.find('source[src*=".'+ v.ext +'"], source[data-src*=".'+ v.ext +'"]');
+
+                            if( !$sources.is('[src]') ){
+
+                                $sources
+                                    .attr('src', v.url)
+                                    .removeAttr('data-src');
+
+                                load = true;
+
+                            }
+
+                        }
+
+                        __preloadMedia($target, v.url, v.ext, function(){ progress.call({ target : $target, data : this }); }, load, plugin.settings.playthrough);
+
+                        break;
+
+
+                }
+
+
             };
 
         plugin.preloaded = false;
@@ -506,13 +615,22 @@
 
         plugin.element = $element;
 
-        plugin.destroy = function(){
+        plugin.stop = function(){
 
-            // todo ...
+            abort = true;
 
             collection = [];
+            count = length;
+            pipe = length;
 
-        }
+            $.heavy.preloader.busy = false;
+
+            // auto-cleanup
+            $element
+                .removeData($.heavy.preloader.name)
+                .data($.heavy.preloader.name, undefined); // overkill...
+
+        };
 
         plugin.settings.attrs = typeof plugin.settings.attrs === 'string' ? [plugin.settings.attrs] : plugin.settings.attrs;
 
@@ -635,7 +753,7 @@
                 }
 
 
-            })
+            });
 
             // se this è un immagine
             if( plugin.element.is('img') ){ // todo check priorities
@@ -711,107 +829,12 @@
                 });
 
             // LOAD!
-            var count  = 0,
-                pipe   = 0,
-                percentage = 0,
-                length = collection.length,
-                onProgressCallback = function(n, context, data){
+            length = collection.length;
 
-                    var processing = { percentage : n, thisElement : context, data : data };
-
-                    if( $.isFunction(plugin.settings.onProgress) )
-                        plugin.settings.onProgress.call($.extend(false, plugin, processing)); // shallowcopy --> todo : shouldn't be like that?
-
-                    if( $.isFunction($.heavy.preloader.onProgress) )
-                        $.heavy.preloader.onProgress.call( data && context ? $.extend(true, processing.data, { context : context }) : null );
-
-
-                },
-                progress = function(){
-
-                    $.heavy.preloader.busy = true;
-
-                    count++;
-
-                    percentage = count / length * 100;
-
-                    onProgressCallback(percentage, this.target, this.data);
-
-                    if( count === length ) {
-
-                        $.heavy.preloader.busy = false;
-
-                        plugin.preloaded = true;
-
-                        plugin.element.trigger( $.heavy.preloader.method );
-
-                        callback();
-
-                        return;
-
-                    }
-
-                    if( plugin.settings.pipeline === true ){
-
-                        pipe++;
-
-                        logic(pipe, collection[pipe]);
-
-                    }
-
-                },
-                logic = function(i, v){
-
-                    switch( v.type ){
-
-                        case 'image' :
-
-                            var isFake  = !v.$el,
-                                $target = isFake ? $(new Image()) : v.$el;
-
-                            __preloadImage($target, isFake ? v.url + __urlSuffix(v.url) : v.url, v.ext, function(){ progress.call({ target : $target, data : this }); });
-
-                            break;
-
-                        case 'audio/video' :
-
-                            var $target = v.$el,
-                                load = false;
-
-                            if( !$target ) {
-
-                                $target = __fakeMedia(v.url + __urlSuffix(v.url), __is(v.url, 'audio') ? 'audio' : 'video', v.ext);
-
-                                load = true;
-
-                            }else{
-
-                                var $sources = $target.find('source[type="audio/'+ v.ext +'"], source[type="video/'+ v.ext +'"]')
-
-                                if( !$sources.length )
-                                    $sources = $target.find('source[src*=".'+ v.ext +'"], source[data-src*=".'+ v.ext +'"]');
-
-                                if( !$sources.is('[src]') ){
-
-                                    $sources
-                                        .attr('src', v.url)
-                                        .removeAttr('data-src');
-
-                                    load = true;
-
-                                }
-
-                            }
-
-                            __preloadMedia($target, v.url, v.ext, function(){ progress.call({ target : $target, data : this }); }, load, plugin.settings.playthrough);
-
-                            break;
-
-
-                    }
-
-
-                };
+            //count  = 0,
+            //pipe   = 0,
+            //percentage = 0,
+            //abort = false;
 
             onProgressCallback(0, null, null);
 
@@ -831,68 +854,81 @@
 
             }
 
-        }
+        };
 
         plugin.init();
 
-    },
+    };
 
-        $.fn[$.heavy.preloader.method] = function(options, callback){
+    $.fn[$.heavy.preloader.method] = function(options, callback){
 
-            return this.each(function(){
+        return this.each(function(){
 
-                if( $.isFunction(options) && undefined === callback ){
-                    callback = options;
-                    options = {};
-                }
+            if( $.isFunction(options) && undefined === callback ){
+                callback = options;
+                options = {};
+            }
 
-                var _this = this,
-                    $this = $(_this),
-                    _callback = function(e){
+            var _this = this,
+                $this = $(_this),
+                _callback = function(e){
 
-                        if( $.isFunction( callback ) )
-                            callback.call( _this );
+                    if( $.isFunction( callback ) )
+                        callback.call( _this );
 
-                        if( $.isFunction($ .heavy.preloader.callback ) )
-                            $.heavy.preloader.callback.call( _this );
+                    if( $.isFunction($ .heavy.preloader.callback ) )
+                        $.heavy.preloader.callback.call( _this );
 
-                    };
+                };
 
-                // loop
-                if( undefined === $this.data($.heavy.preloader.name) ){
+            // .stop() is an api method to abort the preload operation, we assume it is always needed when trying to preload unique elements such as document obj or html tag or body tag
+            if( ( $this.is(document) || $this.is('html') || $this.is('body') ) && undefined !== $this.data($.heavy.preloader.name) )
+                $this.data($.heavy.preloader.name).stop();
 
-                    var plugin = new $[$.heavy.preloader.method](_this, options, _callback)
+            // loop
+            if( undefined === $this.data($.heavy.preloader.name) ){
 
-                    $this.data($.heavy.preloader.name, plugin);
-
-                }else if( 'preloaded' in $this.data($.heavy.preloader.name) && $this.data($.heavy.preloader.name).preloaded === false ) {
-
-                    var $children = $this.find('img, video'),
-                        j = $children.length,
-                        i = 0;
-
-                    $this
-                        .on($.heavy.preloader.method, _callback);
-
-                    $children
-                        .on($.heavy.preloader.method, function(){
-
-                            i++;
-
-                            if( j === i )
-                                _callback();
-
-                        });
-
-
-                }else if( 'preloaded' in $this.data($.heavy.preloader.name) && $(this).data($.heavy.preloader.name).preloaded === true ){
+                var plugin = new $[$.heavy.preloader.method](_this, options, function(){
 
                     _callback();
 
-                }
+                    // auto-cleanup
+                    $this
+                        .removeData($.heavy.preloader.name)
+                        .data($.heavy.preloader.name, undefined); // overkill...
+
+                });
+
+                $this.data($.heavy.preloader.name, plugin);
+
+            }else if( 'preloaded' in $this.data($.heavy.preloader.name) && $this.data($.heavy.preloader.name).preloaded === false ) { // todo check
+
+                var $children = $this.find('img, video'),
+                    j = $children.length,
+                    i = 0;
+
+                $this
+                    .on($.heavy.preloader.method, _callback);
+
+                $children
+                    .on($.heavy.preloader.method, function(){
+
+                        i++;
+
+                        if( j === i )
+                            _callback();
+
+                    });
 
 
-            });
-        };
+            }else if( 'preloaded' in $this.data($.heavy.preloader.name) && $(this).data($.heavy.preloader.name).preloaded === true ){ // todo check
+
+                _callback();
+
+            }
+
+
+        });
+    };
 
 })(window, document, jQuery);
