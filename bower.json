@@ -1,9 +1,9 @@
 {
-  "name": "heavyPreloader",
+  "name": "nite-preloader",
   "description": "a tool that offers an elegant way to detect (or trigger) the loading process of images",
   "main": [
-    "jquery.heavy.preloader.js",
-    "jquery.heavy.preloader.min.js"
+    "jquery.nite.preloader.js",
+    "jquery.nite.preloader.min.js"
   ],
   "dependencies": {
     "jquery": ">=1.9.1"
@@ -21,7 +21,7 @@
     "powerful"
   ],
   "authors": [
-    "Daniele Fioroni <dfioroni91@gmail.com>"
+    "memob0x <dfioroni91@gmail.com>"
   ],
   "license": "MIT",
   "ignore": [
@@ -30,7 +30,8 @@
     "bower_components",
     "test",
     "tests",
-    "examples"
+    "examples",
+    "beta"
   ],
   "private": false
 }

@@ -1,93 +1,95 @@
-# heavyPreloader
-heavyPreloader is a tool that offers an elegant way to detect (or trigger) the loading process of images, and here's an example:
+# nite-cropper
+### Basic
+<p>Consider a box <em>.inscribe</em> which takes up a certain amount of space <em>(for wathever reason: width, height, padding...)</em>.</p>
+
 ```
-<script>
-  $.heavyPreload({
-    urls : [
-      'http://image-url-1.jpg',
-      'http://image-url-2.jpg',
-      'http://image-url-3.png',
-      'http://image-url-4.tif'
-    ]
-  }, function(){
-     // everything is now fully loaded here, m8! ;)
-  });
-</script>
-```
-### An images finder
-Tired with retrieving all the images urls? Not a problem, <strong>heavyPreloader</strong> can do it for you:
-```
-<div class="someImages">
-  <img src="image-1.gif"/>
-  <img src="image-2.jpg"/>
-  <img src="image-3.jpg"/>
+<div class="inscribe">
+   <img src="http://placehold.it/120x120.jpg" />
 </div>
 ```
+
+<p>If you want to <strong>cover ✂</strong> that element with an <em>&lt;img /&gt;</em> tag without using <em>css backgrounds</em> just do:</p>
+
 ```
-<script>
-  $('div.someImages').heavyPreload(function(){
-     // sir, your div is now ready for the show!
-  });
-</script>
+$('.inscribe').niteCrop();
 ```
-### Custom attributes
-This method won't only look for images contained in <code>&lt;img /&gt;</code> tags, but also in <i>backgrounds</i> defined in your <strong>CSS</strong> and in <strong> custom attributes</strong> you may want to specify, for instance:
+
+<p>That's it! 👏 </p>
+
+<hr>
+<p>This plugin listens to images 'load', and videos 'onloadedmetadata' events so you don't need to wait for those stuff with other plugins. 👌 </p>
+<hr>
+
+<p>You may need to address specific elements:</p>
+
 ```
-<article>
-  <div data-src="image.gif">
-    hey there!
-  </div>
-  <p data-background=-"image.png">
-    some content...
-  </p>
-  <span rel=-"an-image.jpg" data-src=-"another-one.png">
-    lorem ipsum
-  </span>
-</article>
+$('.inscribe').niteCrop({
+  elements : 'img.inscribe__element, video.inscribe__element'
+});
 ```
+
+<br>
+
+### Advanced
+<p>If you want to crop a block-level element (<em>&lt;div&gt;</em>,<em>&lt;span&gt;</em>, 🍫 etc...) you need to define its size like that:</p>
+
 ```
-<script>
-  $('article').heavyPreload({
-    attrs : ['data-src', 'data-background', 'rel']
-  }, function(){
-     // ready! and i've found your special images in those attributes :D
-  });
-</script>
+$('.inscribe').niteCrop({
+  elements : 'div',
+  width : 1920,
+  height : 1240
+});
 ```
-### Callbacks
-You want a <i>callback</i> for <u>every single</u> image that <strong>heavyPreloader</strong> would find and load? There's a <code>onProgress</code> function that will suit you well:
+
+<hr>
+
+<p>🎟️ There's a dedicated <strong>event</strong> that occurs when the operation is done:</p>
+
 ```
-<script>
-  $('div.someImages').heavyPreload({
-    onProgress : function(){
-      // i've found one more image here, d00d!
-    }
-  }, function(){
-     // cool, everything is now loaded.
-  });
-</script>
+$(document).on('niteCrop', '.inscribe', function(){
+
+   $(this).addClass('inscribed');
+   
+});
+
 ```
----
-### Load the entire website!
-<i>"Don't bother me once more!"</i>  ─ Ok then... preload your entire app!
+
+<hr>
+
+<p>If you change your mind you can destroy an instance.</p>
+
 ```
-<script>
-  $(document).heavyPreload(function(){
-     // Phew, your entire thing is ready...
-  });
-</script>
+$('.inscribe').niteCrop('destroy');
 ```
----
-### One last thing before you go... <i>this</i>
-In the general callback function <code>this</code> is the current element, so you can do...
+
+<hr>
+
+<p>You can get useful data 🎒 with this:</p>
+
 ```
-<script>
-  $('html').heavyPreload(function(){
-     $(this).addClass('ready');
-  });
-</script>
+var usefulCropData = $('.inscribe img').data('niteCropper');
 ```
-... and after your page is fully loaded you will have:
+<br>
+
+### Extra
+
+<p>There's an awesome built-in parallax func! 😎</p>
+
 ```
-<html class="ready">
+$('.inscribe-with-parallax').niteCrop({
+   parallax : true
+});
+
+$('.inscribe-with-parallax--horizontal-only').niteCrop({
+   parallax : 'horizontal'
+});
+
+$('.inscribe-with-parallax--vertical-only').niteCrop({
+   parallax : 'vertical'
+});
 ```
+<hr>
+
+<br><br><br>
+
+<em>TO BE CONTINUED...</em>
