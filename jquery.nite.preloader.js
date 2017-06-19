@@ -94,8 +94,6 @@
             $el
                 .on('load.'+ plugin_name+' error.'+ plugin_name, function(){
 
-                    $el.data(plugin_name).preloaded = true;
-
                     cb.call({
                         type : 'image',
                         url  : url,
@@ -122,8 +120,6 @@
 
                     if( paused )
                         el.currentTime = 0;
-
-                    $el.data(plugin_name).preloaded = true;
 
                     var extra = {};
 
@@ -218,7 +214,12 @@
 
         };
 
-    $.fn.nitePreload = function(options){
+    $.fn.nitePreload = function(options, callback){
+
+        if( $.isFunction(options) && undefined === callback ) {
+            callback = options;
+            options = {};
+        }
 
         return this.each(function(){
 
@@ -281,7 +282,9 @@
 
                     if( count === length ) {
 
-                        $element.trigger('nitePreloaded');
+                        callback.call($element[0]);
+
+                        $element.trigger('nitePreloaded', [collection]);
 
                         return;
 
@@ -571,9 +574,11 @@
 
             }else {
 
+                callback.call($element[0]);
+
                 $element
                     .trigger('nitePreloading', [null, 100, {}])
-                    .trigger('nitePreloaded');
+                    .trigger('nitePreloaded', [collection]);
 
             }
             // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
