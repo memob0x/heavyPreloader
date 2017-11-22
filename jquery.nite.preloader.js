@@ -21,204 +21,6 @@
             attributes  : [],
             backgrounds : false,
             playthrough : false
-        },
-
-        support = function(type, extension){
-
-            var tmpVid = document.createElement(type);
-
-            return tmpVid.canPlayType(type+'/'+extension);
-
-        },
-
-        formats = {
-            image  : 'jp[e]?g|gif|png|tif[f]?|bmp',
-            audio  : 'mp3|ogg',
-            video  : 'mp4|ogv|ogg|webm'
-        },
-
-        url_suffix = function( url ){
-
-            if( /^data:/gi.test( url ) )
-                return '';
-            else
-                return '#!nitePreloader';
-
-        },
-
-        is = function( url, format, args ){
-
-            var opts = $.extend({
-                warn : false
-            }, args);
-
-            url = url
-                .toLowerCase() // "i" flag nella regex dava problemi ;((((((((
-                .split('?')[0]; // rimuove query strings
-
-            if( url === ''  )
-                return false;
-
-            var base64 = '\;base64\,';
-
-            if( new RegExp('(\.(' + formats[ format ] + ')$)|' + base64, 'g').test( url ) ){
-
-                if( new RegExp(base64, 'g').test( url ) ){
-
-                    var matches64 = url.match(new RegExp('^data:'+format+'\/(' + formats[ format ] + ')', 'g'));
-
-                    if( !matches64 || null === matches64 ) {
-
-                        //if( opts.warn ) // warna sempre problemi con base64
-                        console.warn(url +': base64 '+ format +' format not recognized.');
-
-                        return false;
-
-                    }
-
-                    matches64 = matches64[0];
-                    return matches64.replace('data:'+format+'/g', '');
-
-                }else{
-
-                    var matches = url.match( new RegExp(formats[ format ], 'g') );
-                    return matches ? matches[0] : false;
-
-                }
-            }else {
-
-                if( opts.warn )
-                    console.warn(url +': file '+ format +' not recognized.');
-
-                return false;
-
-            }
-
-        },
-
-        preload_image = function($el, url, ext, cb){
-
-            $el
-                .on('load.'+ plugin_name+' error.'+ plugin_name, function(){
-
-                    cb.call({
-                        type : 'image',
-                        url  : url,
-                        extension : ext,
-                        naturalWidth : this.naturalWidth,
-                        naturalHeight : this.naturalHeight
-                    });
-
-                })
-                .attr('src', url)
-                .removeAttr('data-src');
-
-            if( $el[0].complete === true )
-                $el.trigger('load.'+ plugin_name);
-
-            return $el;
-
-        },
-
-        preload_media = function($el, url, ext,  cb, load, playthrough){
-
-            var el   = $el[0],
-                done = function () {
-
-                    if( paused )
-                        el.currentTime = 0;
-
-                    var extra = {};
-
-                    if( $el.is('video') ) {
-                        extra = {
-                            naturalWidth: el.videoWidth,
-                            naturalHeight: el.videoHeight
-                        };
-                        el.naturalWidth = extra.naturalWidth;
-                        el.naturalHeight = extra.naturalHeight;
-                    }
-
-                    cb.call($.extend(true, {
-                        type : 'audio/video',
-                        url  : url,
-                        extension : ext,
-                        duration : el.duration
-                    }, extra));
-
-                    if( $el.hasClass(plugin_name+'-temp') )
-                        $el.remove();
-
-                },
-                paused = el.paused;
-
-            if( true === load && paused )
-                el.load();
-
-            $el
-                .on('canplaythrough.' + plugin_name, done)
-
-                .on('loadedmetadata.' + plugin_name, function () {
-
-                    if( !playthrough ) {
-
-                        done();
-
-                        return;
-
-                    }
-
-                    paused = el.paused;
-
-                    if( paused )
-                        el.currentTime++;
-
-                })
-
-                .on('progress.' + plugin_name, function () {
-
-                    if( !playthrough )
-                        return;
-
-                    if ( el.readyState > 0 && !el.duration ) { // error!
-
-                        done();
-
-                        return;
-
-                    }
-
-                    paused = el.paused;
-
-                    if( paused )
-                        el.currentTime++; // force
-
-                });
-
-            return $el;
-
-        },
-        append_fake_element    = function(url, type, ext){
-
-            var $el = $('<'+type+' />', {
-                src: url,
-                type: type + '/' + ext,
-                muted: true,
-                preload: 'metadata'
-            });
-
-            $('body').append( $el.addClass(plugin_name+'-temp').css({
-                width      : 2,
-                height     : 1,
-                visibility : 'hidden',
-                position   : 'absolute',
-                left       : -9999,
-                top        : -9999,
-                zIndex     : -1
-            }) );
-
-            return $el;
-
         };
 
     /* todo new specs as following
@@ -258,8 +60,6 @@
 
 
     var nite_preloader_core = function(argument){
-        
-        var CORE = this;
 
         var options = {},
             collection = [];
@@ -272,128 +72,38 @@
 
         var settings = $.extend(true, default_settings, options);
 
-        var count  = 0,
-            pipe   = 0,
-            percentage = 0,
-            abort = false,
+        this.done = $.noop();
+        this.progress = $.noop();
 
-            progress = function(){
-
-                count++;
-
-                percentage = count / length * 100;
-
-                if( count === length ) {
-
-                    CORE.done();
-
-                    return;
-
-                }
-
-                if( settings.pipeline === true ){
-
-                    pipe++;
-
-                    logic(pipe, collection[pipe]);
-
-                }
-
-            },
-            logic = function(i, v){
-
-                if( abort )
-                    return;
-
-                var $target = $();
-
-                switch( v.type ){
-
-                    case 'image' :
-
-                        var is_fake  = !v.$el;
-
-                        $target = is_fake ? $(new Image()) : v.$el;
-
-                        preload_image($target, is_fake ? v.url + url_suffix(v.url) : v.url, v.ext, function(){ progress.call({ target : $target, data : this }); });
-
-                        break;
-
-                    case 'audio/video' :
-
-                        var load = false;
-
-                        $target = v.$el;
-
-                        if( !$target.length ) {
-
-                            $target = append_fake_element(v.url + url_suffix(v.url), is(v.url, 'audio') ? 'audio' : 'video', v.ext);
-
-                            load = true;
-
-                        }else{
-
-                            var $sources = $target.find('source[type="audio/'+ v.ext +'"], source[type="video/'+ v.ext +'"]')
-
-                            if( !$sources.length )
-                                $sources = $target.find('source[src*=".'+ v.ext +'"], source[data-src*=".'+ v.ext +'"]');
-
-                            if( !$sources.is('[src]') ){
-
-                                $sources
-                                    .attr('src', v.url)
-                                    .removeAttr('data-src');
-
-                                load = true;
-
-                            }
-
-                        }
-
-                        preload_media($target, v.url, v.ext, function(){ progress.call({ target : $target, data : this }); }, load, settings.playthrough);
-
-                        break;
-
-
-                }
-
-
-            },
-            length = collection.length;
-
-
-        if( length ){
-
-            if( settings.pipeline === true )
-                logic(pipe, collection[pipe]);
-
-            else
-                $.each(collection, logic);
-
-        }else {
-
-            this.done();
-
-        }
-
-        this.done = function(){
-
-
-        };
-
-        this.progress = function(){
-
-
-        };
+        // do stuff
 
         this.abort = function(){
 
+            // abort stuff
 
         };
 
     };
 
     $.nitePreload = nite_preloader_core;
+
+    $.niteLazyload = function(){
+
+        if( !$.nite || !( 'inViewport' in $.nite ) || !( 'scroll' in $.nite ) ) {
+
+            console.log('nite is needed, maybe outdated?');
+
+            return;
+
+        }
+
+        $.nite.scroll('nitePreloader', function(){
+
+            // lazyload stuff
+
+        });
+
+    };
 
 
     /* todo new specs as following
