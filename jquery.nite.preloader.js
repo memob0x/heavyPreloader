@@ -7,6 +7,8 @@
     // todo: preload video poster ?
     // todo: make srcset to load only one pic (the current one) --> done already?
 
+
+
     // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
     if( !$ ) {
         console.error('jQuery is needed for $.fn.niteCrop() to work!')
@@ -14,7 +16,12 @@
     }
     // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
-    var plugin_name = 'nitePreloader',
+    var default_settings = {
+            pipeline    : false,
+            attributes  : [],
+            backgrounds : false,
+            playthrough : false
+        },
 
         support = function(type, extension){
 
@@ -35,7 +42,7 @@
             if( /^data:/gi.test( url ) )
                 return '';
             else
-                return '#!'+ plugin_name;
+                return '#!nitePreloader';
 
         },
 
@@ -214,377 +221,487 @@
 
         };
 
+    /* todo new specs as following
+
+    // global instance mode
+    // - - - - - - - - - - - - -
+    var siteLoader = new $.nitePreload({ // no arguments or object of parameters
+       selector : ‘data-src’
+    });
+    // uses interception observer to find inViewport images
+    // - - - - - - - - - - - - -
+
+    // single instance mode
+    // - - - - - - - - - - - - -
+    var instance = new $.nitePreload([ // array
+       ‘immagine.jpg’,
+       ‘immagine.png’,
+       ‘immagine.gif’
+    ]);
+
+    console.log(instance.percentage);
+
+    instance.abort();
+
+    instance.loaded(function(url){
+        // url is loaded…
+    });
+
+    instance.error(function(url){
+        // url has encountered a problem
+    });
+
+    instance.done(function(){
+       // finito…
+    });
+    // - - - - - - - - - - - - - */
+
+
+    var nite_preloader_core = function(argument){
+        
+        var CORE = this;
+
+        var options = {},
+            collection = [];
+
+        if( $.isArray(argument) )
+            collection = argument;
+
+        if( typeof argument === 'string' )
+            collection.push(argument);
+
+        var settings = $.extend(true, default_settings, options);
+
+        var count  = 0,
+            pipe   = 0,
+            percentage = 0,
+            abort = false,
+
+            progress = function(){
+
+                count++;
+
+                percentage = count / length * 100;
+
+                if( count === length ) {
+
+                    CORE.done();
+
+                    return;
+
+                }
+
+                if( settings.pipeline === true ){
+
+                    pipe++;
+
+                    logic(pipe, collection[pipe]);
+
+                }
+
+            },
+            logic = function(i, v){
+
+                if( abort )
+                    return;
+
+                var $target = $();
+
+                switch( v.type ){
+
+                    case 'image' :
+
+                        var is_fake  = !v.$el;
+
+                        $target = is_fake ? $(new Image()) : v.$el;
+
+                        preload_image($target, is_fake ? v.url + url_suffix(v.url) : v.url, v.ext, function(){ progress.call({ target : $target, data : this }); });
+
+                        break;
+
+                    case 'audio/video' :
+
+                        var load = false;
+
+                        $target = v.$el;
+
+                        if( !$target.length ) {
+
+                            $target = append_fake_element(v.url + url_suffix(v.url), is(v.url, 'audio') ? 'audio' : 'video', v.ext);
+
+                            load = true;
+
+                        }else{
+
+                            var $sources = $target.find('source[type="audio/'+ v.ext +'"], source[type="video/'+ v.ext +'"]')
+
+                            if( !$sources.length )
+                                $sources = $target.find('source[src*=".'+ v.ext +'"], source[data-src*=".'+ v.ext +'"]');
+
+                            if( !$sources.is('[src]') ){
+
+                                $sources
+                                    .attr('src', v.url)
+                                    .removeAttr('data-src');
+
+                                load = true;
+
+                            }
+
+                        }
+
+                        preload_media($target, v.url, v.ext, function(){ progress.call({ target : $target, data : this }); }, load, settings.playthrough);
+
+                        break;
+
+
+                }
+
+
+            },
+            length = collection.length;
+
+
+        if( length ){
+
+            if( settings.pipeline === true )
+                logic(pipe, collection[pipe]);
+
+            else
+                $.each(collection, logic);
+
+        }else {
+
+            this.done();
+
+        }
+
+        this.done = function(){
+
+
+        };
+
+        this.progress = function(){
+
+
+        };
+
+        this.abort = function(){
+
+
+        };
+
+    };
+
+    $.nitePreload = nite_preloader_core;
+
+
+    /* todo new specs as following
+
+
+
+    // - - - - - - - - - - - - -
+    trova tutte le immagini, audio e video e li aspetta.
+    // nothing loaded yet…
+    $(‘div.parent, img.test-images, video#bunny, audio#metallica’).nitePreload({
+       srcAttr : ‘data-src’,
+       findBackgrounds : false,
+       canplaythrough : true // video e audio senza interruzioni
+    }, function(){
+         // everything loaded at this point!
+    });
+    // - - - - - - - - - - - - -
+
+
+    // events
+    // - - - - - - - - - - - - -
+    $(document).on(‘load.nite error.nite’, function(event, $element){
+
+        // $element is loaded at this point
+
+    });
+    $(document).on(‘load.nite error.nite’, ‘.element’, function(event){
+
+        // this is loaded at this point
+
+    });
+    $(‘.element’).on(‘load.nite error.nite’, function(){
+
+       // this is loaded
+
+    });
+    // - - - - - - - - - - - - - */
+
+
+    var nite_preloader_finder = function($element, options){
+
+        var settings = $.extend(true, default_settings, options);
+
+        var collection = [],
+            collect = function(urls, $el, type){
+
+                if( !urls || !$el || !$el.length )
+                    return;
+
+                if( settings.backgrounds )
+                    urls = urls.replace(/url\(\"|url\(\'|url\(|((\"|\')\)$)/igm, '');
+
+                var splitter = '_' + Math.round( new Date().getTime() + ( Math.random() * 100 ) ) + '_';
+
+                urls = urls.replace(new RegExp('(' + formats.image + '|' + formats.audio + '|' + formats.video + ')(\s|$|\,)', 'igm'), function(match, p1, p2){ return p1 + splitter; }).split(new RegExp(splitter, 'igm'));
+
+                for( var k in urls ) {
+
+                    var url = urls[k],
+                        ext_audio = is(url, 'audio'),
+                        ext_video = is(url, 'video'),
+                        ext_image = is(url, 'image');
+
+                    if( ext_image || ( ext_video && support('audio', ext_audio) ) || ( ext_video && support('audio', ext_video) ) )
+                        collection.push( $.extend(true, { $el : $el }, {
+                            url : url,
+                            type : type,
+                            ext : ext_image || ext_video || ext_audio
+                        }));
+
+                }
+
+            };
+
+        // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+        // search
+        // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+
+        //
+        settings.attributes = typeof settings.attributes === 'string' ? [settings.attributes] : settings.attributes;
+
+        // custom attributes in other tags
+        if( settings.attributes && !$element.is('img') && !$element.is('audio') && !$element.is('video') && !$element.is('source') )
+            for( var k in settings.attributes ){
+
+                // se this ha un custom attr
+                if( $element.is('['+settings.attributes[k]+']') && !$element.is('img, audio, video, source') ) {
+
+                    var url = $element.attr(settings.attributes[k]);
+
+                    collect(url, null, is(url, 'image') ? 'image' : 'audio/video');
+
+                }
+
+                // se trovo un custom attr
+                $element.find('['+settings.attributes[k]+']:not(img, audio, video, source)').each(function(){
+
+                    var url = $(this).attr(settings.attributes[k]);
+
+                    collect(url, null, is(url, 'image') ? 'image' : 'audio/video');
+
+                });
+
+            }
+
+        // se this è un audio / video
+        if( $element.is('video') || $element.is('audio') ){
+            if( $element.is('[src]') )
+                collect($(this).attr('src'), $element, 'audio/video');
+            else
+                $element.children('source').each(function(){
+
+                    var interrupt = false;
+
+                    if( $(this).is('[src]') ) {
+                        collect($(this).attr('src'), $element, 'audio/video');
+                        interrupt = true;
+                    }
+
+                    if( interrupt )
+                        return true;
+
+                    if( settings.attributes ) for( var k in settings.attributes )
+                        if( $(this).is('['+settings.attributes[k]+']') ) {
+                            collect($(this).attr(settings.attributes[k]), $element, 'audio/video');
+                            interrupt = true;
+                        }
+
+                    if( interrupt )
+                        return true;
+
+                    if( undefined !== $.data(this, 'src') || $(this).is('[data-src]') ) {
+                        collect( $(this).data('src') || $(this).attr('data-src'), $element, 'audio/video' );
+                    }
+
+                });
+        }
+
+        // se this è una source video/audio
+        if( $element.is('source') ){
+
+            var interrupt = false;
+
+            if( $element.is('[src]') ){
+                collect( $element.attr('src'), $element.closest('audio, video'), 'audio/video' );
+                interrupt = true;
+            }
+
+            if( !interrupt && settings.attributes ) for( var k in settings.attributes )
+                if( $element.is('['+settings.attributes[k]+']') ) {
+                    collect($element.attr(settings.attributes[k]), $element.closest('audio, video'), 'audio/video');
+                    interrupt = true;
+                }
+
+            if( !interrupt && ( undefined !== $.data($element, 'src') || $element.is('[data-src]') ) )
+                collect( $element.data('src') || $element.attr('data-src'), $element.closest('audio, video'), 'audio/video' );
+
+        }
+
+        // cerca video e audio
+        $element.find('video, audio')
+            .filter('[src]').each(function(){
+
+            collect($(this).attr('src'), $(this), 'audio/video');
+
+        })
+            .end()
+            .not('[src]').children('source').each(function(){
+
+            var interrupt = false;
+
+            if( $(this).is('[src]') ) {
+                collect($(this).attr('src'), $(this).parent(), 'audio/video');
+                interrupt = true;
+            }
+
+            if( interrupt )
+                return true;
+
+            if( settings.attributes ) for( var k in settings.attributes )
+                if( $(this).is('['+settings.attributes[k]+']') ) {
+                    collect($(this).attr(settings.attributes[k]), $(this).parent(), 'audio/video');
+                    interrupt = true;
+                }
+
+            if( interrupt )
+                return true;
+
+            if( undefined !== $.data(this, 'src') || $(this).is('[data-src]') ) {
+                collect( $(this).data('src') || $(this).attr('data-src'), $(this).parent(), 'audio/video' );
+            }
+
+
+        });
+
+        // se this è un immagine
+        if( $element.is('img') ){ // todo check priorities
+
+            var interrupt = false;
+
+            if( $element.is('[src]') ){
+                collect( $element.attr('src'), $element, 'image' );
+                interrupt = true;
+            }
+
+            if( !interrupt && $element.is('[srcset]') ) {
+                collect($element.prop('currentSrc') || $element.prop('src'), $element, 'image');
+                interrupt = true;
+            }
+
+            if( settings.attributes ) for( var k in settings.attributes )
+                if( $element.is('['+settings.attributes[k]+']') ) {
+                    collect($element.attr(settings.attributes[k]), $element, 'image');
+                    interrupt = true;
+                }
+
+            if( !interrupt && ( undefined !== $.data($element, 'src') || $element.is('[data-src]') ) )
+                collect( $element.data('src') || $element.attr('data-src'), $element, 'image' );
+
+        }
+
+        // cerca immagini
+        $element.find('img').each(function(){
+
+            var interrupt = false;
+
+            if( $(this).is('[src]') ){
+                collect( $(this).attr('src'), $(this), 'image' );
+                interrupt = true;
+            }
+
+            if( interrupt )
+                return true;
+
+            if( $(this).is('[srcset]') ){
+                collect( this.currentSrc || this.src, $(this), 'image' );
+                interrupt = true;
+            }
+
+            if( interrupt )
+                return true;
+
+            if( settings.attributes ) for( var k in settings.attributes )
+                if( $(this).is('['+settings.attributes[k]+']') ) {
+                    collect($(this).attr(settings.attributes[k]), $(this), 'image');
+                    interrupt = true;
+                }
+
+            if( interrupt )
+                return true;
+
+            if( undefined !== $.data(this, 'src') || $(this).is('[data-src]') ){
+                collect( $(this).data('src') || $(this).attr('data-src'), $(this), 'image' );
+            }
+
+        });
+
+        //se this ha un background
+        if( settings.backgrounds && document !== $element[0] && $element.css('background-image') !== 'none' )
+            collect( $element.css('background-image'), null, 'image' );
+
+        // trovo sfondi
+        if( settings.backgrounds )
+            $element.find('*:not(img)').filter(function(){ return $(this).css('background-image') !== 'none'; }).each(function(){
+
+                collect( $(this).css('background-image'), null, 'image' );
+
+            });
+        // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+
+        return collection;
+
+    };
+
+    $.nitePreloaderFinder = nite_preloader_finder;
+
     $.fn.nitePreload = function(options, callback){
 
-        if( $.isFunction(options) && undefined === callback ) {
+        if( $.isFunction(options) && undefined === callback ){
             callback = options;
             options = {};
         }
 
+        var settings = $.extend(true, default_settings, options);
+
         return this.each(function(){
 
-            // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
             var $element = $(this),
+                instance = $element.data('nitePreloader');
 
-                settings = $.extend(true, {
-                    pipeline : false,
-                    attributes : [],
-                    backgrounds : false,
-                    playthrough : false
-                }, options),
+            if( undefined !== instance )
+                instance.abort();
 
-                collection = [],
+            instance = new nite_preloader_core(nite_preloader_finder($element, settings));
 
-                collect = function(urls, $el, type){
-
-                    if( !urls || !$el || !$el.length )
-                        return;
-
-                    if( settings.backgrounds )
-                        urls = urls.replace(/url\(\"|url\(\'|url\(|((\"|\')\)$)/igm, '');
-
-                    var splitter = '_' + Math.round( new Date().getTime() + ( Math.random() * 100 ) ) + '_';
-
-                    urls = urls.replace(new RegExp('(' + formats.image + '|' + formats.audio + '|' + formats.video + ')(\s|$|\,)', 'igm'), function(match, p1, p2){ return p1 + splitter; }).split(new RegExp(splitter, 'igm'));
-
-                    for( var k in urls ) {
-
-                        var url = urls[k],
-                            ext_audio = is(url, 'audio'),
-                            ext_video = is(url, 'video'),
-                            ext_image = is(url, 'image');
-
-                        if( ext_image || ( ext_video && support('audio', ext_audio) ) || ( ext_video && support('audio', ext_video) ) )
-                            collection.push( $.extend(true, { $el : $el }, {
-                                url : url,
-                                type : type,
-                                ext : ext_image || ext_video || ext_audio
-                            }));
-
-                    }
-
-                },
-
-                count  = 0,
-                pipe   = 0,
-                percentage = 0,
-                abort = false,
-
-                length = collection.length,
-
-                progress = function(){
-
-                    count++;
-
-                    percentage = count / length * 100;
-
-                    $element.trigger('nitePreloading', [this.target, percentage, this.data]);
-
-                    if( count === length ) {
-
-                        callback.call($element[0]);
-
-                        $element.trigger('nitePreloaded', [collection]);
-
-                        return;
-
-                    }
-
-                    if( settings.pipeline === true ){
-
-                        pipe++;
-
-                        logic(pipe, collection[pipe]);
-
-                    }
-
-                },
-                logic = function(i, v){
-
-                    if( abort )
-                        return;
-
-                    var $target = $();
-
-                    switch( v.type ){
-
-                        case 'image' :
-
-                            var is_fake  = !v.$el;
-
-                            $target = is_fake ? $(new Image()) : v.$el;
-
-                            preload_image($target, is_fake ? v.url + url_suffix(v.url) : v.url, v.ext, function(){ progress.call({ target : $target, data : this }); });
-
-                            break;
-
-                        case 'audio/video' :
-
-                            var load = false;
-
-                            $target = v.$el;
-
-                            if( !$target.length ) {
-
-                                $target = append_fake_element(v.url + url_suffix(v.url), is(v.url, 'audio') ? 'audio' : 'video', v.ext);
-
-                                load = true;
-
-                            }else{
-
-                                var $sources = $target.find('source[type="audio/'+ v.ext +'"], source[type="video/'+ v.ext +'"]')
-
-                                if( !$sources.length )
-                                    $sources = $target.find('source[src*=".'+ v.ext +'"], source[data-src*=".'+ v.ext +'"]');
-
-                                if( !$sources.is('[src]') ){
-
-                                    $sources
-                                        .attr('src', v.url)
-                                        .removeAttr('data-src');
-
-                                    load = true;
-
-                                }
-
-                            }
-
-                            preload_media($target, v.url, v.ext, function(){ progress.call({ target : $target, data : this }); }, load, settings.playthrough);
-
-                            break;
-
-
-                    }
-
-
-                };
-            // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-
-
-            // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-            // search
-            // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-
-            //
-            settings.attributes = typeof settings.attributes === 'string' ? [settings.attributes] : settings.attributes;
-
-            // custom attributes in other tags
-            if( settings.attributes && !$element.is('img') && !$element.is('audio') && !$element.is('video') && !$element.is('source') )
-                for( var k in settings.attributes ){
-
-                    // se this ha un custom attr
-                    if( $element.is('['+settings.attributes[k]+']') && !$element.is('img, audio, video, source') ) {
-
-                        var url = $element.attr(settings.attributes[k]);
-
-                        collect(url, null, is(url, 'image') ? 'image' : 'audio/video');
-
-                    }
-
-                    // se trovo un custom attr
-                    $element.find('['+settings.attributes[k]+']:not(img, audio, video, source)').each(function(){
-
-                        var url = $(this).attr(settings.attributes[k]);
-
-                        collect(url, null, is(url, 'image') ? 'image' : 'audio/video');
-
-                    });
-
-                }
-
-            // se this è un audio / video
-            if( $element.is('video') || $element.is('audio') ){
-                if( $element.is('[src]') )
-                    collect($(this).attr('src'), $element, 'audio/video');
-                else
-                    $element.children('source').each(function(){
-
-                        var interrupt = false;
-
-                        if( $(this).is('[src]') ) {
-                            collect($(this).attr('src'), $element, 'audio/video');
-                            interrupt = true;
-                        }
-
-                        if( interrupt )
-                            return true;
-
-                        if( settings.attributes ) for( var k in settings.attributes )
-                            if( $(this).is('['+settings.attributes[k]+']') ) {
-                                collect($(this).attr(settings.attributes[k]), $element, 'audio/video');
-                                interrupt = true;
-                            }
-
-                        if( interrupt )
-                            return true;
-
-                        if( undefined !== $.data(this, 'src') || $(this).is('[data-src]') ) {
-                            collect( $(this).data('src') || $(this).attr('data-src'), $element, 'audio/video' );
-                        }
-
-                    });
-            }
-
-            // se this è una source video/audio
-            if( $element.is('source') ){
-
-                var interrupt = false;
-
-                if( $element.is('[src]') ){
-                    collect( $element.attr('src'), $element.closest('audio, video'), 'audio/video' );
-                    interrupt = true;
-                }
-
-                if( !interrupt && settings.attributes ) for( var k in settings.attributes )
-                    if( $element.is('['+settings.attributes[k]+']') ) {
-                        collect($element.attr(settings.attributes[k]), $element.closest('audio, video'), 'audio/video');
-                        interrupt = true;
-                    }
-
-                if( !interrupt && ( undefined !== $.data($element, 'src') || $element.is('[data-src]') ) )
-                    collect( $element.data('src') || $element.attr('data-src'), $element.closest('audio, video'), 'audio/video' );
-
-            }
-
-            // cerca video e audio
-            $element.find('video, audio')
-                .filter('[src]').each(function(){
-
-                    collect($(this).attr('src'), $(this), 'audio/video');
-
-                })
-                .end()
-                .not('[src]').children('source').each(function(){
-
-                var interrupt = false;
-
-                if( $(this).is('[src]') ) {
-                    collect($(this).attr('src'), $(this).parent(), 'audio/video');
-                    interrupt = true;
-                }
-
-                if( interrupt )
-                    return true;
-
-                if( settings.attributes ) for( var k in settings.attributes )
-                    if( $(this).is('['+settings.attributes[k]+']') ) {
-                        collect($(this).attr(settings.attributes[k]), $(this).parent(), 'audio/video');
-                        interrupt = true;
-                    }
-
-                if( interrupt )
-                    return true;
-
-                if( undefined !== $.data(this, 'src') || $(this).is('[data-src]') ) {
-                    collect( $(this).data('src') || $(this).attr('data-src'), $(this).parent(), 'audio/video' );
-                }
-
-
+            instance.progress(function(){
+                // todo
             });
 
-            // se this è un immagine
-            if( $element.is('img') ){ // todo check priorities
-
-                var interrupt = false;
-
-                if( $element.is('[src]') ){
-                    collect( $element.attr('src'), $element, 'image' );
-                    interrupt = true;
-                }
-
-                if( !interrupt && $element.is('[srcset]') ) {
-                    collect($element.prop('currentSrc') || $element.prop('src'), $element, 'image');
-                    interrupt = true;
-                }
-
-                if( settings.attributes ) for( var k in settings.attributes )
-                    if( $element.is('['+settings.attributes[k]+']') ) {
-                        collect($element.attr(settings.attributes[k]), $element, 'image');
-                        interrupt = true;
-                    }
-
-                if( !interrupt && ( undefined !== $.data($element, 'src') || $element.is('[data-src]') ) )
-                    collect( $element.data('src') || $element.attr('data-src'), $element, 'image' );
-
-            }
-            // cerca immagini
-            $element.find('img').each(function(){
-
-                var interrupt = false;
-
-                if( $(this).is('[src]') ){
-                    collect( $(this).attr('src'), $(this), 'image' );
-                    interrupt = true;
-                }
-
-                if( interrupt )
-                    return true;
-
-                if( $(this).is('[srcset]') ){
-                    collect( this.currentSrc || this.src, $(this), 'image' );
-                    interrupt = true;
-                }
-
-                if( interrupt )
-                    return true;
-
-                if( settings.attributes ) for( var k in settings.attributes )
-                    if( $(this).is('['+settings.attributes[k]+']') ) {
-                        collect($(this).attr(settings.attributes[k]), $(this), 'image');
-                        interrupt = true;
-                    }
-
-                if( interrupt )
-                    return true;
-
-                if( undefined !== $.data(this, 'src') || $(this).is('[data-src]') ){
-                    collect( $(this).data('src') || $(this).attr('data-src'), $(this), 'image' );
-                }
-
-            });
-
-            //se this ha un background
-            if( settings.backgrounds && document !== $element[0] && $element.css('background-image') != 'none' )
-                collect( $element.css('background-image'), null, 'image' );
-
-            // trovo sfondi
-            if( settings.backgrounds )
-                $element.find('*:not(img)').filter(function(){ return $(this).css('background-image') != 'none'; }).each(function(){
-
-                    collect( $(this).css('background-image'), null, 'image' );
-
-                });
-            // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-
-
-            // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-            // load loop
-            // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-            length = collection.length;
-
-            $element.trigger('nitePreloading', [null, 0, {}]);
-
-            if( length ){
-
-                if( settings.pipeline === true )
-                    logic(pipe, collection[pipe]);
-
-                else
-                    $.each(collection, logic);
-
-            }else {
-
+            instance.done(function(){
                 callback.call($element[0]);
+            });
 
-                $element
-                    .trigger('nitePreloading', [null, 100, {}])
-                    .trigger('nitePreloaded', [collection]);
-
-            }
-            // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+            $element.data('nitePreloader', instance);
 
 
         });
+
     };
 
 })(window, document, jQuery);
