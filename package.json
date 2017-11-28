@@ -1,0 +1,30 @@
+{
+  "name": "nite-preloader",
+  "version": "1.0.0",
+  "description": "",
+  "main": "gulpfile.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "babel-core": "^6.26.0",
+    "babel-plugin-transform-regenerator": "^6.26.0",
+    "babel-preset-env": "^1.6.0",
+    "babel-preset-es2015": "^6.24.1",
+    "gulp": "^3.9.1",
+    "gulp-babel": "^7.0.0",
+    "gulp-concat": "^2.6.0",
+    "gulp-merge": "^0.1.1",
+    "gulp-sourcemaps": "^1.6.0",
+    "gulp-util": "^3.0.8",
+    "gulp-babel-minify": "^0.2.0",
+    "gulp-watch": "^4.3.10",
+    "gulp-rename": "^1.2.2",
+    "pump": "^1.0.1"
+  },
+  "dependencies": {
+    "babel-polyfill": "^6.26.0"
+  }
+}
