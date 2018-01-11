@@ -18,56 +18,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }
     // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
-    /* todo new specs as following
-     // global instance mode
-    // - - - - - - - - - - - - -
-    let siteLoader = new $.nitePreload({ // no arguments or object of parameters
-       selector : ‘data-src’
-    });
-    // uses interception observer to find inViewport images
-    // - - - - - - - - - - - - -
-     // single instance mode
-    // - - - - - - - - - - - - -
-    let instance = new $.nitePreload([ // array
-       ‘immagine.jpg’,
-       ‘immagine.png’,
-       ‘immagine.gif’
-    ]);
-     console.log(instance.percentage);
-     instance.abort();
-     instance.loaded(function(url){
-        // url is loaded…
-    });
-     instance.error(function(url){
-        // url has encountered a problem
-    });
-     instance.done(function(){
-       // finito…
-    });
-    // - - - - - - - - - - - - -
-     // - - - - - - - - - - - - -
-    trova tutte le immagini, audio e video e li aspetta.
-    // nothing loaded yet…
-    $(‘div.parent, img.test-images, video#bunny, audio#metallica’).nitePreload({
-       srcAttr : ‘data-src’,
-       findBackgrounds : false,
-       canplaythrough : true // video e audio senza interruzioni
-    }, function(){
-         // everything loaded at this point!
-    });
-    // - - - - - - - - - - - - -
-      // events
-    // - - - - - - - - - - - - -
-    $(document).on(‘load.nite error.nite’, function(event, $element){
-         // $element is loaded at this point
-     });
-    $(document).on(‘load.nite error.nite’, ‘.element’, function(event){
-         // this is loaded at this point
-     });
-    $(‘.element’).on(‘load.nite error.nite’, function(){
-        // this is loaded
-     });
-    // - - - - - - - - - - - - - */
 
     var namespace_prefix = 'nite',
         namespace_method = namespace_prefix + 'Preload',
@@ -88,59 +38,183 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }
 
         return $element.length;
+    },
+        is_format = function is_format(string, expected_format) {
+
+        string = string.toLowerCase().split('?')[0]; // get rid of query strings
+
+        if (string === '') return false;
+
+        var formats = {
+            image: 'jp[e]?g|gif|png|tif[f]?|bmp',
+            audio: 'mp3|ogg',
+            video: 'mp4|ogv|ogg|webm'
+        },
+            base64_heading = '\;base64\,',
+            formats_queue = undefined !== expected_format ? [expected_format] : Object.keys(formats);
+
+        var output = { format: null, extension: null };
+
+        for (var x in formats_queue) {
+
+            if (new RegExp('(\.(' + formats[formats_queue[x]] + ')$)|' + base64_heading, 'g').test(string)) {
+
+                if (new RegExp(base64_heading, 'g').test(string)) {
+
+                    var matches64 = string.match(new RegExp('^data:' + formats_queue[x] + '\/(' + formats[formats_queue[x]] + ')', 'g'));
+
+                    if (!matches64 || null === matches64) {
+
+                        console.warn(string + ': base64 ' + formats_queue[x] + ' format not recognized.');
+
+                        continue;
+                    }
+
+                    matches64 = matches64[0];
+
+                    output = { format: matches64.replace('data:' + formats_queue[x] + '/g', ''), extension: 'base64' };
+
+                    break;
+                } else {
+
+                    var matches = string.match(new RegExp(formats[formats_queue[x]], 'g'));
+
+                    if (matches) {
+
+                        output = { format: formats_queue[x], extension: matches[0] };
+
+                        break;
+                    }
+                }
+            }
+        }
+
+        return output;
     };
 
     var ResourceLoader = function () {
-        function ResourceLoader() {
+        function ResourceLoader(settings) {
             _classCallCheck(this, ResourceLoader);
 
-            this._resource = null;
-            this._$resource = $();
+            var self = this;
 
-            this._type = null;
+            this._settings = settings;
+
+            this._element = null;
+            this._$element = $();
+
+            this._resource = null;
+
+            this._format = null;
             this._instance = null;
             this._processed = false;
 
-            this.callback = function (e) {
+            this._callback = $.noop;
+            this._done = function (e) {
 
-                if (this._processed) return;
+                self._callback.call(null /*temp*/, self._resource);
 
-                this._$resource.trigger(e.type + '.' + namespace_prefix);
-                $document.trigger(e.type + '.' + namespace_prefix, [this._$resource]);
+                if (self._processed) return;
+
+                self._$element.trigger(e.type + '.' + namespace_prefix);
+                $document.trigger(e.type + '.' + namespace_prefix, [this._$element]);
             };
         }
 
         _createClass(ResourceLoader, [{
-            key: 'complete',
-            value: function complete(callback) {
+            key: 'abort',
+            value: function abort() {
 
-                switch (this._type) {
+                this._$element.filter('[src], [srcset]').data(this._settings.srcsetAttr, this._$element.attr('srcset')).data(this._settings.srcAttr, this._$element.attr('src')).attr(this._settings.srcsetAttr, this._$element.attr('srcset')).attr(this._settings.srcAttr, this._$element.attr('src')).removeAttr('src').removeAttr('srcset').end().off('load.' + this._instance + ' error.' + this._instance);
+            }
+        }, {
+            key: 'done',
+            value: function done(callback) {
+
+                if (!$.isFunction(callback)) return;
+
+                var context = this;
+
+                this._callback = function (resource) {
+                    console.log(resource);
+                    callback.call(context, resource);
+                };
+            }
+        }, {
+            key: 'resource',
+            set: function set(resource) {
+
+                var recognized_resource = (typeof resource === 'undefined' ? 'undefined' : _typeof(resource)) === 'object' && 'standard' in resource,
+                    standard_resource = recognized_resource && resource.standard === true,
+                    string_resource = typeof resource === 'string';
+
+                if (!recognized_resource && !string_resource) return false;
+
+                var self = this;
+
+                if (string_resource || !standard_resource) {
+
+                    this._format = is_format(resource).format;
+
+                    if (this._format === 'image') this._element = new Image();else this._element = document.createElement(this._format);
+
+                    this._settings.srcsetAttr = 'data-srcset';
+                    this._settings.srcAttr = 'data-src';
+
+                    this._resource = resource;
+                }
+
+                this._$element = $(this._element);
+
+                if (string_resource || !standard_resource) {
+
+                    this._$element.data(this._settings.srcAttr.replace('data-', ''), this._resource).data(this._settings.srcsetAttr.replace('data-', ''), this._resource).attr(this._settings.srcAttr, this._resource).attr(this._settings.srcsetAttr, this._resource);
+                }
+
+                if (!string_resource && standard_resource) {
+
+                    this._element = resource.element;
+                    this._format = resource.format;
+
+                    this._$element = $(this._element);
+                }
+
+                this._instance = this._$element.data(namespace);
+                this._processed = this._instance !== undefined;
+
+                this._instance = this._processed ? this._instance : namespace + '_unique_' + ($.nite ? $.nite.uniqueId() : Math.random(1000, 9999));
+
+                switch (this._format) {
 
                     case 'image':
 
-                        this._$resource[this._processed ? 'on' : 'one']('load.' + this._instance + ' error.' + this._instance, function (e) {
-                            this.callback(e, callback);
-                        });
+                        this._$element[this._processed ? 'on' : 'one']('load.' + this._instance + ' error.' + this._instance, this._done);
 
-                        var $picture = this._$resource.closest('picture');
+                        var $picture = this._$element.closest('picture'),
+                            src = this._settings.srcAttr,
+                            src_clean = this._settings.srcAttr.replace('data-', ''),
+                            srcset = this._settings.srcsetAttr,
+                            srcset_clean = this._settings.srcsetAttr.replace('data-', '');
 
                         if ($picture.length) {
 
-                            this._$resource.removeData('srcset').removeAttr('data-srcset').removeData('src').removeAttr('data-src');
+                            this._$element.removeData(srcset_clean).removeAttr(srcset).removeData(src_clean).removeAttr(src);
 
-                            $picture.find('source[data-srcset]').attr('srcset', $picture.data('srcset')).removeData('srcset').removeAttr('data-srcset');
+                            $picture.find('source[data-srcset]').attr('srcset', $picture.data('srcset')).removeData(srcset_clean).removeAttr(srcset);
                         } else {
 
-                            if (this._$resource.is('[data-srcset]')) this._$resource.attr('srcset', this._$resource.data('srcset')).removeData('srcset').removeAttr('data-srcset');
+                            if (this._$element.is('[data-srcset]')) this._$element.attr('srcset', this._$element.data('srcset')).removeData(srcset_clean).removeAttr(srcset);
 
-                            if (this._$resource.is('[data-src]')) this._$resource.attr('src', this._$resource.data('src')).removeData('src').removeAttr('data-src');
+                            if (this._$element.is('[data-src]')) this._$element.attr('src', this._$element.data('src')).removeData(src_clean).removeAttr(src);
                         }
 
-                        if (true === this._resource.complete && this._resource.naturalWidth !== 0 && this._resource.naturalHeight !== 0) {
+                        this._resource = this._element.currentSrc || this._element.src;
 
-                            if (!this._processed) this._$resource.off('.' + this._instance);
+                        if (true === this._element.complete && this._element.naturalWidth !== 0 && this._element.naturalHeight !== 0) {
 
-                            this.callback(new Event(undefined !== this._resource.naturalWidth ? 'load' : 'error'), callback);
+                            if (!this._processed) this._$element.off('.' + this._instance);
+
+                            this._done.call(new Event(undefined !== this._element.naturalWidth ? 'load' : 'error'));
                         }
 
                         break;
@@ -155,25 +229,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
                 }
 
-                if (!this._processed) this._$resource.data(namespace, this._instance);
-            }
-        }, {
-            key: 'resource',
-            set: function set(resource) {
-
-                if (typeof resource === 'string') {}
-
-                if ((typeof resource === 'undefined' ? 'undefined' : _typeof(resource)) === 'object' && 'element' in resource) {
-                    this._resource = resource.element;
-                    this._type = resource.type;
-                }
-
-                this._$resource = $(this._resource);
-
-                this._instance = this._$resource.data(namespace);
-                this._processed = this._instance !== undefined;
-
-                this._instance = this._processed ? this._instance : namespace + '_unique_' + ($.nite ? $.nite.uniqueId() : Math.random(1000, 9999));
+                if (!this._processed) this._$element.data(namespace, this._instance);
             }
         }]);
 
@@ -182,7 +238,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
     var ResourcesLoader = function () {
         function ResourcesLoader(collection, options) {
+            var _this = this;
+
             _classCallCheck(this, ResourcesLoader);
+
+            var self = this;
 
             this._collection = [];
 
@@ -196,46 +256,64 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 playthrough: false
             }, options);
 
+            this.percentage = 0;
+
             this._callback = $.noop();
             this._progress = $.noop();
             this._abort = false;
 
+            this._load_instances = [new ResourceLoader(this._settings)];
+
             if (this._collection.length) {
 
                 if (true !== this._settings.sequential) {
+                    (function () {
 
-                    for (var i = 0; i < this._collection.length; i++) {
+                        var loaded = 0;
 
-                        if (this._abort) break;
+                        for (var i = 0; i < _this._collection.length; i++) {
 
-                        var load = new ResourceLoader();
+                            if (_this._abort) break;
 
-                        load.resource = this._collection[i];
+                            var load_instance = new ResourceLoader(_this._settings);
 
-                        load.complete(function () {
+                            _this._load_instances.push(load_instance);
 
-                            // todo
+                            load_instance.resource = _this._collection[i];
 
-                            if (this._abort) return;
-                        });
-                    }
+                            load_instance.done(function (resource) {
+
+                                loaded++;
+
+                                self.percentage = loaded / self._collection.length * 100;
+
+                                self._progress.call(null /* todo */, resource);
+
+                                if (loaded > self._collection.length || self._abort) return;
+
+                                if (loaded === self._collection.length) self._callback.call(null /* todo */);
+                            });
+                        }
+                    })();
                 } else {
 
-                    var _i = -1;
+                    var loaded = -1;
 
                     var sequential_recursion = function sequential_recursion() {
 
-                        _i++;
+                        loaded++;
 
-                        var load = new ResourceLoader();
+                        if (loaded > this._collection.length || this._abort) return;
 
-                        load.resource = this._collection[_i];
+                        if (loaded === this._collection.length) this._callback.call(null /* todo */);
 
-                        load.complete(function () {
+                        this._load_instances[0].resource = this._collection[loaded];
 
-                            // todo
+                        this._load_instances[0].done(function (resource) {
 
-                            if (this._abort) return;
+                            self.percentage = loaded / self._collection.length * 100;
+
+                            self._progress.call(null /* todo */, resource);
 
                             setTimeout(sequential_recursion, $.isNumeric(this._settings.pipelineDelay) ? parseInt(this._settings.pipelineDelay) : 0);
                         });
@@ -257,7 +335,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     callback.call(context);
                 };
 
-                if (this.collection.length) this._callback = _func;else _func();
+                if (this._collection.length) this._callback = _func;else _func();
             }
         }, {
             key: 'progress',
@@ -266,8 +344,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 if (!$.isFunction(callback)) return;
 
                 var context = this,
-                    _func = function _func() {
-                    callback.call(context);
+                    _func = function _func(resource) {
+                    callback.call(context, resource);
                 };
 
                 if (this._collection.length) this._progress = _func;else _func();
@@ -276,13 +354,80 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             key: 'abort',
             value: function abort() {
 
-                if (!this._collection.length) return;
+                for (var instance in this._load_instances) {
+                    this._load_instances[instance].abort();
+                }if (!this._collection.length) return;
 
                 this._abort = true;
             }
         }]);
 
         return ResourcesLoader;
+    }();
+
+    var CollectionPopulator = function () {
+        function CollectionPopulator($element, settings) {
+            _classCallCheck(this, CollectionPopulator);
+
+            this._$element = $element;
+            this._settings = settings;
+        }
+
+        _createClass(CollectionPopulator, [{
+            key: 'collect',
+            value: function collect() {
+
+                var collection = [];
+
+                var targets = 'img, video, audio, iframe',
+                    targets_extended = targets + ', picture, source';
+
+                var $targets = this._$element.find(targets);
+                if (this._$element.is(targets)) $targets.add($element);
+                $targets.each(function () {
+                    collection.push({
+                        element: this,
+                        resource: this.currentSrc || this.src,
+                        standard: true
+                    });
+                });
+
+                if (true === this._settings.backgrounds) this._$element.find('*').addBack().not(targets_extended).filter(function () {
+                    return $(this).css('background-image') !== 'none';
+                }).each(function () {
+                    collection.push({
+                        element: this,
+                        resource: $(this).css('background-image').replace(/url\(\"|url\(\'|url\(|((\"|\')\)$)/igm, ''),
+                        standard: false
+                    });
+                });
+
+                if (this._settings.attributes.length) {
+                    var _loop = function (attr) {
+
+                        this._$element.find('[' + attr + ']:not(' + targets_extended + ')').each(function () {
+                            collection.push({
+                                element: this,
+                                resource: $(this).attr(attr),
+                                standard: false
+                            });
+                        });
+
+                        if (this._$element.is('[' + attr + ']') && !this._$element.is(targets_extended)) collection.add({
+                            element: this,
+                            resource: this._$element.attr(attr),
+                            standard: false
+                        });
+                    };
+
+                    for (let attr in this._settings.attributes) {
+                        _loop(attr);
+                    }
+                }return collection;
+            }
+        }]);
+
+        return CollectionPopulator;
     }();
 
     $[namespace_method] = ResourcesLoader;
@@ -293,17 +438,17 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         if (!$.isFunction(callback)) callback = $.noop;
         if ((typeof options === 'undefined' ? 'undefined' : _typeof(options)) !== 'object') options = {};
 
-        var default_attributes = ['src', 'data-src', 'srcset', 'data-nite-src'];
-
         var settings = $.extend(true, {
+            srcAttr: 'data-src',
+            srcsetAttr: 'data-srcset',
             sequential: false,
             pipelineDelay: 0,
-            attributes: default_attributes,
+            extraAttrs: [],
             backgrounds: false,
             playthrough: false
         }, options);
 
-        if (!$.isArray(settings.attributes)) settings.attributes = default_attributes;
+        if (!$.isArray(settings.attributes)) settings.attributes = [];
         if (typeof settings.attributes === 'string') settings.attributes = settings.attributes.split(' ');
 
         return this.each(function () {
@@ -311,52 +456,26 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             var element = this,
                 $element = $(element);
 
-            var instance = $element.data(namespace);
+            var load_instance = $element.data(namespace);
 
-            if (undefined !== instance) instance.abort();
+            if (undefined !== load_instance) load_instance.abort();
 
-            // - - -
-            var collection = [];
+            load_instance = new ResourcesLoader(new CollectionPopulator($element, settings).collect(), settings);
 
-            var targets = 'img, video, audio, iframe',
-                targets_extended = targets + ', picture, source';
+            load_instance.progress(function () {
 
-            collection.concat($element.find(targets).toArray());
+                // todo trigger event ...
 
-            if ($element.is(targets)) collection.add($element[0]);
-
-            if (true === settings.backgrounds) $element.find('*').addBack().not(targets_extended).filter(function () {
-                return $(this).css('background-image') !== 'none';
-            }).each(function () {
-                collection.push($(this).css('background-image').replace(/url\(\"|url\(\'|url\(|((\"|\')\)$)/igm, ''));
             });
 
-            if (settings.attributes.length) {
-                var _loop = function (attr) {
+            load_instance.done(function () {
 
-                    $element.find('[' + attr + ']:not(' + targets_extended + ')').each(function () {
-                        collection.push($(this).attr(attr));
-                    });
-
-                    if ($element.is('[' + attr + ']') && !$element.is(targets_extended)) collection.add($element.attr(attr));
-                };
-
-                for (let attr in settings.attributes) {
-                    _loop(attr);
-                }
-            } // - - -
-
-            instance = new ResourcesLoader(collection, settings);
-
-            instance.progress(function () {
-                // todo
-            });
-
-            instance.done(function () {
                 callback.call(element);
+
+                // todo trigger event ...
             });
 
-            $element.data(namespace, instance);
+            $element.data(namespace, load_instance);
         });
     };
 

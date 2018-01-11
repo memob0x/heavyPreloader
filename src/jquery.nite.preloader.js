@@ -9,72 +9,6 @@
     }
     // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
-    /* todo new specs as following
-
-    // global instance mode
-    // - - - - - - - - - - - - -
-    let siteLoader = new $.nitePreload({ // no arguments or object of parameters
-       selector : ‘data-src’
-    });
-    // uses interception observer to find inViewport images
-    // - - - - - - - - - - - - -
-
-    // single instance mode
-    // - - - - - - - - - - - - -
-    let instance = new $.nitePreload([ // array
-       ‘immagine.jpg’,
-       ‘immagine.png’,
-       ‘immagine.gif’
-    ]);
-
-    console.log(instance.percentage);
-
-    instance.abort();
-
-    instance.loaded(function(url){
-        // url is loaded…
-    });
-
-    instance.error(function(url){
-        // url has encountered a problem
-    });
-
-    instance.done(function(){
-       // finito…
-    });
-    // - - - - - - - - - - - - -
-
-    // - - - - - - - - - - - - -
-    trova tutte le immagini, audio e video e li aspetta.
-    // nothing loaded yet…
-    $(‘div.parent, img.test-images, video#bunny, audio#metallica’).nitePreload({
-       srcAttr : ‘data-src’,
-       findBackgrounds : false,
-       canplaythrough : true // video e audio senza interruzioni
-    }, function(){
-         // everything loaded at this point!
-    });
-    // - - - - - - - - - - - - -
-
-
-    // events
-    // - - - - - - - - - - - - -
-    $(document).on(‘load.nite error.nite’, function(event, $element){
-
-        // $element is loaded at this point
-
-    });
-    $(document).on(‘load.nite error.nite’, ‘.element’, function(event){
-
-        // this is loaded at this point
-
-    });
-    $(‘.element’).on(‘load.nite error.nite’, function(){
-
-       // this is loaded
-
-    });
-    // - - - - - - - - - - - - - */
 
     const
         namespace_prefix = 'nite',
@@ -101,99 +35,208 @@
             }
 
             return $element.length;
+        },
+        
+        is_format = function( string, expected_format ){
+    
+            string = string
+                .toLowerCase()
+                .split('?')[0]; // get rid of query strings
+    
+            if( string === ''  )
+                return false;
+    
+            const
+                formats = {
+                    image : 'jp[e]?g|gif|png|tif[f]?|bmp',
+                    audio : 'mp3|ogg',
+                    video : 'mp4|ogv|ogg|webm'
+                },
+                base64_heading = '\;base64\,',
+                formats_queue = undefined !== expected_format ? [ expected_format ] : Object.keys(formats);
+
+            let output = { format : null, extension : null };
+
+            for( let x in formats_queue ) {
+
+                if (new RegExp('(\.(' + formats[ formats_queue[x] ] + ')$)|' + base64_heading, 'g').test(string)) {
+
+                    if (new RegExp(base64_heading, 'g').test(string)) {
+
+                        let matches64 = string.match(new RegExp('^data:' +  formats_queue[x]  + '\/(' + formats[ formats_queue[x] ] + ')', 'g'));
+
+                        if (!matches64 || null === matches64) {
+
+                            console.warn(string + ': base64 ' +  formats_queue[x]  + ' format not recognized.');
+
+                            continue;
+
+                        }
+
+                        matches64 = matches64[0];
+
+                        output = { format : matches64.replace('data:' +  formats_queue[x]  + '/g', ''), extension : 'base64' };
+
+                        break;
+
+                    } else {
+
+                        let matches = string.match(new RegExp(formats[ formats_queue[x] ], 'g'));
+
+                        if( matches ){
+
+                            output = { format : formats_queue[x], extension : matches[0] };
+
+                            break;
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+            return output;
+    
         };
 
     class ResourceLoader {
 
-        constructor(){
+        constructor(settings){
 
-            this._resource  = null;
-            this._$resource = $();
+            const self = this;
+
+            this._settings = settings;
+
+            this._element  = null;
+            this._$element = $();
+
+            this._resource = null;
             
-            this._type      = null;
+            this._format    = null;
             this._instance  = null;
             this._processed = false;
 
-            this.callback   = function(e){
+            this._callback  = $.noop;
+            this._done  = function(e){
 
-                if( this._processed )
+                self._callback.call(null /*temp*/, self._resource);
+
+                if( self._processed )
                     return;
 
-                this._$resource.trigger(e.type + '.'+namespace_prefix);
-                $document.trigger(e.type + '.'+namespace_prefix, [this._$resource]);
+                self._$element.trigger(e.type + '.'+namespace_prefix);
+                $document.trigger(e.type + '.'+namespace_prefix, [this._$element]);
 
             };
 
         }
         
         set resource( resource ){
-            
-            if( typeof resource === 'string' ){
-                
-            }
-            
-            if( typeof resource === 'object' && 'element' in resource ){
-                this._resource = resource.element;
-                this._type = resource.type;
+
+            const
+                recognized_resource = typeof resource === 'object' && 'standard' in resource,
+                standard_resource   = recognized_resource && resource.standard === true,
+                string_resource     = typeof resource === 'string';
+
+            if( !recognized_resource && !string_resource )
+                return false;
+
+            const self = this;
+
+            if( string_resource || !standard_resource ){
+
+                this._format = is_format(resource).format;
+
+                if( this._format === 'image' )
+                    this._element = new Image();
+                else
+                    this._element = document.createElement(this._format);
+
+                this._settings.srcsetAttr = 'data-srcset';
+                this._settings.srcAttr    = 'data-src';
+
+                this._resource = resource;
+
             }
 
-            this._$resource = $(this._resource);
+            this._$element = $(this._element);
 
-            this._instance  = this._$resource.data(namespace);
+            if( string_resource || !standard_resource ){
+
+                this._$element
+                    .data(this._settings.srcAttr.replace('data-', ''), this._resource)
+                    .data(this._settings.srcsetAttr.replace('data-', ''), this._resource)
+                    .attr(this._settings.srcAttr, this._resource)
+                    .attr(this._settings.srcsetAttr, this._resource);
+
+            }
+            
+            if( !string_resource && standard_resource ){
+
+                this._element = resource.element;
+                this._format  = resource.format;
+
+                this._$element = $(this._element);
+
+            }
+
+            this._instance  = this._$element.data(namespace);
             this._processed = this._instance !== undefined;
 
             this._instance  = this._processed ? this._instance : namespace + '_unique_' + ( $.nite ? $.nite.uniqueId() : Math.random(1000, 9999) );
 
-        }
-
-        complete(callback){
-            
-            switch( this._type ) {
+            switch( this._format ) {
 
                 case 'image':
 
-                    this._$resource
-                        [ this._processed ? 'on' : 'one']('load.' + this._instance + ' error.' + this._instance, function (e) {
-                        this.callback(e, callback);
-                    });
+                    this._$element[ this._processed ? 'on' : 'one']('load.' + this._instance + ' error.' + this._instance, this._done);
 
-                    const $picture = this._$resource.closest('picture');
+                    const
+                        $picture     = this._$element.closest('picture'),
+                        src          = this._settings.srcAttr,
+                        src_clean    = this._settings.srcAttr.replace('data-', ''),
+                        srcset       = this._settings.srcsetAttr,
+                        srcset_clean = this._settings.srcsetAttr.replace('data-', '');
 
                     if ($picture.length) {
 
-                        this._$resource
-                            .removeData('srcset')
-                            .removeAttr('data-srcset')
-                            .removeData('src')
-                            .removeAttr('data-src');
+                        this._$element
+                            .removeData(srcset_clean)
+                            .removeAttr(srcset)
+                            .removeData(src_clean)
+                            .removeAttr(src);
 
                         $picture.find('source[data-srcset]')
                             .attr('srcset', $picture.data('srcset'))
-                            .removeData('srcset')
-                            .removeAttr('data-srcset');
+                            .removeData(srcset_clean)
+                            .removeAttr(srcset);
 
                     } else {
 
-                        if( this._$resource.is('[data-srcset]') )
-                            this._$resource
-                                .attr('srcset', this._$resource.data('srcset'))
-                                .removeData('srcset')
-                                .removeAttr('data-srcset');
+                        if( this._$element.is('[data-srcset]') )
+                            this._$element
+                                .attr('srcset', this._$element.data('srcset'))
+                                .removeData(srcset_clean)
+                                .removeAttr(srcset);
 
-                        if( this._$resource.is('[data-src]') )
-                            this._$resource
-                                .attr('src', this._$resource.data('src'))
-                                .removeData('src')
-                                .removeAttr('data-src');
+                        if( this._$element.is('[data-src]') )
+                            this._$element
+                                .attr('src', this._$element.data('src'))
+                                .removeData(src_clean)
+                                .removeAttr(src);
 
                     }
 
-                    if (true === this._resource.complete && this._resource.naturalWidth !== 0 && this._resource.naturalHeight !== 0) {
+                    this._resource = this._element.currentSrc || this._element.src;
+
+                    if (true === this._element.complete && this._element.naturalWidth !== 0 && this._element.naturalHeight !== 0) {
 
                         if ( !this._processed )
-                            this._$resource.off('.' + this._instance);
+                            this._$element.off('.' + this._instance);
 
-                        this.callback(new Event(undefined !== this._resource.naturalWidth ? 'load' : 'error'), callback);
+                        this._done.call(new Event(undefined !== this._element.naturalWidth ? 'load' : 'error'));
 
                     }
 
@@ -215,8 +258,36 @@
 
 
             if ( !this._processed )
-                this._$resource.data(namespace, this._instance);
-            
+                this._$element.data(namespace, this._instance);
+
+        }
+
+        abort(){
+
+            this._$element
+                .filter('[src], [srcset]')
+                    .data(this._settings.srcsetAttr, this._$element.attr('srcset'))
+                    .data(this._settings.srcAttr, this._$element.attr('src'))
+                    .attr(this._settings.srcsetAttr, this._$element.attr('srcset'))
+                    .attr(this._settings.srcAttr, this._$element.attr('src'))
+                    .removeAttr('src').removeAttr('srcset')
+                .end()
+                .off('load.' + this._instance + ' error.' + this._instance);
+
+        }
+
+        done(callback){
+
+            if( !$.isFunction(callback) )
+                return;
+
+            const context = this;
+
+            this._callback = function(resource){
+                console.log(resource)
+                callback.call(context, resource);
+            };
+
         };
 
     }
@@ -224,6 +295,8 @@
     class ResourcesLoader {
 
         constructor(collection, options) {
+
+            const self = this;
 
             this._collection = [];
 
@@ -239,29 +312,44 @@
                 playthrough: false
             }, options);
 
+            this.percentage = 0;
+
             this._callback = $.noop();
             this._progress = $.noop();
             this._abort = false;
 
+            this._load_instances = [ new ResourceLoader(this._settings) ];
+
             if (this._collection.length) {
 
                 if (true !== this._settings.sequential) {
+
+                    let loaded = 0;
 
                     for (let i = 0; i < this._collection.length; i++) {
 
                         if (this._abort)
                             break;
 
-                        let load = new ResourceLoader();
+                        let load_instance = new ResourceLoader(this._settings);
 
-                        load.resource = this._collection[i];
+                        this._load_instances.push(load_instance);
 
-                        load.complete(function () {
+                        load_instance.resource = this._collection[i];
 
-                            // todo
+                        load_instance.done(function(resource){
 
-                            if (this._abort)
+                            loaded++;
+
+                            self.percentage = loaded / self._collection.length * 100;
+
+                            self._progress.call(null /* todo */, resource);
+
+                            if ( loaded > self._collection.length || self._abort )
                                 return;
+
+                            if( loaded === self._collection.length )
+                                self._callback.call(null /* todo */ );
 
                         });
 
@@ -269,22 +357,25 @@
 
                 } else {
 
-                    let i = -1;
+                    let loaded = -1;
 
                     const sequential_recursion = function () {
 
-                        i++;
+                        loaded++;
 
-                        let load = new ResourceLoader();
+                        if ( loaded > this._collection.length || this._abort )
+                            return;
 
-                        load.resource = this._collection[i];
+                        if( loaded === this._collection.length )
+                            this._callback.call(null /* todo */ );
 
-                        load.complete(function () {
+                        this._load_instances[0].resource = this._collection[loaded];
 
-                            // todo
+                        this._load_instances[0].done(function (resource) {
 
-                            if (this._abort)
-                                return;
+                            self.percentage = loaded / self._collection.length * 100;
+
+                            self._progress.call(null /* todo */, resource);
 
                             setTimeout(sequential_recursion, $.isNumeric(this._settings.pipelineDelay) ? parseInt(this._settings.pipelineDelay) : 0);
 
@@ -311,7 +402,7 @@
                     callback.call(context);
                 };
 
-            if( this.collection.length )
+            if( this._collection.length )
                 this._callback = _func;
             else
                 _func();
@@ -325,8 +416,8 @@
 
             const
                 context = this,
-                _func = function(){
-                    callback.call(context);
+                _func = function(resource){
+                    callback.call(context, resource);
                 };
 
             if( this._collection.length )
@@ -338,12 +429,80 @@
 
         abort(){
 
+            for( let instance in this._load_instances )
+                this._load_instances[ instance ].abort();
+
             if( !this._collection.length )
                 return;
 
             this._abort = true;
 
         };
+
+    }
+
+    class CollectionPopulator {
+
+        constructor($element, settings) {
+
+            this._$element = $element;
+            this._settings = settings;
+
+        }
+
+        collect() {
+
+            let collection = [];
+
+            const
+                targets = 'img, video, audio, iframe',
+                targets_extended = targets + ', picture, source';
+
+            let $targets = this._$element.find(targets);
+            if (this._$element.is(targets))
+                $targets.add($element);
+            $targets.each(function () {
+                collection.push({
+                    element  : this,
+                    resource : this.currentSrc || this.src,
+                    standard : true
+                });
+            });
+
+            if (true === this._settings.backgrounds)
+                this._$element.find('*').addBack().not(targets_extended).filter(function () {
+                    return $(this).css('background-image') !== 'none';
+                }).each(function () {
+                    collection.push({
+                        element  : this,
+                        resource : $(this).css('background-image').replace(/url\(\"|url\(\'|url\(|((\"|\')\)$)/igm, ''),
+                        standard : false
+                    });
+                });
+
+            if (this._settings.attributes.length)
+                for (let attr in this._settings.attributes) {
+
+                    this._$element.find('[' + attr + ']:not(' + targets_extended + ')').each(function () {
+                        collection.push({
+                            element  : this,
+                            resource : $(this).attr(attr),
+                            standard : false
+                        });
+                    });
+
+                    if (this._$element.is('[' + attr + ']') && !this._$element.is(targets_extended))
+                        collection.add({
+                            element  : this,
+                            resource : this._$element.attr(attr),
+                            standard : false
+                        });
+
+                }
+
+            return collection;
+
+        }
 
     }
 
@@ -358,18 +517,18 @@
         if( typeof options !== 'object' )
             options = {};
 
-        const default_attributes = [ 'src', 'data-src', 'srcset', 'data-nite-src' ];
-
         let settings = $.extend(true, {
+            srcAttr       : 'data-src',
+            srcsetAttr    : 'data-srcset',
             sequential    : false,
             pipelineDelay : 0,
-            attributes    : default_attributes,
+            extraAttrs    : [],
             backgrounds   : false,
             playthrough   : false
         }, options);
 
         if( !$.isArray(settings.attributes) )
-            settings.attributes = default_attributes;
+            settings.attributes = [];
         if( typeof settings.attributes === 'string' )
             settings.attributes = settings.attributes.split(' ');
 
@@ -378,51 +537,28 @@
             const element = this,
                   $element = $(element);
 
-            let instance = $element.data(namespace);
+            let load_instance = $element.data(namespace);
 
-            if( undefined !== instance )
-                instance.abort();
+            if( undefined !== load_instance )
+                load_instance.abort();
 
-            // - - -
-            let collection = [];
+            load_instance = new ResourcesLoader(new CollectionPopulator($element, settings).collect(), settings);
 
-            const targets = 'img, video, audio, iframe',
-                targets_extended = targets+', picture, source';
+            load_instance.progress(function(){
 
-            collection.concat($element.find(targets).toArray());
+                // todo trigger event ...
 
-            if( $element.is(targets) )
-                collection.add($element[0]);
-
-            if( true === settings.backgrounds )
-                $element.find('*').addBack().not(targets_extended).filter(function(){ return $(this).css('background-image') !== 'none'; }).each(function(){
-                    collection.push( $(this).css('background-image').replace(/url\(\"|url\(\'|url\(|((\"|\')\)$)/igm, '') );
-                });
-
-            if( settings.attributes.length )
-                for( let attr in settings.attributes ) {
-
-                    $element.find('[' + attr + ']:not('+targets_extended+')').each(function () {
-                        collection.push($(this).attr(attr));
-                    });
-
-                    if( $element.is('[' + attr + ']') && !$element.is(targets_extended) )
-                        collection.add($element.attr(attr));
-
-                }
-            // - - -
-
-            instance = new ResourcesLoader(collection, settings);
-
-            instance.progress(function(){
-                // todo
             });
 
-            instance.done(function(){
+            load_instance.done(function(){
+
                 callback.call(element);
+
+                // todo trigger event ...
+
             });
 
-            $element.data(namespace, instance);
+            $element.data(namespace, load_instance);
 
         });
 
