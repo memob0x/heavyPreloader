@@ -2,9 +2,31 @@
 (function(window, document, $, undefined){
     'use strict';
 
+    const _console = function(message, level){
+
+        if( !window.console )
+            return;
+
+        let display = window.console.log;
+
+        switch(level){
+            case 1:
+                if( window.console.warn )
+                    display = window.console.warn;
+                break;
+            case 2:
+                if( window.console.error )
+                    display = window.console.error;
+                break;
+        }
+
+        display(message);
+
+    };
+
     // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
     if( !$ ) {
-        console.error('jQuery is needed for nitePreloader to work!');
+        _console('jQuery is needed for nitePreloader to work!', 2);
         return undefined;
     }
     // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
