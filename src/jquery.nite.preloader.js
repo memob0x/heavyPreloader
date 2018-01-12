@@ -4,7 +4,7 @@
 
     // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
     if( !$ ) {
-        console.error('jQuery is needed for $.fn.nitePreload(), $.nitePreload, $.niteLazyLoad to work!');
+        console.error('jQuery is needed for nitePreloader to work!');
         return undefined;
     }
     // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
@@ -16,78 +16,121 @@
         namespace = namespace_prefix+'er',
 
         $document = $(document),
+        $window = $(window),
 
-        is_valid_selector = function(selector){
+        unique_id = function(){
 
-            let $element = $();
+            return $.nite ? $.nite.uniqueId() : Math.floor(Math.random() * (9999 - 1000)) + 1000;
 
-            if ( typeof(selector) !== 'string' )
-                return false;
+        },
 
-            try {
+        is_visible = function(element){
 
-                $element = $(selector);
+            const $el = $(element);
 
-            } catch(error) {
+            let in_viewport = false;
 
-                return false;
+            if( $.nite )
+                in_viewport = $.nite.inViewport(element).ratio;
+
+            else{
+
+                const rect = element.getBoundingClientRect();
+
+                in_viewport = !( rect.right < 0 || rect.bottom < 0 || rect.left > $window.width() || rect.top > $window.height() );
 
             }
 
-            return $element.length;
+            return in_viewport && $el.is(':visible') && $el.css('visibility') !== 'hidden';
+
+        },
+
+        is_loaded = function(element){
+
+            return (
+                element.complete &&
+                Math.floor(element.naturalWidth) >= 1 &&
+                Math.floor(element.naturalHeight) >= 1
+            )
+            ||
+            (
+                element.readyState >= 2 &&
+                element.videoWidth !== 0 &&
+                element.videoHeight !== 0
+            );
+
+        },
+
+        is_html_object = function( object ){
+
+            if( typeof object !== 'object' )
+                return false;
+
+            try {
+                return object instanceof HTMLElement;
+            }
+            catch(e){
+                return object.nodeType === 1 && typeof object.style === 'object' && typeof object.ownerDocument === 'object';
+            }
+
         },
         
-        is_format = function( string, expected_format ){
-    
-            string = string
-                .toLowerCase()
-                .split('?')[0]; // get rid of query strings
-    
-            if( string === ''  )
-                return false;
-    
+        is_format = function( item, expected_format ){
+
             const
-                formats = {
+                format_extensions = {
                     image : 'jp[e]?g|gif|png|tif[f]?|bmp',
                     audio : 'mp3|ogg',
                     video : 'mp4|ogv|ogg|webm'
                 },
-                base64_heading = '\;base64\,',
-                formats_queue = undefined !== expected_format ? [ expected_format ] : Object.keys(formats);
+                format_names = Object.keys(format_extensions),
+                base64_heading = '\;base64\,';
 
-            let output = { format : null, extension : null };
+            let output = { format: null, extension: null };
 
-            for( let x in formats_queue ) {
+            if( typeof item === 'string' ) {
 
-                if (new RegExp('(\.(' + formats[ formats_queue[x] ] + ')$)|' + base64_heading, 'g').test(string)) {
+                item = item.split('?')[0]; // get rid of query strings
+                item = item.split('#')[0]; // get rid of hashes
 
-                    if (new RegExp(base64_heading, 'g').test(string)) {
+                if (item === '')
+                    return false;
 
-                        let matches64 = string.match(new RegExp('^data:' +  formats_queue[x]  + '\/(' + formats[ formats_queue[x] ] + ')', 'g'));
+                let format_queue = undefined !== expected_format ? [ expected_format ] : format_names;
 
-                        if (!matches64 || null === matches64) {
+                for (const x in format_queue) {
 
-                            console.warn(string + ': base64 ' +  formats_queue[x]  + ' format not recognized.');
+                    if (format_queue.hasOwnProperty(x)){
 
-                            continue;
+                        if (new RegExp('(\.(' + format_extensions[format_queue[x]] + ')$)|' + base64_heading, 'g').test(item)) {
 
-                        }
+                            if (new RegExp(base64_heading, 'g').test(item)) {
 
-                        matches64 = matches64[0];
+                                let matches64 = item.match(new RegExp('^data:' + format_queue[x] + '\/(' + format_extensions[format_queue[x]] + ')', 'g'));
 
-                        output = { format : matches64.replace('data:' +  formats_queue[x]  + '/g', ''), extension : 'base64' };
+                                if ( !matches64 || null === matches64 )
+                                    continue;
 
-                        break;
+                                matches64 = matches64[0];
 
-                    } else {
+                                output.format = matches64.replace('data:' + format_queue[x] + '/g', '');
 
-                        let matches = string.match(new RegExp(formats[ formats_queue[x] ], 'g'));
+                                break;
 
-                        if( matches ){
+                            } else {
 
-                            output = { format : formats_queue[x], extension : matches[0] };
+                                let matches = item.match(new RegExp(format_extensions[format_queue[x]], 'g'));
 
-                            break;
+                                if (matches) {
+
+                                    output.format = format_queue[x];
+                                    output.extension = matches[0];
+
+                                    break;
+
+                                }
+
+                            }
 
                         }
 
@@ -97,73 +140,100 @@
 
             }
 
+            if( is_html_object(item) ){
+
+                let tag_name = item.tagName.toLowerCase();
+                
+                if( $.inArray(tag_name, format_names) > -1 )
+                    output.format = item.tagName.toLowerCase();
+
+                if( tag_name === 'img' )
+                    output.format = 'image';
+
+            }
+
             return output;
     
         };
 
     class ResourceLoader {
 
-        constructor(settings){
+        constructor(options){
 
             const self = this;
 
-            this._settings = settings;
+            this._settings  = $.extend(true, {
+                playthrough  : false,
+                srcsetAttr   : 'data-srcset',
+                srcAttr      : 'data-src',
+                visible      : false
+            }, options);
 
-            this._element  = null;
-            this._$element = $();
+            this._id        = null;
+            this._id_event  = null;
 
-            this._resource = null;
-            
+            this._element   = null;
+            this._$element  = $();
+
+            this._resource  = null;
+            this._process   = false;
+
             this._format    = null;
-            this._instance  = null;
-            this._processed = false;
 
             this._callback  = $.noop;
-            this._done  = function(e){
+            this._done      = function(e){
 
-                self._callback.call(null /*temp*/, self._resource);
+                self._callback.call(null /*temp*/, self._id, self._element.currentSrc || self._element.src);
 
-                if( self._processed )
+                if( self._process )
                     return;
 
-                self._$element.trigger(e.type + '.'+namespace_prefix);
-                $document.trigger(e.type + '.'+namespace_prefix, [this._$element]);
+                const trigger_event = e.type.charAt(0).toUpperCase() + e.type.slice(1);
+
+                self._$element.trigger(namespace_prefix + trigger_event + '.' + namespace_prefix, [ self._$element ]);
 
             };
 
         }
-        
-        set resource( resource ){
+
+        set resource( data ){
 
             const
-                recognized_resource = typeof resource === 'object' && 'standard' in resource,
-                standard_resource   = recognized_resource && resource.standard === true,
-                string_resource     = typeof resource === 'string';
+                element_resource = is_html_object(data.resource),
+                string_resource = typeof data.resource === 'string';
 
-            if( !recognized_resource && !string_resource )
+            if( !element_resource && !string_resource )
                 return false;
 
-            const self = this;
+            this._id = data.id;
+            this._format = is_format(data.resource).format;
 
-            if( string_resource || !standard_resource ){
+            if( string_resource ){
 
-                this._format = is_format(resource).format;
+                let is_img = this._format === 'image';
 
-                if( this._format === 'image' )
-                    this._element = new Image();
-                else
-                    this._element = document.createElement(this._format);
+                this._element = document.createElement(is_img ? 'img' : this._format);
 
-                this._settings.srcsetAttr = 'data-srcset';
-                this._settings.srcAttr    = 'data-src';
+                if( is_img )
+                    this._settings.srcsetAttr = 'data-srcset';
+                this._settings.srcAttr = 'data-src';
 
-                this._resource = resource;
+                this._resource = data.resource;
+
+            }
+
+            if( element_resource ){
+
+                this._element = data.resource;
+
+                if( this._settings.visible && !is_visible(this._element) )
+                    return false;
 
             }
 
             this._$element = $(this._element);
 
-            if( string_resource || !standard_resource ){
+            if( string_resource ){
 
                 this._$element
                     .data(this._settings.srcAttr.replace('data-', ''), this._resource)
@@ -172,32 +242,35 @@
                     .attr(this._settings.srcsetAttr, this._resource);
 
             }
-            
-            if( !string_resource && standard_resource ){
 
-                this._element = resource.element;
-                this._format  = resource.format;
+            this._id_event  = this._$element.data(namespace);
+            this._process   = this._id_event !== undefined;
+            this._id_event  = this._process ? this._id_event : namespace + '_unique_' + unique_id();
 
-                this._$element = $(this._element);
+            return true;
 
-            }
+        }
 
-            this._instance  = this._$element.data(namespace);
-            this._processed = this._instance !== undefined;
+        process(){
 
-            this._instance  = this._processed ? this._instance : namespace + '_unique_' + ( $.nite ? $.nite.uniqueId() : Math.random(1000, 9999) );
+            if ( is_loaded(this._element) ) {
 
-            switch( this._format ) {
+                if (!this._process)
+                    this._$element.off('.' + this._id_event);
 
-                case 'image':
+                this._done(new Event($.isNumeric(this._element.naturalWidth) ? namespace_prefix+'Load' : namespace_prefix+'Error'));
 
-                    this._$element[ this._processed ? 'on' : 'one']('load.' + this._instance + ' error.' + this._instance, this._done);
+            }else{
+
+                if( this._format === 'image' ) {
+
+                    this._$element[this._process ? 'on' : 'one']('load.' + this._id_event + ' error.' + this._id_event, this._done);
 
                     const
-                        $picture     = this._$element.closest('picture'),
-                        src          = this._settings.srcAttr,
-                        src_clean    = this._settings.srcAttr.replace('data-', ''),
-                        srcset       = this._settings.srcsetAttr,
+                        $picture = this._$element.closest('picture'),
+                        src = this._settings.srcAttr,
+                        src_clean = this._settings.srcAttr.replace('data-', ''),
+                        srcset = this._settings.srcsetAttr,
                         srcset_clean = this._settings.srcsetAttr.replace('data-', '');
 
                     if ($picture.length) {
@@ -208,71 +281,66 @@
                             .removeData(src_clean)
                             .removeAttr(src);
 
-                        $picture.find('source[data-srcset]')
-                            .attr('srcset', $picture.data('srcset'))
+                        $picture.find('source[' + srcset + ']')
+                            .attr('srcset', $picture.data(srcset_clean))
                             .removeData(srcset_clean)
                             .removeAttr(srcset);
 
                     } else {
 
-                        if( this._$element.is('[data-srcset]') )
+                        if (this._$element.is('[' + srcset + ']'))
                             this._$element
-                                .attr('srcset', this._$element.data('srcset'))
+                                .attr('srcset', this._$element.data(srcset_clean))
                                 .removeData(srcset_clean)
                                 .removeAttr(srcset);
 
-                        if( this._$element.is('[data-src]') )
+                        if (this._$element.is('[' + src + ']'))
                             this._$element
-                                .attr('src', this._$element.data('src'))
+                                .attr('src', this._$element.data(src_clean))
                                 .removeData(src_clean)
                                 .removeAttr(src);
 
                     }
+                }
 
-                    this._resource = this._element.currentSrc || this._element.src;
+                if( this._format === 'video' || this._format === 'audio' ){
 
-                    if (true === this._element.complete && this._element.naturalWidth !== 0 && this._element.naturalHeight !== 0) {
+                    // todo
 
-                        if ( !this._processed )
-                            this._$element.off('.' + this._instance);
+                }
 
-                        this._done.call(new Event(undefined !== this._element.naturalWidth ? 'load' : 'error'));
-
-                    }
-
-                    break;
-
-                case 'media':
-
-
-
-                    break;
-
-                case 'iframe':
-
-
-
-                    break;
+                if ( !this._process )
+                    this._$element.data(namespace, this._id_event);
 
             }
 
-
-            if ( !this._processed )
-                this._$element.data(namespace, this._instance);
+            this._resource = this._element.currentSrc || this._element.src;
 
         }
 
         abort(){
 
             this._$element
-                .filter('[src], [srcset]')
-                    .data(this._settings.srcsetAttr, this._$element.attr('srcset'))
-                    .data(this._settings.srcAttr, this._$element.attr('src'))
-                    .attr(this._settings.srcsetAttr, this._$element.attr('srcset'))
-                    .attr(this._settings.srcAttr, this._$element.attr('src'))
-                    .removeAttr('src').removeAttr('srcset')
-                .end()
-                .off('load.' + this._instance + ' error.' + this._instance);
+                .off('.' + this._id_event);
+
+            if( is_loaded(this._element) )
+                return;
+
+            const
+                src = this._$element.attr('srcset'),
+                srcset = this._$element.attr('src');
+
+            if( undefined !== src )
+                this._$element
+                    .data(this._settings.srcAttr, src)
+                    .attr(this._settings.srcAttr, src)
+                    .removeAttr('src').removeAttr('srcset');
+
+            if( undefined !== srcset )
+                this._$element
+                    .data(this._settings.srcsetAttr, srcset)
+                    .attr(this._settings.srcsetAttr, srcset)
+                    .removeAttr('src').removeAttr('srcset');
 
         }
 
@@ -284,7 +352,6 @@
             const context = this;
 
             this._callback = function(resource){
-                console.log(resource)
                 callback.call(context, resource);
             };
 
@@ -299,17 +366,18 @@
             const self = this;
 
             this._collection = [];
+            this._collection_loaded = [];
+            this._collection_instances = [ new ResourceLoader(this._settings) ];
 
-            if ($.isArray(collection) && ( typeof collection[0] === 'string' || typeof collection[0] === 'object' && 'subject' in collection[0] ))
-                this._collection = collection;
-
-            if (typeof collection === 'string')
-                this._collection.push(collection);
+            if ($.isArray(collection) && ( typeof collection[0] === 'string' || is_html_object(collection[0]) ))
+                for ( const resource in collection )
+                    if( collection.hasOwnProperty(resource) )
+                        this._collection.push({ id : unique_id(), resource : collection[resource] });
+            if ( typeof collection === 'string' || is_html_object(collection) )
+                this._collection.push({ id : unique_id(), resource : collection });
 
             this._settings = $.extend(true, {
-                sequential: false,
-                pipelineDelay: 0,
-                playthrough: false
+                sequential: false
             }, options);
 
             this.percentage = 0;
@@ -318,83 +386,83 @@
             this._progress = $.noop();
             this._abort = false;
 
-            this._load_instances = [ new ResourceLoader(this._settings) ];
+            this._complete = false;
 
-            if (this._collection.length) {
+            this._loaded = 0;
 
-                if (true !== this._settings.sequential) {
+            this._loop = function(){
 
-                    let loaded = 0;
+                if ( !this._collection.length )
+                    return;
 
-                    for (let i = 0; i < this._collection.length; i++) {
+                if( true === this._complete ){
 
-                        if (this._abort)
-                            break;
+                    self._callback.call(null /* todo context */);
 
-                        let load_instance = new ResourceLoader(this._settings);
-
-                        this._load_instances.push(load_instance);
-
-                        load_instance.resource = this._collection[i];
-
-                        load_instance.done(function(resource){
-
-                            loaded++;
-
-                            self.percentage = loaded / self._collection.length * 100;
-
-                            self._progress.call(null /* todo */, resource);
-
-                            if ( loaded > self._collection.length || self._abort )
-                                return;
-
-                            if( loaded === self._collection.length )
-                                self._callback.call(null /* todo */ );
-
-                        });
-
-                    }
-
-                } else {
-
-                    let loaded = -1;
-
-                    const sequential_recursion = function () {
-
-                        loaded++;
-
-                        if ( loaded > this._collection.length || this._abort )
-                            return;
-
-                        if( loaded === this._collection.length )
-                            this._callback.call(null /* todo */ );
-
-                        this._load_instances[0].resource = this._collection[loaded];
-
-                        this._load_instances[0].done(function (resource) {
-
-                            self.percentage = loaded / self._collection.length * 100;
-
-                            self._progress.call(null /* todo */, resource);
-
-                            setTimeout(sequential_recursion, $.isNumeric(this._settings.pipelineDelay) ? parseInt(this._settings.pipelineDelay) : 0);
-
-                        });
-
-                    };
-
-                    sequential_recursion();
+                    return;
 
                 }
 
-            }
+                for (let i = 0; i < this._collection.length; i++) {
+
+                    if (this._abort)
+                        break;
+
+                    // todo this._settings.sequential --> must be called in the following .done() call and taking account of visibility check in ResourceLoader();
+
+                    let load_instance = new ResourceLoader(this._settings);
+
+                    this._collection_instances.push(load_instance);
+
+                    load_instance.resource = this._collection[i];
+
+                    load_instance.process();
+
+                    load_instance.done(function(id, resource){
+
+                        if( $.inArray(id, self._collection_loaded) === -1 ) {
+
+                            self._loaded++;
+
+                            self._collection_loaded.push(id);
+
+                            self.percentage = self._loaded / self._collection.length * 100;
+
+                            self._progress.call(null /* todo */, resource);
+
+                        }
+
+                        if ( self._loaded > self._collection.length || self._abort )
+                            return;
+
+                        if( self._loaded === self._collection.length ) {
+
+                            self._callback.call(null /* todo */);
+
+                            self._complete = true;
+
+                        }
+
+                    });
+
+                }
+
+            };
+
+            this._loop();
+
+        }
+
+        loop(){
+
+            this._loop();
 
         }
 
         done(callback){
 
             if( !$.isFunction(callback) )
-                return;
+                return false;
 
             const
                 context = this,
@@ -407,12 +475,14 @@
             else
                 _func();
 
+            return true;
+
         };
 
         progress(callback){
 
             if( !$.isFunction(callback) )
-                return;
+                return false;
 
             const
                 context = this,
@@ -425,12 +495,14 @@
             else
                 _func();
 
+            return true;
+
         };
 
         abort(){
 
-            for( let instance in this._load_instances )
-                this._load_instances[ instance ].abort();
+            for( const instance in this._collection_instances )
+                this._collection_instances[ instance ].abort();
 
             if( !this._collection.length )
                 return;
@@ -450,54 +522,40 @@
 
         }
 
-        collect() {
+        collect( /*output*/ ) { // todo output types es: only elements, only, urls, mixed, all ... dunno
 
             let collection = [];
 
             const
-                targets = 'img, video, audio, iframe',
+                targets = 'img, video, audio',
                 targets_extended = targets + ', picture, source';
 
             let $targets = this._$element.find(targets);
             if (this._$element.is(targets))
-                $targets.add($element);
+                $targets.add(this._$element);
             $targets.each(function () {
-                collection.push({
-                    element  : this,
-                    resource : this.currentSrc || this.src,
-                    standard : true
-                });
+                collection.push(this);
             });
 
             if (true === this._settings.backgrounds)
                 this._$element.find('*').addBack().not(targets_extended).filter(function () {
                     return $(this).css('background-image') !== 'none';
                 }).each(function () {
-                    collection.push({
-                        element  : this,
-                        resource : $(this).css('background-image').replace(/url\(\"|url\(\'|url\(|((\"|\')\)$)/igm, ''),
-                        standard : false
-                    });
+                    collection.push($(this).css('background-image').replace(/url\("|url\('|url\(|(("')\)$)/igm, ''));
                 });
 
             if (this._settings.attributes.length)
-                for (let attr in this._settings.attributes) {
+                for (const attr in this._settings.attributes) {
+                    if( this._settings.attributes.hasOwnProperty(attr) ) {
 
-                    this._$element.find('[' + attr + ']:not(' + targets_extended + ')').each(function () {
-                        collection.push({
-                            element  : this,
-                            resource : $(this).attr(attr),
-                            standard : false
-                        });
-                    });
-
-                    if (this._$element.is('[' + attr + ']') && !this._$element.is(targets_extended))
-                        collection.add({
-                            element  : this,
-                            resource : this._$element.attr(attr),
-                            standard : false
+                        this._$element.find('[' + attr + ']:not(' + targets_extended + ')').each(function () {
+                            collection.push($(this).attr(attr));
                         });
 
+                        if (this._$element.is('[' + attr + ']') && !this._$element.is(targets_extended))
+                            collection.push(this._$element.attr(attr));
+
+                    }
                 }
 
             return collection;
@@ -518,13 +576,19 @@
             options = {};
 
         let settings = $.extend(true, {
+
             srcAttr       : 'data-src',
             srcsetAttr    : 'data-srcset',
+
+            visible       : false,
+
             sequential    : false,
-            pipelineDelay : 0,
-            extraAttrs    : [],
+
             backgrounds   : false,
+            extraAttrs    : [],
+
             playthrough   : false
+
         }, options);
 
         if( !$.isArray(settings.attributes) )
@@ -534,58 +598,78 @@
 
         return this.each(function(){
 
-            const element = this,
-                  $element = $(element);
+            const
+                element = this,
+                $element = $(element),
+                collection = new CollectionPopulator($element, settings).collect(),
+                event_namespace = namespace + '_' + unique_id(),
+                clear = function(){
+
+                    $document.off('scroll.' + event_namespace);
+                    $window.off('scroll.'+event_namespace);
+
+                    $element.removeData(namespace);
+
+                };
 
             let load_instance = $element.data(namespace);
 
-            if( undefined !== load_instance )
+            if( undefined !== load_instance ) {
+
                 load_instance.abort();
 
-            load_instance = new ResourcesLoader(new CollectionPopulator($element, settings).collect(), settings);
+                clear();
 
-            load_instance.progress(function(){
+            }
 
-                // todo trigger event ...
+            load_instance = new ResourcesLoader(collection, settings);
+
+            load_instance.progress(function () {
+
+                $element.trigger(namespace_prefix+'Progress.'+namespace_prefix, [$element]);
 
             });
 
-            load_instance.done(function(){
+            load_instance.done(function () {
+
+                clear();
+
+                $element.trigger(namespace_prefix+'Load.'+namespace_prefix, [$element]);
 
                 callback.call(element);
-
-                // todo trigger event ...
+                callback = $.noop;
 
             });
 
             $element.data(namespace, load_instance);
 
+            if( settings.visible ){
+
+                if( $.nite )
+                    $.nite.scroll(event_namespace, function(){ load_instance.loop(); }, { fps : 25 });
+
+                else{
+
+                    const throttle_scroll_event = function(fn, wait) {
+
+                        let time = Date.now();
+
+                        return function() {
+                            if ((time + wait - Date.now()) < 0) {
+                                fn();
+                                time = Date.now();
+                            }
+                        }
+
+                    };
+
+                    $window.on('scroll.'+event_namespace, throttle_scroll_event(function(){ load_instance.loop(); }, 1000));
+
+                }
+
+            }
+
         });
-
-    };
-
-    $[namespace_prefix+'Lazyload'] = function(selector){
-
-        if( !$.nite || !( 'inViewport' in $.nite ) || !( 'scroll' in $.nite ) ) {
-
-            console.log('A recent version of $.nite is needed.');
-
-            return;
-
-        }
-
-        $.nite.scroll(namespace, function(){
-
-            $( is_valid_selector(selector) ? selector : '[data-nite-src]' ).inViewport()[namespace_method](function(){
-
-                const $this = $(this);
-
-                $this.trigger(e.type + '.'+namespace_prefix+'LazyLoad');
-                $document.trigger(e.type + '.'+namespace_prefix+'LazyLoad', [$this]);
-
-            });
-
-        }, { fps : 25 });
 
     };
 

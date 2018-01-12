@@ -2,51 +2,68 @@
 <html>
 <head>
 
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="../../bower_components/jquery/dist/jquery.min.js"></script>
     <script src="../../nitejs/dist/jquery.nite.js" ></script>
     <script src="../dist/jquery.nite.preloader.js" ></script>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
 
-    <title>Title of the document</title>
+    <title>Nite Preloader Playground</title>
 
     <style>
         html, body, * {
             margin: 0;
+            box-sizing: border-box;
+        }
+        .nite-preload {
+            border: 10px solid blue;
+            transition: border-color .4s linear;
+        }
+        .nite-preload figure {
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .nite-preload.loaded {
+            border-color: red;
+        }
+        .nite-preload figure,
+        .nite-preload img {
+            width: 100%;
+        }
+        .nite-preload img {
+            height: 100%;
+            opacity: 0;
+            transition: opacity .4s linear .4s;
+        }
+        .nite-preload img.loaded {
+            opacity: 1;
         }
     </style>
 
 </head>
 <body>
 
-<div>
+<section class="nite-preload">
 
-    <div>
-        <figure>
-            <img data-nite-src="http://placehold.it/720x720/c2b6f9.jpg" />
-        </figure>
-    </div>
+    <figure>
+        <img data-nite-src="http://placehold.it/720x720/c2b6f9.jpg" />
+    </figure>
 
-    <div>
-        <figure>
-            <img data-nite-src="http://placehold.it/720x720/fed4bc.jpg" />
-        </figure>
-    </div>
+    <figure>
+        <img data-nite-src="http://placehold.it/720x720/fed4bc.jpg" />
+    </figure>
 
-    <div>
-        <figure>
-            <img data-nite-src="http://placehold.it/720x720/bbefda.jpg" />
-        </figure>
-    </div>
+    <figure>
+        <img data-nite-src="http://placehold.it/720x720/bbefda.jpg" />
+    </figure>
 
-    <div>
-        <figure>
-            <img data-nite-src="http://placehold.it/720x720/c0d4f7.jpg" />
-        </figure>
-    </div>
+    <figure>
+        <img data-nite-src="http://placehold.it/720x720/c0d4f7.jpg" />
+    </figure>
 
-</div>
+</section>
 
 <script>
     (function($){
@@ -56,18 +73,19 @@
         // instance mode
         // - - - - - - - - - - - - -
 
+    /*
         let instance = new $.nitePreload([
             'http://placehold.it/720x720/d5dcfc/ffffff.jpg',
             'http://placehold.it/720x720/d9cbf9/ffffff.gif',
             'http://placehold.it/720x720/c8fdcc/ffffff.png'
         ]);
-
+    */
 
     /*
         instance.abort();
     */
 
-    /* */
+    /*
         instance.progress(function(url){
 
             console.log(instance.percentage);
@@ -75,7 +93,7 @@
             console.log('loaded -> '+ url);
 
         });
-    /* */
+    /*
 
     /* todo maybe?
         instance.success(function(url){
@@ -86,48 +104,57 @@
         });
     */
 
-    /* */
+    /*
         instance.done(function(){
 
             console.log('done');
 
         });
-    /**/
+    */
         // - - - - - - - - - - - - -
 
 
         // - - - - - - - - - - - - -
         // object method mode
         // - - - - - - - - - - - - -
-    /*
-        $('div.parent, img.test-images, video#bunny, audio#metallica').nitePreload({
+        $('section.nite-preload').nitePreload({
+
             srcAttr       : 'data-nite-src',
             srcsetAttr    : 'data-nite-srcset',
-            sequential    : false,
-            pipelineDelay : 0,
-            extraAttrs    : [],
-            backgrounds   : false,
-            playthrough   : false
-        }, function(){
-            console.log('done')
-        });
-    */
 
-    /*
-        $(document).on('load.nite error.nite', function(e, $element){
-            console.log($element);
+            visible       : true,
+
+            sequential    : true,
+
+            backgrounds   : true,
+            extraAttrs    : [],
+
+            playthrough   : false
+
+        }, function(){
+
+            console.log('done');
+
         });
-    */
-    /*
-        $(document).on('load.nite error.nite', '.element', function(e){
+
+    /**/
+        $(document).on('niteLoad.nite niteError.nite', function(e, $el){
+            //console.log(e);
+            $el.addClass('loaded');
+        });
+    /**/
+
+    /* // todo: this doesn't work for some reason...
+        $(document).on('niteLoad.nite niteError.nite', 'img', function(e){
             console.log($(this));
         });
-    */
-    /*
-        $('.element').on('load.nite error.nite', function(e){
-            console.log($(this));
+    /**/
+
+    /**/
+        $('img').on('niteLoad.nite niteError.nite', function(e){
+            console.log(e);
         });
-    */
+    /**/
         // - - - - - - - - - - - - - */
 
     })(jQuery);
