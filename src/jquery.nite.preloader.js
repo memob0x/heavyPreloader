@@ -2,40 +2,41 @@
 (function(window, document, $, undefined){
     'use strict';
 
-    const _console = function(message, level){
+    const
+        namespace_prefix = 'nite',
+        namespace_method = namespace_prefix+'Preload',
+        namespace = namespace_method+'er',
+        _console = function(message, level){
 
-        if( !window.console )
-            return;
+            if( !window.console )
+                return;
 
-        let display = window.console.log;
+            let display = window.console.log;
 
-        switch(level){
-            case 1:
-                if( window.console.warn )
-                    display = window.console.warn;
-                break;
-            case 2:
-                if( window.console.error )
-                    display = window.console.error;
-                break;
-        }
+            switch(level){
+                case 1:
+                    if( window.console.warn )
+                        display = window.console.warn;
+                    break;
+                case 2:
+                    if( window.console.error )
+                        display = window.console.error;
+                    break;
+            }
 
-        display(message);
+            display(message);
 
-    };
+        };
 
     // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
     if( !$ ) {
-        _console('jQuery is needed for nitePreloader to work!', 2);
+        _console('jQuery is needed for '+namespace+' to work!', 2);
         return undefined;
     }
     // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
 
     const
-        namespace_prefix = 'nite',
-        namespace_method = namespace_prefix+'Preload',
-        namespace = namespace_prefix+'er',
 
         $document = $(document),
         $window = $(window),
@@ -205,14 +206,14 @@
             this._callback  = $.noop;
             this._done      = function(e){
 
-                self._callback.call(null /*temp*/, self._id, self._element.currentSrc || self._element.src);
+                if( !self._process ) {
 
-                if( self._process )
-                    return;
+                    const trigger_event = e.type.charAt(0).toUpperCase() + e.type.slice(1);
 
-                const trigger_event = e.type.charAt(0).toUpperCase() + e.type.slice(1);
+                    self._$element.trigger(namespace_prefix + trigger_event + '.' + namespace_prefix, [self._$element]);
+                }
 
-                self._$element.trigger(namespace_prefix + trigger_event + '.' + namespace_prefix, [ self._$element ]);
+                self._callback.call(null /* todo context */, self._id, self._element.currentSrc || self._element.src);
 
             };
 
@@ -225,7 +226,7 @@
                 string_resource = typeof data.resource === 'string';
 
             if( !element_resource && !string_resource )
-                return false;
+                return;
 
             this._id = data.id;
             this._format = is_format(data.resource).format;
@@ -244,14 +245,8 @@
 
             }
 
-            if( element_resource ){
-
+            if( element_resource )
                 this._element = data.resource;
-
-                if( this._settings.visible && !is_visible(this._element) )
-                    return false;
-
-            }
 
             this._$element = $(this._element);
 
@@ -265,15 +260,16 @@
 
             }
 
-            this._id_event  = this._$element.data(namespace);
-            this._process   = this._id_event !== undefined;
-            this._id_event  = this._process ? this._id_event : namespace + '_unique_' + unique_id();
-
-            return true;
+            this._id_event = this._$element.data(namespace);
+            this._process  = this._id_event !== undefined;
+            this._id_event = this._process ? this._id_event : namespace + '_unique_' + unique_id();
 
         }
 
         process(){
+
+            if( this._settings.visible && !is_visible(this._element) )
+                return;
 
             const
                 self = this,
@@ -328,71 +324,102 @@
                     }
                 }
 
-                if( this._format === 'video' || this._format === 'audio' ){const $sources = this._$element.find('source');
+                if( this._format === 'video' || this._format === 'audio' ){
 
-                /* todo if this._process ??? */
-                    this._$element
-                        .on('canplaythrough.' + this._id_event, function(){
+                    const $sources = this._$element.find('source');
 
-                            if( self._settings.playthrough ) {
-
-                                self._element.currentTime = 0;
-
-                                if( self._$element.is('[autoplay]') )
-                                    self._element.play();
-
-                                self._done(new Event('load'));
-
-                            }
-
-                        })
-                        .on('loadedmetadata.' + this._id_event + ' error.' + this._id_event, function (e) {
-
-                            if( !self._settings.playthrough )
-                                self._done(new Event(e.type === 'error' ? 'error' : 'load'));
-
-                        })
-                        .on('loadedmetadata.' + this._id_event+' progress.' + this._id_event, function () {
-
-                            if( self._settings.playthrough ) {
-
-                                if ( self._element.readyState > 0 && !self._element.duration ) {
-
-                                    self._done(new Event('error'));
-
-                                }else {
-
-                                    if (!self._element.paused)
-                                        self._element.pause();
-
-                                    self._element.currentTime++;
-
-                                }
-
-                            }
-
-                        });
+                    let load = false;
 
                     if( $sources.length ){
 
                         $sources.each(function() {
 
-                            if ( $(this).is('[' + src + ']') )
+                            if ( $(this).is('[' + src + ']') ) {
+
                                 $(this)
                                     .attr('src', $(this).data(src_clean))
                                     .removeData(src_clean)
                                     .removeAttr(src);
+
+                                load = true;
+
+                            }
+
                         });
 
                     }else{
 
-                        if (this._$element.is('[' + src + ']'))
+                        if (this._$element.is('[' + src + ']')) {
+
                             this._$element
                                 .attr('src', this._$element.data(src_clean))
                                 .removeData(src_clean)
                                 .removeAttr(src);
 
+                            load = true;
+
+                        }
+
                     }
+
+                    if( load )
+                        this._element.load();
+
+                    this._$element
+                        [this._process ? 'on' : 'one']('loadedmetadata.' + this._id_event, function () {
+
+                            if (true !== self._settings.playthrough)
+                                self._done(new Event('load'));
+
+                        })
+                        /*[this._process ? 'on' : 'one']('canplay.' + this._id_event, function () {
+
+                            if (true === self._settings.playthrough) {
+
+                                $(this).on('progress.' + self._id_event, function () {
+
+                                    console.log('as')
+
+                                    if (this.readyState > 0 && !this.duration) {
+
+                                        self._done(new Event('error'));
+
+                                        return;
+
+                                    }
+
+                                    if (!self._process) {
+
+                                        if (!this.paused)
+                                            this.pause();
+
+                                        this.currentTime++;
+
+                                    }
+
+                                    if (this.buffered.length && Math.round(this.buffered.end(0)) / Math.round(this.seekable.end(0)) === 1) {
+
+                                        this.currentTime = 0;
+
+                                        if ($(this).is('[autoplay]'))
+                                            this.play();
+
+                                        self._done(new Event('load'));
+
+                                    }
+
+                                });
+
+                            }
+
+                        })*/
+                        [this._process ? 'on' : 'one']('canplaythrough.' + this._id_event, function(){
+
+                            if( true === self._settings.playthrough )
+                                self._done(new Event('load'));
+
+                        })
+                        [this._process ? 'on' : 'one']('error.' + this._id_event, self._done);
 
                 }
 
@@ -685,17 +712,23 @@
 
         return this.each(function(){
 
+            let _complete = false;
+
             const
                 element = this,
                 $element = $(element),
                 collection = new CollectionPopulator($element, settings).collect(),
                 event_namespace = namespace + '_' + unique_id(),
-                clear = function(){
+                complete = function(){
 
-                    $document.off('scroll.' + event_namespace);
-                    $window.off('scroll.'+event_namespace);
+                    if( $.nite )
+                        $document.off('scroll.' + event_namespace);
+                    else
+                        $window.off('scroll.'+event_namespace);
 
                     $element.removeData(namespace);
+
+                    _complete = true;
 
                 };
 
@@ -705,7 +738,7 @@
 
                 load_instance.abort();
 
-                clear();
+                complete();
 
             }
 
@@ -719,7 +752,10 @@
 
             load_instance.done(function () {
 
-                clear();
+                if( _complete )
+                    return;
+
+                complete();
 
                 $element.trigger(namespace_prefix+'Load.'+namespace_prefix, [$element]);
 

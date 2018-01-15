@@ -2,7 +2,7 @@
 <html>
 <head>
 
-    <script src="../../bower_components/jquery/dist/jquery.min.js"></script>
+    <script src="../bower_components/jquery/dist/jquery.min.js"></script>
     <script src="../../nitejs/dist/jquery.nite.js" ></script>
     <script src="../dist/jquery.nite.preloader.js" ></script>
 
@@ -64,10 +64,9 @@
     </figure>
 
     <figure>
-        <video class="target" style="width:600px;max-width:100%;">
+        <video class="target">
             <source data-nite-src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
             <source data-nite-src="https://www.w3schools.com/html/mov_bbb.ogg" type="video/ogg">
-            Your browser does not support HTML5 video.
         </video>
     </figure>
 
@@ -137,18 +136,19 @@
             backgrounds   : true,
             extraAttrs    : [],
 
-            playthrough   : false
+            playthrough   : true
 
         }, function(){
 
-            console.log('done');
+            console.log(this, 'method cb');
 
         });
 
     /**/
         $(document).on('niteLoad.nite niteError.nite', function(e, $el){
-            console.log($el[0]);
+
             $el.addClass('loaded');
+
         });
     /**/
 
@@ -160,7 +160,9 @@
 
     /**/
         $('.target').on('niteLoad.nite niteError.nite', function(e){
-            //console.log(e);
+
+            console.log(this, 'event cb');
+
         });
     /**/
         // - - - - - - - - - - - - - */
