@@ -29,15 +29,15 @@
             border-color: red;
         }
         .nite-preload figure,
-        .nite-preload img {
+        .nite-preload .target {
             width: 100%;
         }
-        .nite-preload img {
+        .nite-preload .target {
             height: 100%;
             opacity: 0;
             transition: opacity .4s linear .4s;
         }
-        .nite-preload img.loaded {
+        .nite-preload .target.loaded {
             opacity: 1;
         }
     </style>
@@ -48,19 +48,27 @@
 <section class="nite-preload">
 
     <figure>
-        <img data-nite-src="http://placehold.it/720x720/c2b6f9.jpg" />
+        <img class="target" data-nite-src="http://placehold.it/720x720/c2b6f9.jpg" />
     </figure>
 
     <figure>
-        <img data-nite-src="http://placehold.it/720x720/fed4bc.jpg" />
+        <img class="target" data-nite-src="http://placehold.it/720x720/fed4bc.jpg" />
     </figure>
 
     <figure>
-        <img data-nite-src="http://placehold.it/720x720/bbefda.jpg" />
+        <img class="target" data-nite-src="http://placehold.it/720x720/bbefda.jpg" />
     </figure>
 
     <figure>
-        <img data-nite-src="http://placehold.it/720x720/c0d4f7.jpg" />
+        <img class="target" data-nite-src="http://placehold.it/720x720/c0d4f7.jpg" />
+    </figure>
+
+    <figure>
+        <video class="target" style="width:600px;max-width:100%;">
+            <source data-nite-src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+            <source data-nite-src="https://www.w3schools.com/html/mov_bbb.ogg" type="video/ogg">
+            Your browser does not support HTML5 video.
+        </video>
     </figure>
 
 </section>
@@ -139,7 +147,7 @@
 
     /**/
         $(document).on('niteLoad.nite niteError.nite', function(e, $el){
-            //console.log(e);
+            console.log($el[0]);
             $el.addClass('loaded');
         });
     /**/
@@ -151,8 +159,8 @@
     /**/
 
     /**/
-        $('img').on('niteLoad.nite niteError.nite', function(e){
-            console.log(e);
+        $('.target').on('niteLoad.nite niteError.nite', function(e){
+            //console.log(e);
         });
     /**/
         // - - - - - - - - - - - - - */

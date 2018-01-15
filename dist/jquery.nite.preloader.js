@@ -182,6 +182,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             key: 'process',
             value: function process() {
 
+                var self = this,
+                    src = this._settings.srcAttr,
+                    src_clean = this._settings.srcAttr.replace('data-', '');
+
                 if (is_loaded(this._element)) {
 
                     if (!this._process) this._$element.off('.' + this._id_event);
@@ -194,12 +198,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                         this._$element[this._process ? 'on' : 'one']('load.' + this._id_event + ' error.' + this._id_event, this._done);
 
                         var $picture = this._$element.closest('picture'),
-                            src = this._settings.srcAttr,
-                            src_clean = this._settings.srcAttr.replace('data-', ''),
                             srcset = this._settings.srcsetAttr,
                             srcset_clean = this._settings.srcsetAttr.replace('data-', '');
 
-                        if ($picture.length) {
+                        if ($picture.length && 'HTMLPictureElement' in window) {
 
                             this._$element.removeData(srcset_clean).removeAttr(srcset).removeData(src_clean).removeAttr(src);
 
@@ -213,9 +215,48 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     }
 
                     if (this._format === 'video' || this._format === 'audio') {
+                        var $sources = this._$element.find('source');
 
-                        // todo
+                        /* todo if this._process ??? */
+                        this._$element.on('canplaythrough.' + this._id_event, function () {
 
+                            if (self._settings.playthrough) {
+
+                                self._element.currentTime = 0;
+
+                                if (self._$element.is('[autoplay]')) self._element.play();
+
+                                self._done(new Event('load'));
+                            }
+                        }).on('loadedmetadata.' + this._id_event + ' error.' + this._id_event, function (e) {
+
+                            if (!self._settings.playthrough) self._done(new Event(e.type === 'error' ? 'error' : 'load'));
+                        }).on('loadedmetadata.' + this._id_event + ' progress.' + this._id_event, function () {
+
+                            if (self._settings.playthrough) {
+
+                                if (self._element.readyState > 0 && !self._element.duration) {
+
+                                    self._done(new Event('error'));
+                                } else {
+
+                                    if (!self._element.paused) self._element.pause();
+
+                                    self._element.currentTime++;
+                                }
+                            }
+                        });
+
+                        if ($sources.length) {
+
+                            $sources.each(function () {
+
+                                if ($(this).is('[' + src + ']')) $(this).attr('src', $(this).data(src_clean)).removeData(src_clean).removeAttr(src);
+                            });
+                        } else {
+
+                            if (this._$element.is('[' + src + ']')) this._$element.attr('src', this._$element.data(src_clean)).removeData(src_clean).removeAttr(src);
+                        }
                     }
 
                     if (!this._process) this._$element.data(namespace, this._id_event);
