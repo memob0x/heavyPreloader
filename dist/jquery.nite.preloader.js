@@ -219,7 +219,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
                     if (this._format === 'video' || this._format === 'audio') {
 
-                        var $sources = this._$element.find('source');
+                        var $sources = this._$element.find('source'),
+                            is_fully_buffered = function is_fully_buffered(media) {
+
+                            return media.buffered.length && Math.round(media.buffered.end(0)) / Math.round(media.seekable.end(0)) === 1;
+                        };
 
                         var call_media_load = false;
 
@@ -257,10 +261,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
                         this._$element[this._process ? 'on' : 'one']('loadedmetadata.' + this._id_event, function () {
 
-                            if (true !== self._settings.playthrough && 'force' !== self._settings.playthrough) self._done(new Event('load'));
+                            if (true !== self._settings.playthrough && 'full' !== self._settings.playthrough) self._done(new Event('load'));
+                        })[this._process ? 'on' : 'one']('canplay.' + self._id_event, function () {
+
+                            if ('full' === self._settings.playthrough && this.currentTime === 0 && !is_fully_buffered(this)) this.currentTime++;
                         })[this._process ? 'on' : 'one']('progress.' + self._id_event, function () {
 
-                            if ('force' === self._settings.playthrough) {
+                            if ('full' === self._settings.playthrough) {
 
                                 var media = this;
 
@@ -269,24 +276,18 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                                     if (media.readyState > 0 && !media.duration) {
 
                                         self._done(new Event('error'));
-
-                                        return;
-                                    }
-
-                                    if (!self._process) {
-
-                                        if (!media.paused) media.pause();
-
-                                        media.currentTime += 2;
-                                    }
-
-                                    if (media.buffered.length && Math.round(media.buffered.end(0)) / Math.round(media.seekable.end(0)) === 1) {
+                                    } else if (is_fully_buffered(media)) {
 
                                         media.currentTime = 0;
 
-                                        if (!self._process && $(media).is('[autoplay]')) media.play();
+                                        if (!self._process && media.paused && $(media).is('[autoplay]')) media.play();
 
                                         self._done(new Event('load'));
+                                    } else {
+
+                                        if (!media.paused) media.pause();
+
+                                        if (!self._process) media.currentTime += 2;
                                     }
                                 }, 25);
                             }

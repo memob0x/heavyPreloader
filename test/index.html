@@ -5,6 +5,7 @@
     <script src="../bower_components/jquery/dist/jquery.min.js"></script>
     <script src="../../nitejs/dist/jquery.nite.js" ></script>
     <script src="../dist/jquery.nite.preloader.js" ></script>
+    <script src="../../nite-cropper/dist/jquery.nite.cropper.js" ></script>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
@@ -92,7 +93,7 @@
     </figure>
 
     <figure>
-        <video autoplay class="target" muted>
+        <video autoplay muted loop class="target">
             <source data-nite-src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
             <source data-nite-src="https://www.w3schools.com/html/mov_bbb.ogg" type="video/ogg">
         </video>
@@ -102,6 +103,11 @@
 
 <script>
     (function($){
+
+        if( $.fn.niteCrop )
+            $('figure').niteCrop({
+                elements : '.target'
+            });
 
         $('section.nite-preload').nitePreload({
 
@@ -115,7 +121,7 @@
             backgrounds   : true,
             extraAttrs    : [],
 
-            playthrough   : 'force'
+            playthrough   : 'full'
 
         }, function(){
 
