@@ -92,7 +92,7 @@
     </figure>
 
     <figure>
-        <video autoplay class="target">
+        <video autoplay class="target" muted>
             <source data-nite-src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
             <source data-nite-src="https://www.w3schools.com/html/mov_bbb.ogg" type="video/ogg">
         </video>
@@ -137,61 +137,73 @@
     (function($){
 
         let instance = null;
-        const
-            instance_mode = function(){
 
+        $('#menu__instance--launch').click(function(){
+
+            if( instance === null ) {
+
+                $(this).hide();
                 $('#menu__instance--abort').show();
 
                 let random_stuff = [];
 
-                for( let i = 0; i < 10; i++ ){
+                for (let i = 0; i < 10; i++) {
 
                     let letters = '0123456789ABCDEF',
                         colors = [];
 
-                    for( let ii = 0; ii < 2; ii++ ) {
+                    for (let ii = 0; ii < 2; ii++) {
                         let color = '';
                         for (let c = 0; c < 6; c++)
                             color += letters[Math.floor(Math.random() * 16)];
                         colors[ii] = color;
                     }
 
-                    random_stuff.push('//placehold.it/720x720/'+colors[0]+'/'+colors[1]+'.jpg');
+                    random_stuff.push('//placehold.it/720x720/' + colors[0] + '/' + colors[1] + '.jpg');
 
                 }
 
                 instance = new $.nitePreload(random_stuff);
 
+                $('#menu__instance--result').html('0%');
+
                 instance.progress(function (url) {
-                    $('#menu__instance--result').html(instance.percentage+'%');
+                    $('#menu__instance--result').html(instance.percentage + '%');
                 });
 
                 // todo
                 /*
-                instance.success(function(url){
-                    console.log('%cok --> '+url, 'color: green');
-                }); */
+            instance.success(function(url){
+                console.log('%cok --> '+url, 'color: green');
+            }); */
 
                 // todo
                 /*
-                instance.error(function(url){
-                    console.log('%cerr --> '+url, 'color: red');
-                }); */
+            instance.error(function(url){
+                console.log('%cerr --> '+url, 'color: red');
+            }); */
 
                 instance.done(function () {
-                    $('#menu__instance--result').append(' done!!');
+                    $('#menu__instance--result').append(' - Done!!');
                     $('#menu__instance--abort').hide();
+                    $('#menu__instance--launch').show();
+                    instance = null;
                 });
 
-            };
-        $('#menu__instance--launch').click(instance_mode);
+            }
+
+        });
         $('#menu__instance--abort').hide().click(function(){
 
             if( instance !== null ) {
 
+                $('#menu__instance--result').append(' - Aborted...');
+
                 instance.abort();
+                instance = null;
 
                 $(this).hide();
+                $('#menu__instance--launch').show();
 
             }
 

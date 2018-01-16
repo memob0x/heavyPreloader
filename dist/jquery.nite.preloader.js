@@ -233,12 +233,21 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
                                     call_media_load = true;
                                 }
+                            })[this._process ? 'on' : 'one']('error.' + this._id_event, function (e) {
+
+                                var sources_error_id = namespace + '_error';
+
+                                $(this).data(sources_error_id, true);
+
+                                if ($sources.length === $sources.filter(function () {
+                                    return true === $(this).data(sources_error_id);
+                                }).length) self._done(e);
                             });
                         } else {
 
                             if (this._$element.is('[' + src + ']')) {
 
-                                this._$element.attr('src', this._$element.data(src_clean)).removeData(src_clean).removeAttr(src);
+                                this._$element.attr('src', this._$element.data(src_clean)).removeData(src_clean).removeAttr(src)[this._process ? 'on' : 'one']('error.' + this._id_event, self._done);
 
                                 call_media_load = true;
                             }
@@ -249,7 +258,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                         this._$element[this._process ? 'on' : 'one']('loadedmetadata.' + this._id_event, function () {
 
                             if (true !== self._settings.playthrough && 'force' !== self._settings.playthrough) self._done(new Event('load'));
-                        })[self._process ? 'on' : 'one']('progress.' + self._id_event, function () {
+                        })[this._process ? 'on' : 'one']('progress.' + self._id_event, function () {
 
                             if ('force' === self._settings.playthrough) {
 
@@ -284,7 +293,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                         })[this._process ? 'on' : 'one']('canplaythrough.' + this._id_event, function () {
 
                             if (true === self._settings.playthrough) self._done(new Event('load'));
-                        })[this._process ? 'on' : 'one']('error.' + this._id_event, self._done);
+                        });
                     }
 
                     if (!this._process) this._$element.data(namespace, this._id_event);

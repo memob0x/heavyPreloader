@@ -347,6 +347,16 @@
 
                             }
 
+                        })
+                        [this._process ? 'on' : 'one']('error.' + this._id_event, function(e){
+
+                            const sources_error_id = namespace+'_error';
+
+                            $(this).data(sources_error_id, true);
+
+                            if( $sources.length === $sources.filter(function(){ return true === $(this).data(sources_error_id); }).length )
+                                self._done(e);
+
                         });
 
                     }else{
@@ -356,7 +366,8 @@
                             this._$element
                                 .attr('src', this._$element.data(src_clean))
                                 .removeData(src_clean)
-                                .removeAttr(src);
+                                .removeAttr(src)
+                                [this._process ? 'on' : 'one']('error.' + this._id_event, self._done);
 
                             call_media_load = true;
 
@@ -374,7 +385,7 @@
                                 self._done(new Event('load'));
 
                         })
-                        [self._process ? 'on' : 'one']('progress.' + self._id_event, function () {
+                        [this._process ? 'on' : 'one']('progress.' + self._id_event, function () {
 
                             if ( 'force' === self._settings.playthrough) {
 
@@ -420,8 +431,7 @@
                             if( true === self._settings.playthrough )
                                 self._done(new Event('load'));
 
-                        })
-                        [this._process ? 'on' : 'one']('error.' + this._id_event, self._done);
+                        });
 
                 }
 
