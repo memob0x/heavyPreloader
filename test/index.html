@@ -40,10 +40,38 @@
         .nite-preload .target.loaded {
             opacity: 1;
         }
+
+        menu {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 999;
+        }
+
+        menu span {
+            display: inline-block;
+            background: white;
+            padding: 10px;
+        }
+
+        menu button {
+            display: inline-block;
+            padding: 10px;
+            background: beige;
+            color: black;
+            outline: none;
+        }
+
     </style>
 
 </head>
 <body>
+
+<menu>
+    <button id="menu__instance--launch">Preload Some</button>
+    <button id="menu__instance--abort">Abort</button>
+    <span id="menu__instance--result"></span>
+</menu>
 
 <section class="nite-preload">
 
@@ -64,7 +92,7 @@
     </figure>
 
     <figure>
-        <video class="target">
+        <video autoplay class="target">
             <source data-nite-src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
             <source data-nite-src="https://www.w3schools.com/html/mov_bbb.ogg" type="video/ogg">
         </video>
@@ -75,55 +103,6 @@
 <script>
     (function($){
 
-
-        // - - - - - - - - - - - - -
-        // instance mode
-        // - - - - - - - - - - - - -
-
-    /*
-        let instance = new $.nitePreload([
-            'http://placehold.it/720x720/d5dcfc/ffffff.jpg',
-            'http://placehold.it/720x720/d9cbf9/ffffff.gif',
-            'http://placehold.it/720x720/c8fdcc/ffffff.png'
-        ]);
-    */
-
-    /*
-        instance.abort();
-    */
-
-    /*
-        instance.progress(function(url){
-
-            console.log(instance.percentage);
-
-            console.log('loaded -> '+ url);
-
-        });
-    /*
-
-    /* todo maybe?
-        instance.success(function(url){
-            console.log('err w/ '+url)
-        });
-        instance.error(function(url){
-            console.log('err w/ '+url)
-        });
-    */
-
-    /*
-        instance.done(function(){
-
-            console.log('done');
-
-        });
-    */
-        // - - - - - - - - - - - - -
-
-
-        // - - - - - - - - - - - - -
-        // object method mode
-        // - - - - - - - - - - - - -
         $('section.nite-preload').nitePreload({
 
             srcAttr       : 'data-nite-src',
@@ -136,37 +115,87 @@
             backgrounds   : true,
             extraAttrs    : [],
 
-            playthrough   : true
+            playthrough   : 'force'
 
         }, function(){
 
             console.log(this, 'method cb');
 
         });
-
-    /**/
         $(document).on('niteLoad.nite niteError.nite', function(e, $el){
 
             $el.addClass('loaded');
 
         });
-    /**/
-
-    /* // todo: this doesn't work for some reason...
-        $(document).on('niteLoad.nite niteError.nite', 'img', function(e){
-            console.log($(this));
-        });
-    /**/
-
-    /**/
         $('.target').on('niteLoad.nite niteError.nite', function(e){
 
             console.log(this, 'event cb');
 
         });
-    /**/
-        // - - - - - - - - - - - - - */
 
+    })(jQuery);
+    (function($){
+
+        let instance = null;
+        const
+            instance_mode = function(){
+
+                $('#menu__instance--abort').show();
+
+                let random_stuff = [];
+
+                for( let i = 0; i < 10; i++ ){
+
+                    let letters = '0123456789ABCDEF',
+                        colors = [];
+
+                    for( let ii = 0; ii < 2; ii++ ) {
+                        let color = '';
+                        for (let c = 0; c < 6; c++)
+                            color += letters[Math.floor(Math.random() * 16)];
+                        colors[ii] = color;
+                    }
+
+                    random_stuff.push('//placehold.it/720x720/'+colors[0]+'/'+colors[1]+'.jpg');
+
+                }
+
+                instance = new $.nitePreload(random_stuff);
+
+                instance.progress(function (url) {
+                    $('#menu__instance--result').html(instance.percentage+'%');
+                });
+
+                // todo
+                /*
+                instance.success(function(url){
+                    console.log('%cok --> '+url, 'color: green');
+                }); */
+
+                // todo
+                /*
+                instance.error(function(url){
+                    console.log('%cerr --> '+url, 'color: red');
+                }); */
+
+                instance.done(function () {
+                    $('#menu__instance--result').append(' done!!');
+                    $('#menu__instance--abort').hide();
+                });
+
+            };
+        $('#menu__instance--launch').click(instance_mode);
+        $('#menu__instance--abort').hide().click(function(){
+
+            if( instance !== null ) {
+
+                instance.abort();
+
+                $(this).hide();
+
+            }
+
+        });
     })(jQuery);
 </script>
 

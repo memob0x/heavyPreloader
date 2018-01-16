@@ -68,22 +68,6 @@
 
         },
 
-        is_loaded = function(element){
-
-            return (
-                element.complete &&
-                Math.floor(element.naturalWidth) >= 1 &&
-                Math.floor(element.naturalHeight) >= 1
-            )
-            ||
-            (
-                element.readyState >= 2 &&
-                element.videoWidth !== 0 &&
-                element.videoHeight !== 0
-            );
-
-        },
-
         is_html_object = function( object ){
 
             if( typeof object !== 'object' )
@@ -95,6 +79,24 @@
             catch(e){
                 return object.nodeType === 1 && typeof object.style === 'object' && typeof object.ownerDocument === 'object';
             }
+
+        },
+
+        is_loaded = function(element){
+
+            return is_html_object(element) && (
+                (
+                    element.complete &&
+                    Math.floor(element.naturalWidth) >= 1 &&
+                    Math.floor(element.naturalHeight) >= 1
+                )
+                ||
+                (
+                    element.readyState >= 2 &&
+                    element.videoWidth !== 0 &&
+                    element.videoHeight !== 0
+                )
+            );
 
         },
         
@@ -328,7 +330,7 @@
 
                     const $sources = this._$element.find('source');
 
-                    let load = false;
+                    let call_media_load = false;
 
                     if( $sources.length ){
 
@@ -341,7 +343,7 @@
                                     .removeData(src_clean)
                                     .removeAttr(src);
 
-                                load = true;
+                                call_media_load = true;
 
                             }
 
@@ -356,31 +358,31 @@
                                 .removeData(src_clean)
                                 .removeAttr(src);
 
-                            load = true;
+                            call_media_load = true;
 
                         }
 
                     }
 
-                    if( load )
+                    if( call_media_load )
                         this._element.load();
 
                     this._$element
                         [this._process ? 'on' : 'one']('loadedmetadata.' + this._id_event, function () {
 
-                            if (true !== self._settings.playthrough)
+                            if (true !== self._settings.playthrough && 'force' !== self._settings.playthrough)
                                 self._done(new Event('load'));
 
                         })
-                        /*[this._process ? 'on' : 'one']('canplay.' + this._id_event, function () {
+                        [self._process ? 'on' : 'one']('progress.' + self._id_event, function () {
 
-                            if (true === self._settings.playthrough) {
+                            if ( 'force' === self._settings.playthrough) {
 
-                                $(this).on('progress.' + self._id_event, function () {
+                                const media = this;
 
-                                    console.log('as')
+                                setTimeout(function () {
 
-                                    if (this.readyState > 0 && !this.duration) {
+                                    if (media.readyState > 0 && !media.duration) {
 
                                         self._done(new Event('error'));
 
@@ -390,29 +392,29 @@
 
                                     if (!self._process) {
 
-                                        if (!this.paused)
-                                            this.pause();
+                                        if (!media.paused)
+                                            media.pause();
 
-                                        this.currentTime++;
+                                        media.currentTime += 2;
 
                                     }
 
-                                    if (this.buffered.length && Math.round(this.buffered.end(0)) / Math.round(this.seekable.end(0)) === 1) {
+                                    if (media.buffered.length && Math.round(media.buffered.end(0)) / Math.round(media.seekable.end(0)) === 1) {
 
-                                        this.currentTime = 0;
+                                        media.currentTime = 0;
 
-                                        if ($(this).is('[autoplay]'))
-                                            this.play();
+                                        if (!self._process && $(media).is('[autoplay]'))
+                                            media.play();
 
                                         self._done(new Event('load'));
 
                                     }
 
-                                });
+                                }, 25);
 
                             }
 
-                        })*/
+                        })
                         [this._process ? 'on' : 'one']('canplaythrough.' + this._id_event, function(){
 
                             if( true === self._settings.playthrough )
@@ -477,8 +479,6 @@
 
         constructor(collection, options) {
 
-            const self = this;
-
             this._collection = [];
             this._collection_loaded = [];
             this._collection_instances = [ new ResourceLoader(this._settings) ];
@@ -504,72 +504,68 @@
 
             this._loaded = 0;
 
-            this._loop = function(){
-
-                if ( !this._collection.length )
-                    return;
-
-                if( true === this._complete ){
-
-                    self._callback.call(null /* todo context */);
-
-                    return;
-
-                }
-
-                for (let i = 0; i < this._collection.length; i++) {
-
-                    if (this._abort)
-                        break;
-
-                    // todo this._settings.sequential --> must be called in the following .done() call and taking account of visibility check in ResourceLoader();
-
-                    let load_instance = new ResourceLoader(this._settings);
-
-                    this._collection_instances.push(load_instance);
-
-                    load_instance.resource = this._collection[i];
-
-                    load_instance.process();
-
-                    load_instance.done(function(id, resource){
-
-                        if( $.inArray(id, self._collection_loaded) === -1 ) {
-
-                            self._loaded++;
-
-                            self._collection_loaded.push(id);
-
-                            self.percentage = self._loaded / self._collection.length * 100;
-
-                            self._progress.call(null /* todo */, resource);
-
-                        }
-
-                        if ( self._loaded > self._collection.length || self._abort )
-                            return;
-
-                        if( self._loaded === self._collection.length ) {
-
-                            self._callback.call(null /* todo */);
-
-                            self._complete = true;
-
-                        }
-
-                    });
-
-                }
-
-            };
-
-            this._loop();
+            this.loop();
 
         }
 
         loop(){
 
-            this._loop();
+            const self = this;
+
+            if ( !this._collection.length )
+                return;
+
+            if( true === this._complete ){
+
+                self._callback.call(null /* todo context */);
+
+                return;
+
+            }
+
+            for (let i = 0; i < this._collection.length; i++) {
+
+                if (this._abort)
+                    break;
+
+                // todo this._settings.sequential --> must be called in the following .done() call and taking account of visibility check in ResourceLoader();
+
+                let load_instance = new ResourceLoader(this._settings);
+
+                this._collection_instances.push(load_instance);
+
+                load_instance.resource = this._collection[i];
+
+                load_instance.process();
+
+                load_instance.done(function(id, resource){
+
+                    if( $.inArray(id, self._collection_loaded) === -1 ) {
+
+                        self._loaded++;
+
+                        self._collection_loaded.push(id);
+
+                        self.percentage = self._loaded / self._collection.length * 100;
+
+                        self._progress.call(null /* todo */, resource);
+
+                    }
+
+                    if ( self._loaded > self._collection.length || self._abort )
+                        return;
+
+                    if( self._loaded === self._collection.length ) {
+
+                        self._callback.call(null /* todo */);
+
+                        self._complete = true;
+
+                    }
+
+                });
+
+            }
 
         }
 

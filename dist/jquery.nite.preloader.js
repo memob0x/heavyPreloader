@@ -60,10 +60,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         return in_viewport && $el.is(':visible') && $el.css('visibility') !== 'hidden';
     },
-        is_loaded = function is_loaded(element) {
-
-        return element.complete && Math.floor(element.naturalWidth) >= 1 && Math.floor(element.naturalHeight) >= 1 || element.readyState >= 2 && element.videoWidth !== 0 && element.videoHeight !== 0;
-    },
         is_html_object = function is_html_object(object) {
 
         if ((typeof object === 'undefined' ? 'undefined' : _typeof(object)) !== 'object') return false;
@@ -73,6 +69,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         } catch (e) {
             return object.nodeType === 1 && _typeof(object.style) === 'object' && _typeof(object.ownerDocument) === 'object';
         }
+    },
+        is_loaded = function is_loaded(element) {
+
+        return is_html_object(element) && (element.complete && Math.floor(element.naturalWidth) >= 1 && Math.floor(element.naturalHeight) >= 1 || element.readyState >= 2 && element.videoWidth !== 0 && element.videoHeight !== 0);
     },
         is_format = function is_format(item, expected_format) {
 
@@ -221,7 +221,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
                         var $sources = this._$element.find('source');
 
-                        var load = false;
+                        var call_media_load = false;
 
                         if ($sources.length) {
 
@@ -231,7 +231,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
                                     $(this).attr('src', $(this).data(src_clean)).removeData(src_clean).removeAttr(src);
 
-                                    load = true;
+                                    call_media_load = true;
                                 }
                             });
                         } else {
@@ -240,39 +240,48 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
                                 this._$element.attr('src', this._$element.data(src_clean)).removeData(src_clean).removeAttr(src);
 
-                                load = true;
+                                call_media_load = true;
                             }
                         }
 
-                        if (load) this._element.load();
+                        if (call_media_load) this._element.load();
 
                         this._$element[this._process ? 'on' : 'one']('loadedmetadata.' + this._id_event, function () {
 
-                            if (true !== self._settings.playthrough) self._done(new Event('load'));
-                        })
-                        /*[this._process ? 'on' : 'one']('canplay.' + this._id_event, function () {
-                             if (true === self._settings.playthrough) {
-                                 $(this).on('progress.' + self._id_event, function () {
-                                     console.log('as')
-                                     if (this.readyState > 0 && !this.duration) {
-                                         self._done(new Event('error'));
-                                         return;
-                                     }
-                                     if (!self._process) {
-                                         if (!this.paused)
-                                            this.pause();
-                                         this.currentTime++;
-                                     }
-                                     if (this.buffered.length && Math.round(this.buffered.end(0)) / Math.round(this.seekable.end(0)) === 1) {
-                                         this.currentTime = 0;
-                                         if ($(this).is('[autoplay]'))
-                                            this.play();
-                                         self._done(new Event('load'));
-                                     }
-                                 });
-                             }
-                         })*/
-                        [this._process ? 'on' : 'one']('canplaythrough.' + this._id_event, function () {
+                            if (true !== self._settings.playthrough && 'force' !== self._settings.playthrough) self._done(new Event('load'));
+                        })[self._process ? 'on' : 'one']('progress.' + self._id_event, function () {
+
+                            if ('force' === self._settings.playthrough) {
+
+                                var media = this;
+
+                                setTimeout(function () {
+
+                                    if (media.readyState > 0 && !media.duration) {
+
+                                        self._done(new Event('error'));
+
+                                        return;
+                                    }
+
+                                    if (!self._process) {
+
+                                        if (!media.paused) media.pause();
+
+                                        media.currentTime += 2;
+                                    }
+
+                                    if (media.buffered.length && Math.round(media.buffered.end(0)) / Math.round(media.seekable.end(0)) === 1) {
+
+                                        media.currentTime = 0;
+
+                                        if (!self._process && $(media).is('[autoplay]')) media.play();
+
+                                        self._done(new Event('load'));
+                                    }
+                                }, 25);
+                            }
+                        })[this._process ? 'on' : 'one']('canplaythrough.' + this._id_event, function () {
 
                             if (true === self._settings.playthrough) self._done(new Event('load'));
                         })[this._process ? 'on' : 'one']('error.' + this._id_event, self._done);
@@ -356,8 +365,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         function ResourcesLoader(collection, options) {
             _classCallCheck(this, ResourcesLoader);
 
-            var self = this;
-
             this._collection = [];
             this._collection_loaded = [];
             this._collection_instances = [new ResourceLoader(this._settings)];
@@ -380,7 +387,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
             this._loaded = 0;
 
-            this._loop = function () {
+            this.loop();
+        }
+
+        _createClass(ResourcesLoader, [{
+            key: 'loop',
+            value: function loop() {
+
+                var self = this;
 
                 if (!this._collection.length) return;
 
@@ -428,16 +442,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                         }
                     });
                 }
-            };
-
-            this._loop();
-        }
-
-        _createClass(ResourcesLoader, [{
-            key: 'loop',
-            value: function loop() {
-
-                this._loop();
             }
         }, {
             key: 'done',
