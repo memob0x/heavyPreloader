@@ -12,28 +12,30 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
     var namespace_prefix = 'nite',
         namespace_method = namespace_prefix + 'Preload',
-        namespace = namespace_method + 'er',
-        _console = function _console(message, level) {
+        namespace = namespace_method + 'er';
 
-        if (!window.console) return;
-
-        var display = window.console.log;
-
-        switch (level) {
-            case 1:
-                if (window.console.warn) display = window.console.warn;
-                break;
-            case 2:
-                if (window.console.error) display = window.console.error;
-                break;
+    // https://github.com/paulmillr/console-polyfill
+    // - - - - - - - - - - - - - - - - - - - -
+    (function (global) {
+        if (!global.console) global.console = {};
+        var con = global.console,
+            prop = void 0,
+            method = void 0,
+            dummy = function dummy() {},
+            properties = ['memory'],
+            methods = ('assert,clear,count,debug,dir,dirxml,error,exception,group,' + 'groupCollapsed,groupEnd,info,log,markTimeline,profile,profiles,profileEnd,' + 'show,table,time,timeEnd,timeline,timelineEnd,timeStamp,trace,warn').split(',');
+        while (prop = properties.pop()) {
+            if (!con[prop]) con[prop] = {};
+        }while (method = methods.pop()) {
+            if (!con[method]) con[method] = dummy;
         }
+    })(window);
+    // - - - - - - - - - - - - - - - - - - - -
 
-        display(message);
-    };
 
     // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
     if (!$) {
-        _console('jQuery is needed for ' + namespace + ' to work!', 2);
+        console.error('jQuery is needed for ' + namespace + ' to work!');
         return undefined;
     }
     // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~

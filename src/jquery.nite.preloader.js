@@ -5,32 +5,34 @@
     const
         namespace_prefix = 'nite',
         namespace_method = namespace_prefix+'Preload',
-        namespace = namespace_method+'er',
-        _console = function(message, level){
+        namespace = namespace_method+'er';
 
-            if( !window.console )
-                return;
 
-            let display = window.console.log;
+    // https://github.com/paulmillr/console-polyfill
+    // - - - - - - - - - - - - - - - - - - - -
+    (function(global) {
+        if (!global.console)
+            global.console = {};
+        let con = global.console,
+            prop, method,
+            dummy = function() {},
+            properties = ['memory'],
+            methods = ('assert,clear,count,debug,dir,dirxml,error,exception,group,' +
+                'groupCollapsed,groupEnd,info,log,markTimeline,profile,profiles,profileEnd,' +
+                'show,table,time,timeEnd,timeline,timelineEnd,timeStamp,trace,warn').split(',');
+        while (prop = properties.pop())
+            if (!con[prop])
+                con[prop] = {};
+        while (method = methods.pop())
+            if (!con[method])
+                con[method] = dummy;
+    })(window);
+    // - - - - - - - - - - - - - - - - - - - -
 
-            switch(level){
-                case 1:
-                    if( window.console.warn )
-                        display = window.console.warn;
-                    break;
-                case 2:
-                    if( window.console.error )
-                        display = window.console.error;
-                    break;
-            }
-
-            display(message);
-
-        };
 
     // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
     if( !$ ) {
-        _console('jQuery is needed for '+namespace+' to work!', 2);
+        console.error('jQuery is needed for '+namespace+' to work!');
         return undefined;
     }
     // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
