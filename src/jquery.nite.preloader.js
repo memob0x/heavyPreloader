@@ -215,6 +215,7 @@
                     const trigger_event = e.type.charAt(0).toUpperCase() + e.type.slice(1);
 
                     self._$element.trigger(namespace_prefix + trigger_event + '.' + namespace_prefix, [self._$element]);
+
                 }
 
                 self._callback.call(null /* todo context */, self._id, self._element.currentSrc || self._element.src);
@@ -266,7 +267,7 @@
 
             this._id_event = this._$element.data(namespace);
             this._process  = this._id_event !== undefined;
-            this._id_event = this._process ? this._id_event : namespace + '_unique_' + unique_id();
+            this._id_event = this._process ? this._id_event : namespace + '_unique_' + this._element.tagName + '_'+ unique_id();
 
         }
 
@@ -389,58 +390,70 @@
                     this._$element
                         [this._process ? 'on' : 'one']('loadedmetadata.' + this._id_event, function () {
 
-                            if (true !== self._settings.playthrough && 'full' !== self._settings.playthrough)
+                            if ( true !== self._settings.playthrough && 'full' !== self._settings.playthrough )
                                 self._done(new Event('load'));
 
-                        })
-                        [this._process ? 'on' : 'one']('canplay.' + self._id_event, function () {
+                            if( 'full' === self._settings.playthrough ) {
 
-                            if ( 'full' === self._settings.playthrough && this.currentTime === 0 && !is_fully_buffered(this) )
-                                this.currentTime++;
+                                let interval = setInterval(function(){
 
-                        })
-                        [this._process ? 'on' : 'one']('progress.' + self._id_event, function () {
+                                    // this replaces the faulty progress event below
+                                    if (self._element.readyState > 0 && !self._element.duration) {
 
-                            if ( 'full' === self._settings.playthrough) {
-
-                                const media = this;
-
-                                setTimeout(function () {
-
-                                    if (media.readyState > 0 && !media.duration) {
+                                        clearInterval(interval);
 
                                         self._done(new Event('error'));
 
-                                    }else if ( is_fully_buffered(media) ) {
+                                    } else if (is_fully_buffered(self._element)) {
 
-                                        media.currentTime = 0;
+                                        self._element.currentTime = 0;
 
-                                        if (!self._process && media.paused && $(media).is('[autoplay]'))
-                                            media.play();
+                                        if (!self._process && self._element.paused && $(self._element).is('[autoplay]'))
+                                            self._element.play();
+
+                                        clearInterval(interval);
 
                                         self._done(new Event('load'));
 
-                                    }else{
+                                    } else {
 
-                                        if (!media.paused)
-                                            media.pause();
+                                        if (!self._element.paused)
+                                            self._element.pause();
 
                                         if (!self._process)
-                                            media.currentTime += 2;
+                                            self._element.currentTime += 2;
 
                                     }
 
-                                }, 25);
+                                }, 500);
+
+                                self._$element.data(self._id_event, interval);
 
                             }
 
                         })
-                        [this._process ? 'on' : 'one']('canplaythrough.' + this._id_event, function(){
+                        [this._process ? 'on' : 'one']('canplay.' + this._id_event, function () {
 
-                            if( true === self._settings.playthrough )
+                            if ('full' === self._settings.playthrough && this.currentTime === 0 && !is_fully_buffered(this))
+                                this.currentTime++;
+
+                        })
+                        [this._process ? 'on' : 'one']('canplaythrough.' + this._id_event, function () {
+
+                            if (true === self._settings.playthrough)
                                 self._done(new Event('load'));
 
                         });
+
+                        // this progress event thing is not reliable AL >;(
+                        /*[this._process ? 'on' : 'one']('progress.' + this._id_event, function () {
+
+                            if ('full' === self._settings.playthrough)
+                                setTimeout(function(){
+                                    // progress check code here ...
+                                }, 25);
+
+                        }); */
 
                 }
 
