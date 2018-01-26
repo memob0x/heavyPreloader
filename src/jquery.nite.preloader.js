@@ -30,12 +30,42 @@
     // - - - - - - - - - - - - - - - - - - - -
 
 
-    // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+    // - - - - - - - - - - - - - - - - - - - -
     if( !$ ) {
         console.error('jQuery is needed for '+namespace+' to work!');
         return undefined;
     }
-    // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+    // - - - - - - - - - - - - - - - - - - - -
+
+
+    // https://github.com/jsPolyfill/Array.prototype.findIndex/blob/master/findIndex.js
+    // - - - - - - - - - - - - - - - - - - - -
+    Array.prototype.findIndex = Array.prototype.findIndex || function(callback) {
+        if (this === null) {
+            throw new TypeError('Array.prototype.findIndex called on null or undefined');
+        } else if (typeof callback !== 'function') {
+            throw new TypeError('callback must be a function');
+        }
+        const
+            list = Object(this),
+            // Makes sures is always has an positive integer as length.
+             length = list.length >>> 0,
+             thisArg = arguments[1];
+        for (let i = 0; i < length; i++) {
+            if ( callback.call(thisArg, list[i], i, list) ) {
+                return i;
+            }
+        }
+        return -1;
+    };
+    // - - - - - - - - - - - - - - - - - - - -
+
+
+    // https://gist.github.com/eliperelman/1031656
+    // - - - - - - - - - - - - - - - - - - - -
+    [].filter||(Array.prototype.filter=function(a,b,c,d,e){c=this;d=[];for(e in c)~~e+''==e&&e>=0&&a.call(b,c[e],+e,c)&&d.push(c[e]);return d})
+    // - - - - - - - - - - - - - - - - - - - -
+
 
 
     const
@@ -89,7 +119,7 @@
             return is_html_object(element) && (
                 (
                     element.complete &&
-                    Math.floor(element.naturalWidth) >= 1 &&
+                    Math.floor(element.naturalWidth)  >= 1 &&
                     Math.floor(element.naturalHeight) >= 1
                 )
                 ||
@@ -190,10 +220,10 @@
             const self = this;
 
             this._settings  = $.extend(true, {
-                playthrough  : false,
-                srcsetAttr   : 'data-srcset',
-                srcAttr      : 'data-src',
-                visible      : false
+                playthrough : false,
+                srcsetAttr  : 'data-srcset',
+                srcAttr     : 'data-src',
+                visible     : false
             }, options);
 
             this._id        = null;
@@ -203,20 +233,24 @@
             this._$element  = $();
 
             this._resource  = null;
-            this._process   = false;
+            this._busy      = false;
 
             this._format    = null;
 
             this._callback  = $.noop;
             this._done      = function(e){
 
-                if( !self._process ) {
+                if( !self._busy ) {
 
                     const trigger_event = e.type.charAt(0).toUpperCase() + e.type.slice(1);
 
                     self._$element.trigger(namespace_prefix + trigger_event + '.' + namespace_prefix, [self._$element]);
 
                 }
+
+                self._$element.removeData(namespace);
+
+                self._busy = false;
 
                 self._callback.call(null /* todo context */, self._id, self._element.currentSrc || self._element.src);
 
@@ -266,15 +300,16 @@
             }
 
             this._id_event = this._$element.data(namespace);
-            this._process  = this._id_event !== undefined;
-            this._id_event = this._process ? this._id_event : namespace + '_unique_' + this._element.tagName + '_'+ unique_id();
+            this._busy = this._id_event !== undefined;
+            this._id_event = this._busy ? this._id_event : namespace + '_unique_' + this._element.tagName + '_'+ unique_id();
 
         }
 
+        /**
+         *
+         * @returns {boolean} se ha preso in carico il caricamento oppure no per vari motivi (è già caricato, non è nella viewport etc)
+         */
         process(){
-
-            if( this._settings.visible && !is_visible(this._element) )
-                return;
 
             const
                 self = this,
@@ -283,16 +318,22 @@
 
             if ( is_loaded(this._element) ) {
 
-                if (!this._process)
+                if (!this._busy)
                     this._$element.off('.' + this._id_event);
 
                 this._done(new Event($.isNumeric(this._element.naturalWidth) ? namespace_prefix+'Load' : namespace_prefix+'Error'));
+
+                return false;
+
+            }else if( this._settings.visible && !is_visible(this._element) ){
+
+                return false;
 
             }else{
 
                 if( this._format === 'image' ) {
 
-                    this._$element[this._process ? 'on' : 'one']('load.' + this._id_event + ' error.' + this._id_event, this._done);
+                    this._$element[this._busy ? 'on' : 'one']('load.' + this._id_event + ' error.' + this._id_event, this._done);
 
                     const
                         $picture = this._$element.closest('picture'),
@@ -327,9 +368,8 @@
                                 .removeAttr(src);
 
                     }
-                }
 
-                if( this._format === 'video' || this._format === 'audio' ){
+                }else if( this._format === 'video' || this._format === 'audio' ){
 
                     const
                         $sources = this._$element.find('source'),
@@ -357,7 +397,7 @@
                             }
 
                         })
-                        [this._process ? 'on' : 'one']('error.' + this._id_event, function(e){
+                        [this._busy ? 'on' : 'one']('error.' + this._id_event, function(e){
 
                             const sources_error_id = namespace+'_error';
 
@@ -376,7 +416,7 @@
                                 .attr('src', this._$element.data(src_clean))
                                 .removeData(src_clean)
                                 .removeAttr(src)
-                                [this._process ? 'on' : 'one']('error.' + this._id_event, self._done);
+                                [this._busy ? 'on' : 'one']('error.' + this._id_event, self._done);
 
                             call_media_load = true;
 
@@ -388,81 +428,72 @@
                         this._element.load();
 
                     this._$element
-                        [this._process ? 'on' : 'one']('loadedmetadata.' + this._id_event, function () {
+                        [this._busy ? 'on' : 'one']('loadedmetadata.' + this._id_event, function () {
 
                             if ( true !== self._settings.playthrough && 'full' !== self._settings.playthrough )
                                 self._done(new Event('load'));
 
                             if( 'full' === self._settings.playthrough ) {
 
-                                let interval = setInterval(function(){
+                                let on_progress_replacement_interval = setInterval(function(){
 
-                                    // this replaces the faulty progress event below
-                                    if (self._element.readyState > 0 && !self._element.duration) {
+                                    let is_error = self._element.readyState > 0 && !self._element.duration;
 
-                                        clearInterval(interval);
-
-                                        self._done(new Event('error'));
-
-                                    } else if (is_fully_buffered(self._element)) {
+                                    if( is_error || is_fully_buffered(self._element) ){
 
                                         self._element.currentTime = 0;
 
-                                        if (!self._process && self._element.paused && $(self._element).is('[autoplay]'))
+                                        if( !is_error && !self._busy && self._element.paused && $(self._element).is('[autoplay]') )
                                             self._element.play();
 
-                                        clearInterval(interval);
+                                        clearInterval(on_progress_replacement_interval);
 
-                                        self._done(new Event('load'));
+                                        self._done(new Event( !is_error ? 'load' : 'error' ));
 
                                     } else {
 
-                                        if (!self._element.paused)
+                                        if( !self._element.paused )
                                             self._element.pause();
 
-                                        if (!self._process)
+                                        if( !self._busy )
                                             self._element.currentTime += 2;
 
                                     }
 
                                 }, 500);
 
-                                self._$element.data(self._id_event, interval);
+                                self._$element.data(self._id_event, on_progress_replacement_interval);
 
                             }
 
                         })
-                        [this._process ? 'on' : 'one']('canplay.' + this._id_event, function () {
+                        [this._busy ? 'on' : 'one']('canplay.' + this._id_event, function () {
 
                             if ('full' === self._settings.playthrough && this.currentTime === 0 && !is_fully_buffered(this))
                                 this.currentTime++;
 
                         })
-                        [this._process ? 'on' : 'one']('canplaythrough.' + this._id_event, function () {
+                        [this._busy ? 'on' : 'one']('canplaythrough.' + this._id_event, function () {
 
                             if (true === self._settings.playthrough)
                                 self._done(new Event('load'));
 
                         });
 
-                        // this progress event thing is not reliable AL >;(
-                        /*[this._process ? 'on' : 'one']('progress.' + this._id_event, function () {
+                }else {
 
-                            if ('full' === self._settings.playthrough)
-                                setTimeout(function(){
-                                    // progress check code here ...
-                                }, 25);
-
-                        }); */
+                    return false;
 
                 }
 
-                if ( !this._process )
+                if ( !this._busy )
                     this._$element.data(namespace, this._id_event);
 
             }
 
             this._resource = this._element.currentSrc || this._element.src;
+
+            return !this._busy;
 
         }
 
@@ -511,9 +542,11 @@
 
         constructor(collection, options) {
 
+            const self = this;
+
             this._collection = [];
             this._collection_loaded = [];
-            this._collection_instances = [ new ResourceLoader(this._settings) ];
+            this._collection_instances = [];
 
             if ($.isArray(collection) && ( typeof collection[0] === 'string' || is_html_object(collection[0]) ))
                 for ( const resource in collection )
@@ -528,51 +561,49 @@
 
             this.percentage = 0;
 
-            this._callback = $.noop();
-            this._progress = $.noop();
+            this._callback = $.noop;
+            this._progress = $.noop;
+
             this._abort = false;
-
-            this._complete = false;
-
             this._loaded = 0;
+            this._complete = false;
+            this._busy = false;
 
-            this.loop();
+            this._loop = (function async_loop() {
+                
+                setTimeout(function () { // force asynchrony (gives time to chain methods synchronously)
+
+                    self.loop();
+
+                }, 25);
+
+                return async_loop;
+
+            })();
 
         }
 
         loop(){
 
-            const self = this;
+            const
+                self = this,
+                sequential_mode = true === this._settings.sequential;
 
-            if ( !this._collection.length )
-                return;
+            for( let i = 0; i < this._collection.length; i++ ){
 
-            if( true === this._complete ){
-
-                self._callback.call(null /* todo context */);
-
-                return;
-
-            }
-
-            for (let i = 0; i < this._collection.length; i++) {
-
-                if (this._abort)
+                if( this._abort )
                     break;
 
-                // todo this._settings.sequential --> must be called in the following .done() call and taking account of visibility check in ResourceLoader();
+                let this_load_instance = new ResourceLoader(this._settings);
+                this._collection_instances.push({ id : this._collection[i].id, instance : this_load_instance });
 
-                let load_instance = new ResourceLoader(this._settings);
+                this_load_instance.resource = this._collection[i];
 
-                this._collection_instances.push(load_instance);
+                this_load_instance.done(function(id, resource){
 
-                load_instance.resource = this._collection[i];
+                    let context = null; // todo context
 
-                load_instance.process();
-
-                load_instance.done(function(id, resource){
-
-                    if( $.inArray(id, self._collection_loaded) === -1 ) {
+                    if( !self._complete && !self._abort && $.inArray(id, self._collection_loaded) === -1 ) {
 
                         self._loaded++;
 
@@ -580,22 +611,38 @@
 
                         self.percentage = self._loaded / self._collection.length * 100;
 
-                        self._progress.call(null /* todo */, resource);
+                        self._progress.call(context, resource);
+
+                        self._busy = false;
+
+                        if( sequential_mode ){
+
+                            let next_load_instance = self._collection_instances.findIndex( x => x.id === id ) + 1; // todo check polyfill efficiency in ie
+
+                            if( next_load_instance > 0 && next_load_instance < self._collection_instances.length ) {
+
+                                next_load_instance = self._collection_instances[ next_load_instance ];
+
+                                next_load_instance.instance.process();
+
+                            }
+
+                        }
 
                     }
 
-                    if ( self._loaded > self._collection.length || self._abort )
-                        return;
+                    if( !self._complete && !self._abort && self._loaded === self._collection.length ) {
 
-                    if( self._loaded === self._collection.length ) {
-
-                        self._callback.call(null /* todo */);
+                        self._callback.call(context);
 
                         self._complete = true;
 
                     }
 
                 });
+
+                if( !sequential_mode || ( sequential_mode && !this._busy ) )
+                    this._busy = this_load_instance.process();
 
             }
 
@@ -607,14 +654,18 @@
                 return false;
 
             const
-                context = this,
+                self = this,
                 _func = function(){
-                    callback.call(context);
+                    callback.call(self);
                 };
 
-            if( this._collection.length )
+            if( this._collection.length ) {
+
                 this._callback = _func;
-            else
+
+                this._loop();
+
+            }else
                 _func();
 
             return true;
@@ -627,14 +678,18 @@
                 return false;
 
             const
-                context = this,
+                self = this,
                 _func = function(resource){
-                    callback.call(context, resource);
+                    callback.call(self, resource);
                 };
 
-            if( this._collection.length )
+            if( this._collection.length ) {
+
                 this._progress = _func;
-            else
+
+                this._loop();
+
+            }else
                 _func();
 
             return true;
@@ -643,8 +698,8 @@
 
         abort(){
 
-            for( const instance in this._collection_instances )
-                this._collection_instances[ instance ].abort();
+            for( const key in this._collection_instances )
+                this._collection_instances[ key ].instance.abort();
 
             if( !this._collection.length )
                 return;
@@ -708,6 +763,8 @@
 
     $[namespace_method] = ResourcesLoader;
 
+    let method_collection = [];
+
     $.fn[namespace_method] = function(options, callback){
 
         if( $.isFunction(options) )
@@ -740,81 +797,66 @@
 
         return this.each(function(){
 
-            let _complete = false;
-
             const
                 element = this,
                 $element = $(element),
                 collection = new CollectionPopulator($element, settings).collect(),
-                event_namespace = namespace + '_' + unique_id(),
-                complete = function(){
+                element_in_collection = $.inArray(element, collection) > -1,
+                unique_method_namespace = namespace + '_' + unique_id(),
 
-                    if( $.nite )
-                        $document.off('scroll.' + event_namespace);
-                    else
-                        $window.off('scroll.'+event_namespace);
+                this_load_instance = new ResourcesLoader(collection, settings);
 
-                    $element.removeData(namespace);
+            method_collection.push({
+                id : unique_method_namespace,
+                instance : this_load_instance,
+                element : element
+            });
 
-                    _complete = true;
+            this_load_instance.progress(function () {
 
-                };
-
-            let load_instance = $element.data(namespace);
-
-            if( undefined !== load_instance ) {
-
-                load_instance.abort();
-
-                complete();
-
-            }
-
-            load_instance = new ResourcesLoader(collection, settings);
-
-            load_instance.progress(function () {
-
-                $element.trigger(namespace_prefix+'Progress.'+namespace_prefix, [$element]);
+                if( !element_in_collection )
+                    $element.trigger(namespace_prefix+'Progress.'+namespace_prefix, [$element]);
 
             });
 
-            load_instance.done(function () {
+            this_load_instance.done(function(){
 
-                if( _complete )
-                    return;
+                if( settings.visible )
+                    $( $.nite ? $document : $window ).off('scroll.' + unique_method_namespace);
 
-                complete();
-
-                $element.trigger(namespace_prefix+'Load.'+namespace_prefix, [$element]);
+                if( !element_in_collection )
+                    $element.trigger(namespace_prefix+'Load.'+namespace_prefix, [$element]);
 
                 callback.call(element);
-                callback = $.noop;
+
+                // refresh other method calls for same el (omitting this one)
+                method_collection = method_collection.filter(function(obj) { // todo check polyfill efficiency in ie
+                    return obj.id !== unique_method_namespace;
+                });
+                for( let key in method_collection )
+                    if( $element.is(method_collection[key].element) )
+                        method_collection[key].instance.loop();
 
             });
-
-            $element.data(namespace, load_instance);
 
             if( settings.visible ){
 
                 if( $.nite )
-                    $.nite.scroll(event_namespace, function(){ load_instance.loop(); }, { fps : 25 });
+                    $.nite.scroll(unique_method_namespace, function(){ this_load_instance.loop(); }, { fps : 25 });
 
                 else{
 
                     const throttle_scroll_event = function(fn, wait) {
-
                         let time = Date.now();
-
                         return function() {
-                            if ((time + wait - Date.now()) < 0) {
+                            if( ( time + wait - Date.now() ) < 0 ){
                                 fn();
                                 time = Date.now();
                             }
                         }
-
                     };
 
-                    $window.on('scroll.'+event_namespace, throttle_scroll_event(function(){ load_instance.loop(); }, 1000));
+                    $window.on('scroll.'+unique_method_namespace, throttle_scroll_event(function(){ this_load_instance.loop(); }, 1000));
 
                 }
 

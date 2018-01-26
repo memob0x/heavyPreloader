@@ -72,9 +72,11 @@
 <body>
 
 <menu>
-    <button id="menu__instance--launch">Preload Some</button>
+    <button id="menu__instance--launch">Preload Some Random Stuff</button>
     <button id="menu__instance--abort">Abort</button>
     <span id="menu__instance--result"></span>
+    -
+    <button id="menu__domnow">Just Preload the whole document now!</button>
 </menu>
 
 <section class="nite-preload">
@@ -128,7 +130,7 @@
 
         }, function(){
 
-            console.log(this, 'method cb');
+            console.log('all lazy loaded!');
 
         });
         $(document).on('niteLoad.nite niteError.nite', function(e, $el){
@@ -138,7 +140,22 @@
         });
         $('.target').on('niteLoad.nite niteError.nite', function(e){
 
-            console.log(this, 'event cb');
+            //console.log(this, 'event cb');
+
+        });
+
+        $('#menu__domnow').click(function(){
+
+            $('section.nite-preload').nitePreload({
+
+                srcAttr: 'data-nite-src',
+                srcsetAttr: 'data-nite-srcset'
+
+            }, function(){
+
+                console.log('button pushed!');
+
+            });
 
         });
 
@@ -172,7 +189,9 @@
 
                 }
 
-                instance = new $.nitePreload(random_stuff);
+                instance = new $.nitePreload(random_stuff, {
+                    sequential : true
+                });
 
                 $('#menu__instance--result').html('0%');
 
