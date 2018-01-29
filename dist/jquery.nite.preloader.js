@@ -74,7 +74,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     // - - - - - - - - - - - - - - - - - - - -
 
 
-    var $document = $(document),
+    var capitalize = function capitalize(string) {
+        return string.charAt(0).toUpperCase() + string.slice(1);
+    },
+        $document = $(document),
         $window = $(window),
         unique_id = function unique_id() {
 
@@ -107,7 +110,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     },
         is_loaded = function is_loaded(element) {
 
-        return is_html_object(element) && (element.complete && Math.floor(element.naturalWidth) >= 1 && Math.floor(element.naturalHeight) >= 1 || element.readyState >= 2 && element.videoWidth !== 0 && element.videoHeight !== 0);
+        return is_html_object(element) && 'currentSrc' in element && element.currentSrc.length && ('complete' in element && element.complete || 'readyState' in element && element.readyState >= 2);
+    },
+        is_broken = function is_broken(element) {
+
+        return is_loaded(element) && ('naturalWidth' in element && Math.floor(element.naturalWidth) === 0 || 'videoWidth' in element && element.videoWidth === 0);
     },
         is_format = function is_format(item, expected_format) {
 
@@ -183,9 +190,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             var self = this;
 
             this._settings = $.extend(true, {
-                playthrough: false,
-                srcsetAttr: 'data-srcset',
                 srcAttr: 'data-src',
+                srcsetAttr: 'data-srcset',
+                playthrough: false,
                 visible: false
             }, options);
 
@@ -203,18 +210,15 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             this._callback = $.noop;
             this._done = function (e) {
 
-                if (!self._busy) {
+                var resource = self._element.currentSrc || self._element.src;
 
-                    var trigger_event = e.type.charAt(0).toUpperCase() + e.type.slice(1);
-
-                    self._$element.trigger(namespace_prefix + trigger_event + '.' + namespace_prefix, [self._$element]);
-                }
+                if (!self._busy) self._$element.trigger(namespace_prefix + capitalize(e.type) + '.' + namespace_prefix, [self._$element, resource]);
 
                 self._$element.removeData(namespace);
 
                 self._busy = false;
 
-                self._callback.call(null /* todo context */, self._id, self._element.currentSrc || self._element.src);
+                self._callback.call(null /* todo context */, e.type, resource, self._id);
             };
         }
 
@@ -236,7 +240,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
                     if (!this._busy) this._$element.off('.' + this._id_event);
 
-                    this._done(new Event($.isNumeric(this._element.naturalWidth) ? namespace_prefix + 'Load' : namespace_prefix + 'Error'));
+                    this._done(new Event(!is_broken(this._element) ? 'load' : 'error'));
 
                     return false;
                 } else if (this._settings.visible && !is_visible(this._element)) {
@@ -376,8 +380,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
                 var context = this;
 
-                this._callback = function (resource) {
-                    callback.call(context, resource);
+                this._callback = function (status, resource, id) {
+                    callback.call(context, status, resource, id);
                 };
             }
         }, {
@@ -431,13 +435,17 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             this._collection = [];
             this._collection_loaded = [];
             this._collection_instances = [];
+            this._resources_loaded = [];
 
             if ($.isArray(collection) && (typeof collection[0] === 'string' || is_html_object(collection[0]))) for (var resource in collection) {
                 if (collection.hasOwnProperty(resource)) this._collection.push({ id: unique_id(), resource: collection[resource] });
             }if (typeof collection === 'string' || is_html_object(collection)) this._collection.push({ id: unique_id(), resource: collection });
 
             this._settings = $.extend(true, {
-                sequential: false
+                srcAttr: 'data-src',
+                srcsetAttr: 'data-srcset',
+                playthrough: false,
+                visible: false
             }, options);
 
             this.percentage = 0;
@@ -465,34 +473,46 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         _createClass(ResourcesLoader, [{
             key: 'loop',
             value: function loop() {
+                var _this = this;
 
                 var self = this,
                     sequential_mode = true === this._settings.sequential;
 
-                for (var i = 0; i < this._collection.length; i++) {
+                var _loop = function _loop(i) {
 
-                    if (this._abort) break;
+                    if (_this._abort) return 'break';
 
-                    var this_load_instance = new ResourceLoader(this._settings);
-                    this._collection_instances.push({ id: this._collection[i].id, instance: this_load_instance });
+                    var this_load_id = _this._collection[i].id,
+                        this_load_index = self._collection_instances.findIndex(function (x) {
+                        return x.id === this_load_id;
+                    }),
+                        this_load_instance = new ResourceLoader(_this._settings);
 
-                    this_load_instance.resource = this._collection[i];
+                    if (this_load_index === -1) {
+                        _this._collection_instances.push({ id: this_load_id, instance: this_load_instance });
+                        this_load_index = self._collection_instances.findIndex(function (x) {
+                            return x.id === this_load_id;
+                        });
+                    } else _this._collection_instances[this_load_index].instance = this_load_instance;
 
-                    this_load_instance.done(function (id, resource) {
+                    this_load_instance.resource = _this._collection[i];
 
-                        var context = null; // todo context
+                    var context = null; // todo context
+
+                    this_load_instance.done(function (status, resource, id) {
 
                         if (!self._complete && !self._abort && $.inArray(id, self._collection_loaded) === -1) {
 
-                            self._loaded++;
-
                             self._collection_loaded.push(id);
+                            self._busy = false;
 
+                            self._loaded++;
                             self.percentage = self._loaded / self._collection.length * 100;
 
-                            self._progress.call(context, resource);
+                            var this_resource = { resource: resource, status: status };
+                            self._resources_loaded.push(this_resource);
 
-                            self._busy = false;
+                            self._progress.call(context, this_resource);
 
                             if (sequential_mode) {
 
@@ -511,13 +531,19 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
                         if (!self._complete && !self._abort && self._loaded === self._collection.length) {
 
-                            self._callback.call(context);
+                            self._callback.call(context, self._resources_loaded);
 
                             self._complete = true;
                         }
                     });
 
-                    if (!sequential_mode || sequential_mode && !this._busy) this._busy = this_load_instance.process();
+                    if (!sequential_mode || sequential_mode && !_this._busy) _this._busy = this_load_instance.process();
+                };
+
+                for (var i = 0; i < this._collection.length; i++) {
+                    var _ret = _loop(i);
+
+                    if (_ret === 'break') break;
                 }
             }
         }, {
@@ -527,8 +553,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 if (!$.isFunction(callback)) return false;
 
                 var self = this,
-                    _func = function _func() {
-                    callback.call(self);
+                    _func = function _func(resources) {
+                    callback.call(self, resources);
                 };
 
                 if (this._collection.length) {
@@ -590,11 +616,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
                 var collection = [];
 
-                var targets = 'img, video, audio',
+                var self = this,
+                    targets = 'img, video, audio',
                     targets_extended = targets + ', picture, source';
 
                 var $targets = this._$element.find(targets);
-                if (this._$element.is(targets)) $targets.add(this._$element);
+                if (this._$element.is(targets)) $targets = $targets.add(this._$element);
+                $targets = $targets.filter(function () {
+                    var filter = '[' + self._settings.srcAttr + '], [' + self._settings.srcsetAttr + ']';
+                    return $(this).is(filter) || $(this).children(targets_extended).filter(filter).length;
+                });
                 $targets.each(function () {
                     collection.push(this);
                 });
@@ -606,7 +637,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 });
 
                 if (this._settings.attributes.length) {
-                    var _loop = function (attr) {
+                    var _loop2 = function (attr) {
                         if (this._settings.attributes.hasOwnProperty(attr)) {
 
                             this._$element.find('[' + attr + ']:not(' + targets_extended + ')').each(function () {
@@ -618,7 +649,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     };
 
                     for (const attr in this._settings.attributes) {
-                        _loop(attr);
+                        _loop2(attr);
                     }
                 }return collection;
             }
@@ -649,7 +680,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             backgrounds: false,
             extraAttrs: [],
 
-            playthrough: false
+            playthrough: false,
+
+            early: false,
+            earlyTimeout: 0
 
         }, options);
 
@@ -668,19 +702,20 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             method_collection.push({
                 id: unique_method_namespace,
                 instance: this_load_instance,
-                element: element
+                element: element,
+                timeout: null
             });
 
-            this_load_instance.progress(function () {
+            this_load_instance.progress(function (resource) {
 
-                if (!element_in_collection) $element.trigger(namespace_prefix + 'Progress.' + namespace_prefix, [$element]);
+                if (!element_in_collection) $element.trigger(namespace_prefix + 'Progress.' + namespace_prefix, [$element, resource]);
             });
 
-            this_load_instance.done(function () {
+            this_load_instance.done(function (resources) {
 
                 if (settings.visible) $($.nite ? $document : $window).off('scroll.' + unique_method_namespace);
 
-                if (!element_in_collection) $element.trigger(namespace_prefix + 'Load.' + namespace_prefix, [$element]);
+                if (!element_in_collection) $element.trigger(namespace_prefix + 'Load.' + namespace_prefix, [$element, resources]);
 
                 callback.call(element);
 
@@ -690,7 +725,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     return obj.id !== unique_method_namespace;
                 });
                 for (var key in method_collection) {
-                    if ($element.is(method_collection[key].element)) method_collection[key].instance.loop();
+                    var this_method_collection = method_collection[key];
+                    if ($element.is(this_method_collection.element)) this_method_collection.instance.loop();
                 }
             });
 
@@ -713,6 +749,30 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     $window.on('scroll.' + unique_method_namespace, throttle_scroll_event(function () {
                         this_load_instance.loop();
                     }, 1000));
+                }
+            }
+
+            if (true === settings.early) for (var key in method_collection) {
+                if (method_collection[key].id === unique_method_namespace) {
+                    var _ret3 = function () {
+
+                        var this_method_collection = method_collection[key];
+
+                        clearTimeout(this_method_collection.timeout);
+
+                        this_method_collection.timeout = setTimeout(function () {
+
+                            // todo appropriate method ?
+                            this_method_collection.instance._settings.visible = false;
+                            this_method_collection.instance._settings.sequential = true;
+
+                            this_method_collection.instance.loop();
+                        }, $.isNumeric(settings.earlyTimeout) ? parseInt(settings.earlyTimeout) : 0);
+
+                        return 'break';
+                    }();
+
+                    if (_ret3 === 'break') break;
                 }
             }
         });

@@ -29,11 +29,16 @@
         .nite-preload.loaded {
             border-color: red;
         }
+        .nite-preload figure {
+            position: relative;
+        }
         .nite-preload figure,
-        .nite-preload .target {
+        .nite-preload .target,
+        .nite-preload .not-a-target {
             width: 100%;
         }
-        .nite-preload .target {
+        .nite-preload .target,
+        .nite-preload .not-a-target {
             display: block;
             height: 100%;
             opacity: 0;
@@ -41,8 +46,13 @@
             min-width: 1px;
             min-height: 1px;
         }
-        .nite-preload .target.loaded {
+        .nite-preload .target.loaded,
+        .nite-preload .not-a-target.loaded {
             opacity: 1;
+        }
+        .nite-preload figure.loaded {
+            transition: border .4s ease;
+            border: 22px solid darkgreen;
         }
 
         menu {
@@ -58,12 +68,26 @@
             padding: 10px;
         }
 
-        menu button {
+        button {
             display: inline-block;
             padding: 10px;
             background: beige;
             color: black;
             outline: none;
+        }
+
+        .cover {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            flex-wrap: nowrap;
+            justify-content: center;
+            align-content: center;
+            align-items: center;
         }
 
     </style>
@@ -104,6 +128,13 @@
         </video>
     </figure>
 
+    <figure>
+        <img class="not-a-target" data-src="//placehold.it/720x720/c0d4f7.jpg">
+        <div class="cover">
+            <button id="loadme">Caricami</button>
+        </div>
+    </figure>
+
 </section>
 
 <script>
@@ -111,7 +142,7 @@
 
         if( $.fn.niteCrop )
             $('figure').niteCrop({
-                elements : '.target'
+                elements : '.target, .not-a-target'
             });
 
         $('section.nite-preload').nitePreload({
@@ -126,16 +157,19 @@
             backgrounds   : true,
             extraAttrs    : [],
 
-            playthrough   : 'full'
+            playthrough   : 'full',
+
+            early : true,
+            earlyTimeout : 6000
 
         }, function(){
 
             console.log('all lazy loaded!');
 
         });
-        $(document).on('niteLoad.nite niteError.nite', function(e, $el){
+        $(document).on('niteLoad.nite niteError.nite', function(e, $el, resource){
 
-            $el.addClass('loaded');
+            $el.addClass('loaded'+( e.type === 'niteError' ? '-error' : '' ));
 
         });
         $('.target').on('niteLoad.nite niteError.nite', function(e){
@@ -154,6 +188,23 @@
             }, function(){
 
                 console.log('button pushed!');
+
+            });
+
+        });
+
+        $('#loadme').click(function(){
+
+            let $t = $(this);
+
+            $t.closest('figure').nitePreload({
+
+                srcAttr: 'data-src',
+                srcsetAttr: 'data-srcset'
+
+            }, function(){
+
+                $t.fadeOut();
 
             });
 
@@ -195,7 +246,7 @@
 
                 $('#menu__instance--result').html('0%');
 
-                instance.progress(function (url) {
+                instance.progress(function (resource) {
                     $('#menu__instance--result').html(instance.percentage + '%');
                 });
 
@@ -211,7 +262,7 @@
                 console.log('%cerr --> '+url, 'color: red');
             }); */
 
-                instance.done(function () {
+                instance.done(function (resources) {
                     $('#menu__instance--result').append(' - Done!!');
                     $('#menu__instance--abort').hide();
                     $('#menu__instance--launch').show();

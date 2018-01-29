@@ -70,6 +70,10 @@
 
     const
 
+        capitalize = function(string){
+            return string.charAt(0).toUpperCase() + string.slice(1);
+        },
+
         $document = $(document),
         $window = $(window),
 
@@ -116,19 +120,19 @@
 
         is_loaded = function(element){
 
-            return is_html_object(element) && (
-                (
-                    element.complete &&
-                    Math.floor(element.naturalWidth)  >= 1 &&
-                    Math.floor(element.naturalHeight) >= 1
-                )
-                ||
-                (
-                    element.readyState >= 2 &&
-                    element.videoWidth !== 0 &&
-                    element.videoHeight !== 0
-                )
-            );
+            return is_html_object(element)
+                && ( 'currentSrc' in element && element.currentSrc.length )
+                && ( ( 'complete' in element && element.complete ) || ( 'readyState' in element && element.readyState >= 2 ) );
+
+        },
+
+        is_broken = function(element){
+
+            return is_loaded(element) && (
+                    ( 'naturalWidth' in element && Math.floor(element.naturalWidth) === 0 )
+                    ||
+                    ( 'videoWidth' in element && element.videoWidth === 0 )
+                );
 
         },
         
@@ -220,9 +224,9 @@
             const self = this;
 
             this._settings  = $.extend(true, {
-                playthrough : false,
-                srcsetAttr  : 'data-srcset',
                 srcAttr     : 'data-src',
+                srcsetAttr  : 'data-srcset',
+                playthrough : false,
                 visible     : false
             }, options);
 
@@ -240,19 +244,16 @@
             this._callback  = $.noop;
             this._done      = function(e){
 
-                if( !self._busy ) {
+                let resource = self._element.currentSrc || self._element.src;
 
-                    const trigger_event = e.type.charAt(0).toUpperCase() + e.type.slice(1);
-
-                    self._$element.trigger(namespace_prefix + trigger_event + '.' + namespace_prefix, [self._$element]);
-
-                }
+                if( !self._busy )
+                    self._$element.trigger(namespace_prefix + capitalize(e.type) + '.' + namespace_prefix, [self._$element, resource]);
 
                 self._$element.removeData(namespace);
 
                 self._busy = false;
 
-                self._callback.call(null /* todo context */, self._id, self._element.currentSrc || self._element.src);
+                self._callback.call(null /* todo context */, e.type, resource, self._id);
 
             };
 
@@ -321,7 +322,7 @@
                 if (!this._busy)
                     this._$element.off('.' + this._id_event);
 
-                this._done(new Event($.isNumeric(this._element.naturalWidth) ? namespace_prefix+'Load' : namespace_prefix+'Error'));
+                this._done(new Event(!is_broken(this._element) ? 'load' : 'error'));
 
                 return false;
 
@@ -530,8 +531,8 @@
 
             const context = this;
 
-            this._callback = function(resource){
-                callback.call(context, resource);
+            this._callback = function(status, resource, id){
+                callback.call(context, status, resource, id);
             };
 
         };
@@ -547,6 +548,7 @@
             this._collection = [];
             this._collection_loaded = [];
             this._collection_instances = [];
+            this._resources_loaded = [];
 
             if ($.isArray(collection) && ( typeof collection[0] === 'string' || is_html_object(collection[0]) ))
                 for ( const resource in collection )
@@ -556,7 +558,10 @@
                 this._collection.push({ id : unique_id(), resource : collection });
 
             this._settings = $.extend(true, {
-                sequential: false
+                srcAttr     : 'data-src',
+                srcsetAttr  : 'data-srcset',
+                playthrough : false,
+                visible     : false
             }, options);
 
             this.percentage = 0;
@@ -594,26 +599,34 @@
                 if( this._abort )
                     break;
 
-                let this_load_instance = new ResourceLoader(this._settings);
-                this._collection_instances.push({ id : this._collection[i].id, instance : this_load_instance });
+                let this_load_id = this._collection[i].id,
+                    this_load_index = self._collection_instances.findIndex( x => x.id === this_load_id ),
+                    this_load_instance = new ResourceLoader(this._settings);
+
+                if( this_load_index === -1 ) {
+                    this._collection_instances.push({id: this_load_id, instance: this_load_instance});
+                    this_load_index = self._collection_instances.findIndex( x => x.id === this_load_id );
+                }else
+                    this._collection_instances[this_load_index].instance = this_load_instance;
 
                 this_load_instance.resource = this._collection[i];
 
-                this_load_instance.done(function(id, resource){
+                let context = null; // todo context
 
-                    let context = null; // todo context
+                this_load_instance.done(function(status, resource, id){
 
                     if( !self._complete && !self._abort && $.inArray(id, self._collection_loaded) === -1 ) {
 
-                        self._loaded++;
-
                         self._collection_loaded.push(id);
+                        self._busy = false;
 
+                        self._loaded++;
                         self.percentage = self._loaded / self._collection.length * 100;
 
-                        self._progress.call(context, resource);
+                        let this_resource = { resource : resource, status : status };
+                        self._resources_loaded.push(this_resource);
 
-                        self._busy = false;
+                        self._progress.call(context, this_resource);
 
                         if( sequential_mode ){
 
@@ -633,7 +646,7 @@
 
                     if( !self._complete && !self._abort && self._loaded === self._collection.length ) {
 
-                        self._callback.call(context);
+                        self._callback.call(context, self._resources_loaded);
 
                         self._complete = true;
 
@@ -655,8 +668,8 @@
 
             const
                 self = this,
-                _func = function(){
-                    callback.call(self);
+                _func = function(resources){
+                    callback.call(self, resources);
                 };
 
             if( this._collection.length ) {
@@ -724,12 +737,17 @@
             let collection = [];
 
             const
+                self = this,
                 targets = 'img, video, audio',
                 targets_extended = targets + ', picture, source';
 
             let $targets = this._$element.find(targets);
             if (this._$element.is(targets))
-                $targets.add(this._$element);
+                $targets = $targets.add(this._$element);
+            $targets = $targets.filter(function(){
+                let filter = '['+self._settings.srcAttr+'], ['+self._settings.srcsetAttr+']';
+                return $(this).is(filter) || $(this).children(targets_extended).filter(filter).length;
+            });
             $targets.each(function () {
                 collection.push(this);
             });
@@ -786,7 +804,10 @@
             backgrounds   : false,
             extraAttrs    : [],
 
-            playthrough   : false
+            playthrough   : false,
+
+            early         : false,
+            earlyTimeout  : 0
 
         }, options);
 
@@ -809,23 +830,24 @@
             method_collection.push({
                 id : unique_method_namespace,
                 instance : this_load_instance,
-                element : element
+                element : element,
+                timeout : null
             });
 
-            this_load_instance.progress(function () {
+            this_load_instance.progress(function (resource) {
 
                 if( !element_in_collection )
-                    $element.trigger(namespace_prefix+'Progress.'+namespace_prefix, [$element]);
+                    $element.trigger(namespace_prefix+'Progress.'+namespace_prefix, [$element, resource]);
 
             });
 
-            this_load_instance.done(function(){
+            this_load_instance.done(function(resources){
 
                 if( settings.visible )
                     $( $.nite ? $document : $window ).off('scroll.' + unique_method_namespace);
 
                 if( !element_in_collection )
-                    $element.trigger(namespace_prefix+'Load.'+namespace_prefix, [$element]);
+                    $element.trigger(namespace_prefix + 'Load.'+namespace_prefix, [$element, resources]);
 
                 callback.call(element);
 
@@ -833,9 +855,11 @@
                 method_collection = method_collection.filter(function(obj) { // todo check polyfill efficiency in ie
                     return obj.id !== unique_method_namespace;
                 });
-                for( let key in method_collection )
-                    if( $element.is(method_collection[key].element) )
-                        method_collection[key].instance.loop();
+                for( let key in method_collection ) {
+                    let this_method_collection = method_collection[key];
+                    if ($element.is(this_method_collection.element))
+                        this_method_collection.instance.loop();
+                }
 
             });
 
@@ -861,6 +885,27 @@
                 }
 
             }
+
+            if( true === settings.early ) for( let key in method_collection )
+                if( method_collection[key].id === unique_method_namespace ){
+
+                    let this_method_collection = method_collection[key];
+
+                    clearTimeout( this_method_collection.timeout );
+
+                    this_method_collection.timeout = setTimeout(function(){
+
+                        // todo appropriate method ?
+                        this_method_collection.instance._settings.visible = false;
+                        this_method_collection.instance._settings.sequential = true;
+
+                        this_method_collection.instance.loop();
+
+                    }, $.isNumeric(settings.earlyTimeout) ? parseInt(settings.earlyTimeout) : 0 );
+
+                    break;
+
+                }
 
         });
 
