@@ -6,7 +6,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-/*! JQuery Heavy ResourcesLoader | Daniele Fioroni | dfioroni91@gmail.com */
+/*! JQuery Nite Preloader | Daniele Fioroni | dfioroni91@gmail.com */
 (function (window, document, $, undefined) {
     'use strict';
 
@@ -14,7 +14,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         namespace_method = namespace_prefix + 'Preload',
         namespace = namespace_method + 'er';
 
-    // https://github.com/paulmillr/console-polyfill
+    // thanks to https://github.com/paulmillr/console-polyfill
     // - - - - - - - - - - - - - - - - - - - -
     (function (global) {
         if (!global.console) global.console = {};
@@ -41,7 +41,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     // - - - - - - - - - - - - - - - - - - - -
 
 
-    // https://github.com/jsPolyfill/Array.prototype.findIndex/blob/master/findIndex.js
+    // thanks to https://github.com/jsPolyfill/Array.prototype.findIndex
+    // todo check efficiency and reliability in MS Internet Explorer
     // - - - - - - - - - - - - - - - - - - - -
     Array.prototype.findIndex = Array.prototype.findIndex || function (callback) {
         if (this === null) {
@@ -64,7 +65,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     // - - - - - - - - - - - - - - - - - - - -
 
 
-    // https://gist.github.com/eliperelman/1031656
+    // thanks to https://gist.github.com/eliperelman/1031656
+    // todo check efficiency and reliability in MS Internet Explorer
     // - - - - - - - - - - - - - - - - - - - -
     [].filter || (Array.prototype.filter = function (a, b, c, d, e) {
         c = this;d = [];for (e in c) {
@@ -81,7 +83,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         $window = $(window),
         unique_id = function unique_id() {
 
-        return $.nite ? $.nite.uniqueId() : Math.floor(Math.random() * (9999 - 1000)) + 1000;
+        return $.nite && 'uniqueId' in $.nite ? $.nite.uniqueId() : Math.floor(Math.random() * (9999 - 1000)) + 1000;
     },
         is_visible = function is_visible(element) {
 
@@ -89,7 +91,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         var in_viewport = false;
 
-        if ($.nite) in_viewport = $.nite.inViewport(element).ratio;else {
+        if ($.nite && 'inViewport' in $.nite) in_viewport = $.nite.inViewport(element).ratio;else {
 
             var rect = element.getBoundingClientRect();
 
@@ -189,6 +191,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
             var self = this;
 
+            // todo make _vars really private
+            // todo make useful vars since this class is not public but is returned in .progress() callback
             this._settings = $.extend(true, {
                 srcAttr: 'data-src',
                 srcsetAttr: 'data-srcset',
@@ -212,13 +216,19 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
                 var resource = self._element.currentSrc || self._element.src;
 
-                if (!self._busy) self._$element.trigger(namespace_prefix + capitalize(e.type) + '.' + namespace_prefix, [self._$element, resource]);
+                if (!self._busy) {
+                    // todo it should enter here only once
+
+                    var event_name = capitalize(e.type);
+
+                    self._$element.trigger(namespace_prefix + event_name + '.' + namespace_prefix, [self._element, resource]);
+                }
 
                 self._$element.removeData(namespace);
 
                 self._busy = false;
 
-                self._callback.call(null /* todo context */, e.type, resource, self._id);
+                self._callback.call(self, e.type, resource, self._id);
             };
         }
 
@@ -244,6 +254,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
                     return false;
                 } else if (this._settings.visible && !is_visible(this._element)) {
+                    // todo check if starts scrolling from the bottom of the page
 
                     return false;
                 } else {
@@ -378,10 +389,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
                 if (!$.isFunction(callback)) return;
 
-                var context = this;
-
                 this._callback = function (status, resource, id) {
-                    callback.call(context, status, resource, id);
+                    callback.call(this, status, resource, id);
                 };
             }
         }, {
@@ -432,6 +441,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
             var self = this;
 
+            // todo make _vars really private
             this._collection = [];
             this._collection_loaded = [];
             this._collection_instances = [];
@@ -497,8 +507,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
                     this_load_instance.resource = _this._collection[i];
 
-                    var context = null; // todo context
-
                     this_load_instance.done(function (status, resource, id) {
 
                         if (!self._complete && !self._abort && $.inArray(id, self._collection_loaded) === -1) {
@@ -508,17 +516,18 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
                             self._loaded++;
                             self.percentage = self._loaded / self._collection.length * 100;
+                            self.percentage = parseFloat(self.percentage.toFixed(4));
 
                             var this_resource = { resource: resource, status: status };
                             self._resources_loaded.push(this_resource);
 
-                            self._progress.call(context, this_resource);
+                            self._progress.call(this, this_resource);
 
                             if (sequential_mode) {
 
                                 var next_load_instance = self._collection_instances.findIndex(function (x) {
                                     return x.id === id;
-                                }) + 1; // todo check polyfill efficiency in ie
+                                }) + 1;
 
                                 if (next_load_instance > 0 && next_load_instance < self._collection_instances.length) {
 
@@ -531,7 +540,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
                         if (!self._complete && !self._abort && self._loaded === self._collection.length) {
 
-                            self._callback.call(context, self._resources_loaded);
+                            self._callback.call(self, self._resources_loaded);
 
                             self._complete = true;
                         }
@@ -546,15 +555,19 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     if (_ret === 'break') break;
                 }
             }
+
+            // todo success(callback){}
+
+            // todo error(callback){}
+
         }, {
             key: 'done',
             value: function done(callback) {
 
                 if (!$.isFunction(callback)) return false;
 
-                var self = this,
-                    _func = function _func(resources) {
-                    callback.call(self, resources);
+                var _func = function _func(resources) {
+                    callback.call(this, resources);
                 };
 
                 if (this._collection.length) {
@@ -572,9 +585,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
                 if (!$.isFunction(callback)) return false;
 
-                var self = this,
-                    _func = function _func(resource) {
-                    callback.call(self, resource);
+                var _func = function _func(resource) {
+                    callback.call(this, resource);
                 };
 
                 if (this._collection.length) {
@@ -582,9 +594,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     this._progress = _func;
 
                     this._loop();
-                } else _func();
 
-                return true;
+                    return true;
+                }
+
+                return false;
             }
         }, {
             key: 'abort',
@@ -602,21 +616,28 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }();
 
     var CollectionPopulator = function () {
-        function CollectionPopulator($element, settings) {
+        function CollectionPopulator($element, options) {
             _classCallCheck(this, CollectionPopulator);
 
             this._$element = $element;
-            this._settings = settings;
+            this._element = $element[0];
+
+            this._settings = $.extend(true, {
+                srcAttr: 'data-src',
+                srcsetAttr: 'data-srcset',
+                backgrounds: false,
+                attributes: []
+            }, options);
         }
 
         _createClass(CollectionPopulator, [{
             key: 'collect',
-            value: function collect() /*output*/{
-                // todo output types es: only elements, only, urls, mixed, all ... dunno
+            value: function collect(output) {
 
                 var collection = [];
 
-                var self = this,
+                var is_plain_data_collection = output === 'plain',
+                    self = this,
                     targets = 'img, video, audio',
                     targets_extended = targets + ', picture, source';
 
@@ -627,13 +648,29 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     return $(this).is(filter) || $(this).children(targets_extended).filter(filter).length;
                 });
                 $targets.each(function () {
-                    collection.push(this);
+
+                    var collection_item = {
+                        element: this,
+                        resource: $(this).attr(self._settings.srcAttr) || $(this).attr(self._settings.srcsetAttr)
+                    };
+
+                    if (is_plain_data_collection) collection_item = collection_item.element;
+
+                    collection.push(collection_item);
                 });
 
                 if (true === this._settings.backgrounds) this._$element.find('*').addBack().not(targets_extended).filter(function () {
                     return $(this).css('background-image') !== 'none';
                 }).each(function () {
-                    collection.push($(this).css('background-image').replace(/url\("|url\('|url\(|(("')\)$)/igm, ''));
+
+                    var collection_item = {
+                        element: this,
+                        resource: $(this).css('background-image').replace(/url\("|url\('|url\(|(("')\)$)/igm, '')
+                    };
+
+                    if (is_plain_data_collection) collection_item = collection_item.resource;
+
+                    collection.push(collection_item);
                 });
 
                 if (this._settings.attributes.length) {
@@ -641,10 +678,28 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                         if (this._settings.attributes.hasOwnProperty(attr)) {
 
                             this._$element.find('[' + attr + ']:not(' + targets_extended + ')').each(function () {
-                                collection.push($(this).attr(attr));
+
+                                let collection_item = {
+                                    element: this,
+                                    resource: $(this).attr(attr)
+                                };
+
+                                if (is_plain_data_collection) collection_item = collection_item.resource;
+
+                                collection.push(collection_item);
                             });
 
-                            if (this._$element.is('[' + attr + ']') && !this._$element.is(targets_extended)) collection.push(this._$element.attr(attr));
+                            if (this._$element.is('[' + attr + ']') && !this._$element.is(targets_extended)) {
+
+                                let collection_item = {
+                                    element: this._element,
+                                    resource: this._$element.attr(attr)
+                                };
+
+                                if (is_plain_data_collection) collection_item = collection_item.resource;
+
+                                collection.push(collection_item);
+                            }
                         }
                     };
 
@@ -662,10 +717,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
     var method_collection = [];
 
-    $.fn[namespace_method] = function (options, callback) {
+    $.fn[namespace_method] = function (options) {
 
-        if ($.isFunction(options)) callback = options;
-        if (!$.isFunction(callback)) callback = $.noop;
+        var original_user_options = options;
+
         if ((typeof options === 'undefined' ? 'undefined' : _typeof(options)) !== 'object') options = {};
 
         var settings = $.extend(true, {
@@ -683,9 +738,18 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             playthrough: false,
 
             early: false,
-            earlyTimeout: 0
+            earlyTimeout: 0,
+
+            onProgress: $.noop,
+            onLoad: $.noop,
+            onError: $.noop,
+
+            onComplete: $.noop
 
         }, options);
+
+        var callback = settings.onComplete;
+        if ($.isFunction(original_user_options)) callback = original_user_options;
 
         if (!$.isArray(settings.attributes)) settings.attributes = [];
         if (typeof settings.attributes === 'string') settings.attributes = settings.attributes.split(' ');
@@ -694,9 +758,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
             var element = this,
                 $element = $(element),
-                collection = new CollectionPopulator($element, settings).collect(),
-                element_in_collection = $.inArray(element, collection) > -1,
-                unique_method_namespace = namespace + '_' + unique_id(),
+                collection = new CollectionPopulator($element, settings).collect('plain'),
+
+            //element_in_collection = $.inArray(element, collection) > -1,
+            unique_method_namespace = namespace + '_' + unique_id(),
                 this_load_instance = new ResourcesLoader(collection, settings);
 
             method_collection.push({
@@ -708,20 +773,23 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
             this_load_instance.progress(function (resource) {
 
-                if (!element_in_collection) $element.trigger(namespace_prefix + 'Progress.' + namespace_prefix, [$element, resource]);
+                $element.trigger(namespace_prefix + 'Progress.' + namespace_prefix, [element, resource]);
+
+                if ($.isFunction(settings.onProgress)) settings.onProgress.call(element, this_load_instance, resource);
+
+                var event_name = capitalize(resource.status);
+                if ($.isFunction(settings['on' + event_name])) settings['on' + event_name].call(element, this_load_instance, resource);
             });
 
             this_load_instance.done(function (resources) {
 
-                if (settings.visible) $($.nite ? $document : $window).off('scroll.' + unique_method_namespace);
+                $element.trigger(namespace_prefix + 'Complete.' + namespace_prefix, [element, resources]);
+                callback.call(element, this_load_instance, resources);
 
-                if (!element_in_collection) $element.trigger(namespace_prefix + 'Load.' + namespace_prefix, [$element, resources]);
-
-                callback.call(element);
+                if (settings.visible) $($.nite && 'scroll' in $.nite ? $document : $window).off('scroll.' + unique_method_namespace);
 
                 // refresh other method calls for same el (omitting this one)
                 method_collection = method_collection.filter(function (obj) {
-                    // todo check polyfill efficiency in ie
                     return obj.id !== unique_method_namespace;
                 });
                 for (var key in method_collection) {
@@ -732,7 +800,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
             if (settings.visible) {
 
-                if ($.nite) $.nite.scroll(unique_method_namespace, function () {
+                if ($.nite && 'scroll' in $.nite) $.nite.scroll(unique_method_namespace, function () {
                     this_load_instance.loop();
                 }, { fps: 25 });else {
 
@@ -762,7 +830,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
                         this_method_collection.timeout = setTimeout(function () {
 
-                            // todo appropriate method ?
+                            // todo appropriate method for setting settings?
                             this_method_collection.instance._settings.visible = false;
                             this_method_collection.instance._settings.sequential = true;
 

@@ -26,7 +26,7 @@
             height: 100vh;
             overflow: hidden;
         }
-        .nite-preload.loaded {
+        .nite-preload.complete {
             border-color: red;
         }
         .nite-preload figure {
@@ -49,6 +49,10 @@
         .nite-preload .target.loaded,
         .nite-preload .not-a-target.loaded {
             opacity: 1;
+        }
+        .nite-preload figure.error {
+            background: red;
+            transition: background-color .8s ease .4s;
         }
         .nite-preload figure.loaded {
             transition: border .4s ease;
@@ -118,7 +122,11 @@
     </figure>
 
     <figure>
-        <img class="target" data-nite-src="http://placehold.it/720x720/c0d4f7.jpg" />
+        <img class="target" data-nite-src="err" />
+    </figure>
+
+    <figure>
+        <img class="target" data-nite-src="http://placehold.it/720x720/e2fcea.jpg" />
     </figure>
 
     <figure>
@@ -131,7 +139,7 @@
     <figure>
         <img class="not-a-target" data-src="//placehold.it/720x720/c0d4f7.jpg">
         <div class="cover">
-            <button id="loadme">Caricami</button>
+            <button class="loadme">Caricami</button>
         </div>
     </figure>
 
@@ -145,69 +153,72 @@
                 elements : '.target, .not-a-target'
             });
 
-        $('section.nite-preload').nitePreload({
-
-            srcAttr       : 'data-nite-src',
-            srcsetAttr    : 'data-nite-srcset',
-
-            visible       : true,
-
-            sequential    : true,
-
-            backgrounds   : true,
-            extraAttrs    : [],
-
-            playthrough   : 'full',
-
-            early : true,
-            earlyTimeout : 6000
-
-        }, function(){
-
-            console.log('all lazy loaded!');
-
-        });
-        $(document).on('niteLoad.nite niteError.nite', function(e, $el, resource){
-
-            $el.addClass('loaded'+( e.type === 'niteError' ? '-error' : '' ));
-
-        });
-        $('.target').on('niteLoad.nite niteError.nite', function(e){
-
-            //console.log(this, 'event cb');
-
-        });
-
-        $('#menu__domnow').click(function(){
+        const method_call = function(visible_opt){
 
             $('section.nite-preload').nitePreload({
 
-                srcAttr: 'data-nite-src',
-                srcsetAttr: 'data-nite-srcset'
+                srcAttr       : 'data-nite-src',
+                srcsetAttr    : 'data-nite-srcset',
 
-            }, function(){
+                visible       : visible_opt,
 
-                console.log('button pushed!');
+                sequential    : true,
+
+                backgrounds   : true,
+                extraAttrs    : [],
+
+                playthrough   : 'full',
+
+                early : true,
+                earlyTimeout : 6000,
+
+                onComplete : function(instance, resources){
+
+                    $(this).addClass('complete');
+
+                },
+
+                onProgress : function(instance, resource){
+
+                    $(this).attr('data-percentage', instance.percentage);
+                },
+
+                onLoad : function(instance, resource){
+
+                    $(this).addClass('has-loads');
+
+                },
+                onError : function(instance, resource){
+
+                    $(this).addClass('has-errors');
+
+                }
 
             });
 
+        };
+
+        method_call(true);
+        $('#menu__domnow').click(function(){
+            method_call(false);
         });
 
-        $('#loadme').click(function(){
+        $(document).on('niteLoad.nite niteError.nite', function(e, element){
+            $(element).addClass('loaded'+( e.type === 'niteError' ? '-error' : '' ));
+        });
 
-            let $t = $(this);
+        $(document).on('niteComplete.nite', function(e, element, resources){
+            $('#menu__domnow').fadeOut();
+        });
 
-            $t.closest('figure').nitePreload({
+        $('figure .target').on('niteError.nite', function(e, element, resource){
+            $(this).closest('figure').addClass('error');
+        });
 
-                srcAttr: 'data-src',
-                srcsetAttr: 'data-srcset'
-
-            }, function(){
-
-                $t.fadeOut();
-
+        $('figure .loadme').click(function(){
+            $(this).closest('figure').nitePreload(function(){
+                $(this).find('.loadme').fadeOut();
             });
-
         });
 
     })(jQuery);
@@ -247,26 +258,23 @@
                 $('#menu__instance--result').html('0%');
 
                 instance.progress(function (resource) {
+
+                    console.log(this);
+
                     $('#menu__instance--result').html(instance.percentage + '%');
+
                 });
 
-                // todo
-                /*
-            instance.success(function(url){
-                console.log('%cok --> '+url, 'color: green');
-            }); */
-
-                // todo
-                /*
-            instance.error(function(url){
-                console.log('%cerr --> '+url, 'color: red');
-            }); */
-
                 instance.done(function (resources) {
+
+                    console.log(this);
+
                     $('#menu__instance--result').append(' - Done!!');
                     $('#menu__instance--abort').hide();
                     $('#menu__instance--launch').show();
+
                     instance = null;
+
                 });
 
             }
