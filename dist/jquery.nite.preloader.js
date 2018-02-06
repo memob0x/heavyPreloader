@@ -508,7 +508,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
                     this_load_instance.done(function (element, status, resource, id) {
 
-                        if (!_this4._complete && !_this4._abort && $.inArray(id, _this4._collection_loaded) === -1) {
+                        if (_this4._complete || _this4._abort) return;
+
+                        var a_progress = $.inArray(id, _this4._collection_loaded) === -1;
+
+                        if (a_progress) {
 
                             _this4._collection_loaded.push(id);
                             _this4._busy = false;
@@ -524,27 +528,39 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                             _this4[status !== 'error' ? '_success' : '_error'].call(_this4, this_resource);
 
                             $(element).trigger(namespace_prefix + capitalize(status) + '.' + namespace_prefix, [element, resource]);
-
-                            if (sequential_mode) {
-
-                                var next_load_instance = _this4._collection_instances.findIndex(function (x) {
-                                    return x.id === id;
-                                }) + 1; // todo check if starts scrolling from the bottom of the page / other conditions
-
-                                if (next_load_instance > 0 && next_load_instance < _this4._collection_instances.length) {
-
-                                    next_load_instance = _this4._collection_instances[next_load_instance];
-
-                                    next_load_instance.instance.process();
-                                }
-                            }
                         }
 
-                        if (!_this4._complete && !_this4._abort && _this4._loaded === _this4._collection.length) {
+                        if (_this4._loaded === _this4._collection.length) {
 
                             _this4._done.call(_this4, _this4._resources_loaded);
 
                             _this4._complete = true;
+                        } else if (a_progress && sequential_mode) {
+
+                            // todo ultimo caricato ++ se finisce --
+
+                            var next_instance_key = _this4._collection_instances.findIndex(function (x) {
+                                return x.id === id;
+                            });
+
+                            if (next_instance_key === -1) return;
+
+                            var direction = next_instance_key === _this4._collection_instances.length - 1 ? -1 : 1,
+                                direction_inverted_once = false;
+
+                            do {
+
+                                next_instance_key += direction;
+
+                                if (next_instance_key === 0 && direction === -1 || next_instance_key === _this4._collection_instances.length - 1 && direction === 1) {
+
+                                    if (direction_inverted_once) break;else {
+                                        direction_inverted_once = true;
+                                        direction *= -1;
+                                    }
+                                }
+                            } while ($.inArray(_this4._collection_instances[next_instance_key].id, _this4._collection_loaded) === -1);
+                            _this4._collection_instances[next_instance_key].instance.process();
                         }
                     });
 

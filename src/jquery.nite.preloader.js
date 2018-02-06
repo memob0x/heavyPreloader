@@ -614,7 +614,12 @@
 
                 this_load_instance.done((element, status, resource, id) => {
 
-                    if( !this._complete && !this._abort && $.inArray(id, this._collection_loaded) === -1 ) {
+                    if( this._complete || this._abort )
+                        return;
+
+                    let a_progress = $.inArray(id, this._collection_loaded) === -1;
+
+                    if( a_progress ) {
 
                         this._collection_loaded.push(id);
                         this._busy = false;
@@ -631,27 +636,42 @@
 
                         $(element).trigger(namespace_prefix + capitalize(status) + '.' + namespace_prefix, [ element, resource ]);
 
-                        if( sequential_mode ){
-
-                            let next_load_instance = this._collection_instances.findIndex( x => x.id === id ) + 1; // todo check if starts scrolling from the bottom of the page / other conditions
-
-                            if( next_load_instance > 0 && next_load_instance < this._collection_instances.length ) {
-
-                                next_load_instance = this._collection_instances[ next_load_instance ];
-
-                                next_load_instance.instance.process();
-
-                            }
-
-                        }
-
                     }
 
-                    if( !this._complete && !this._abort && this._loaded === this._collection.length ) {
+                    if( this._loaded === this._collection.length ) {
 
                         this._done.call(this, this._resources_loaded);
 
                         this._complete = true;
+
+                    }else if( a_progress && sequential_mode ){
+
+                        // todo ultimo caricato ++ se finisce --
+
+                        let next_instance_key = this._collection_instances.findIndex(x => x.id === id);
+
+                        if( next_instance_key === -1 )
+                            return;
+
+                        let direction = next_instance_key === this._collection_instances.length - 1 ? -1 : 1,
+                            direction_inverted_once = false;
+
+                        do {
+
+                            next_instance_key += direction;
+
+                            if( ( next_instance_key === 0 && direction === -1 ) || ( next_instance_key === this._collection_instances.length - 1 && direction === 1 ) ){
+
+                                if( direction_inverted_once )
+                                    break;
+                                else {
+                                    direction_inverted_once = true;
+                                    direction *= -1;
+                                }
+                            }
+
+                        }while( $.inArray(this._collection_instances[next_instance_key].id, this._collection_loaded) === -1 )
+                            this._collection_instances[next_instance_key].instance.process();
 
                     }
 
