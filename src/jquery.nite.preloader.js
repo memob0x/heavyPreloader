@@ -556,6 +556,7 @@
             this._collection_loaded    = [];
             this._collection_instances = [];
             this._resources_loaded     = [];
+            this._pending_sequential_items = [];
 
             if ($.isArray(collection) && ( typeof collection[0] === 'string' || is_html_object(collection[0]) ))
                 for ( const resource in collection )
@@ -646,32 +647,9 @@
 
                     }else if( a_progress && sequential_mode ){
 
-                        // todo ultimo caricato ++ se finisce --
-
-                        let next_instance_key = this._collection_instances.findIndex(x => x.id === id);
-
-                        if( next_instance_key === -1 )
-                            return;
-
-                        let direction = next_instance_key === this._collection_instances.length - 1 ? -1 : 1,
-                            direction_inverted_once = false;
-
-                        do {
-
-                            next_instance_key += direction;
-
-                            if( ( next_instance_key === 0 && direction === -1 ) || ( next_instance_key === this._collection_instances.length - 1 && direction === 1 ) ){
-
-                                if( direction_inverted_once )
-                                    break;
-                                else {
-                                    direction_inverted_once = true;
-                                    direction *= -1;
-                                }
-                            }
-
-                        }while( $.inArray(this._collection_instances[next_instance_key].id, this._collection_loaded) === -1 )
-                            this._collection_instances[next_instance_key].instance.process();
+                        // if this._pending_sequential_items.length
+                        // rimuove this_load_instance da this._pending_sequential_items
+                        // this._busy = this._pending_sequential_items[(((IL_PRIMO)))].process();
 
                     }
 
@@ -679,6 +657,14 @@
 
                 if( !sequential_mode || ( sequential_mode && !this._busy ) )
                     this._busy = this_load_instance.process();
+
+                else if( sequential_mode && this._busy ){
+
+                    // if( !this._settings.visible || ( this._settings.visible && is_visible(this_load_instance._element) )
+                    // todo push(this_load_instance) in this._pending_sequential_items
+
+                }
+
 
             }
 
