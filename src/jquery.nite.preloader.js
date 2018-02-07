@@ -555,8 +555,8 @@
             this._collection           = [];
             this._collection_loaded    = [];
             this._collection_instances = [];
+            this._collection_pending   = [];
             this._resources_loaded     = [];
-            this._pending_sequential_items = [];
 
             if ($.isArray(collection) && ( typeof collection[0] === 'string' || is_html_object(collection[0]) ))
                 for ( const resource in collection )
@@ -593,6 +593,8 @@
         }
 
         loop(){
+
+            this._collection_pending = []; // resets pending elements (sequential opt helper array) every time we loop
 
             const sequential_mode = true === this._settings.sequential;
 
@@ -647,9 +649,14 @@
 
                     }else if( a_progress && sequential_mode ){
 
-                        // if this._pending_sequential_items.length
-                        // rimuove this_load_instance da this._pending_sequential_items
-                        // this._busy = this._pending_sequential_items[(((IL_PRIMO)))].process();
+                        if( this._collection_pending.length ){
+
+                            this._collection_pending = this._collection_pending.filter(x => x.id !== id);
+
+                            if( this._collection_pending.length )
+                                this._busy = this._collection_pending[0].instance.process();
+
+                        }
 
                     }
 
@@ -660,8 +667,8 @@
 
                 else if( sequential_mode && this._busy ){
 
-                    // if( !this._settings.visible || ( this._settings.visible && is_visible(this_load_instance._element) )
-                    // todo push(this_load_instance) in this._pending_sequential_items
+                    if( !this._settings.visible || ( this._settings.visible && is_visible(this_load_instance._element) ) )
+                        this._collection_pending.push({ id : this_load_id, instance : this_load_instance });
 
                 }
 
@@ -954,9 +961,7 @@
                     $( $.nite && 'scroll' in $.nite ? $document : $window ).off('scroll.' + unique_method_namespace);
 
                 // refresh other method calls for same el (omitting this one)
-                method_collection = method_collection.filter(function(obj) {
-                    return obj.id !== unique_method_namespace;
-                });
+                method_collection = method_collection.filter( x => x.id !== unique_method_namespace );
                 for( let key in method_collection ) {
                     let this_method_collection = method_collection[key];
                     if ($element.is(this_method_collection.element))

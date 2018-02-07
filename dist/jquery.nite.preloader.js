@@ -446,8 +446,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             this._collection = [];
             this._collection_loaded = [];
             this._collection_instances = [];
+            this._collection_pending = [];
             this._resources_loaded = [];
-            this._pending_sequential_items = [];
 
             if ($.isArray(collection) && (typeof collection[0] === 'string' || is_html_object(collection[0]))) for (var resource in collection) {
                 if (collection.hasOwnProperty(resource)) this._collection.push({ id: unique_id(), resource: collection[resource] });
@@ -485,6 +485,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             key: 'loop',
             value: function loop() {
                 var _this4 = this;
+
+                this._collection_pending = []; // resets pending elements (sequential opt helper array) every time we loop
 
                 var sequential_mode = true === this._settings.sequential;
 
@@ -538,18 +540,20 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                             _this4._complete = true;
                         } else if (a_progress && sequential_mode) {
 
-                            // if this._pending_sequential_items.length
-                            // rimuove this_load_instance da this._pending_sequential_items
-                            // this._busy = this._pending_sequential_items[(((IL_PRIMO)))].process();
+                            if (_this4._collection_pending.length) {
 
+                                _this4._collection_pending = _this4._collection_pending.filter(function (x) {
+                                    return x.id !== id;
+                                });
+
+                                if (_this4._collection_pending.length) _this4._busy = _this4._collection_pending[0].instance.process();
+                            }
                         }
                     });
 
                     if (!sequential_mode || sequential_mode && !_this4._busy) _this4._busy = this_load_instance.process();else if (sequential_mode && _this4._busy) {
 
-                        // if( !this._settings.visible || ( this._settings.visible && is_visible(this_load_instance._element) )
-                        // todo push(this_load_instance) in this._pending_sequential_items
-
+                        if (!_this4._settings.visible || _this4._settings.visible && is_visible(this_load_instance._element)) _this4._collection_pending.push({ id: this_load_id, instance: this_load_instance });
                     }
                 };
 
@@ -820,8 +824,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 if (settings.visible) $($.nite && 'scroll' in $.nite ? $document : $window).off('scroll.' + unique_method_namespace);
 
                 // refresh other method calls for same el (omitting this one)
-                method_collection = method_collection.filter(function (obj) {
-                    return obj.id !== unique_method_namespace;
+                method_collection = method_collection.filter(function (x) {
+                    return x.id !== unique_method_namespace;
                 });
                 for (var key in method_collection) {
                     var this_method_collection = method_collection[key];
