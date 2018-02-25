@@ -1,302 +1,163 @@
 <!DOCTYPE html>
 <html>
-<head>
+    <head>
 
-    <script src="../bower_components/jquery/dist/jquery.min.js"></script>
-    <script src="../../nitejs/dist/jquery.nite.js"></script>
-    <script src="../dist/jquery.nite.preloader.js"></script>
-    <script src="../../nite-cropper/dist/jquery.nite.cropper.js"></script>
+        <script src="../bower_components/jquery/dist/jquery.min.js"></script>
+        <script src="../../nitejs/dist/jquery.nite.js"></script>
+        <script src="../dist/jquery.nite.preloader.js"></script>
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta charset="UTF-8">
+        <link rel="stylesheet" type="text/css" href="assets/dist/test.min.css" />
 
-    <title>Nite Preloader Playground</title>
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,600,700" rel="stylesheet">
 
-    <style>
-        html, body, * {
-            margin: 0;
-            box-sizing: border-box;
-        }
-        .nite-preload {
-            border: 10px solid blue;
-            transition: border-color .4s linear;
-        }
-        .nite-preload figure {
-            width: 100%;
-            height: 100vh;
-            overflow: hidden;
-        }
-        .nite-preload.complete {
-            border-color: red;
-        }
-        .nite-preload figure {
-            position: relative;
-        }
-        .nite-preload figure,
-        .nite-preload .target,
-        .nite-preload .not-a-target {
-            width: 100%;
-        }
-        .nite-preload .target,
-        .nite-preload .not-a-target {
-            display: block;
-            height: 100%;
-            opacity: 0;
-            transition: opacity .4s linear .4s;
-            min-width: 1px;
-            min-height: 1px;
-        }
-        .nite-preload .target.loaded,
-        .nite-preload .not-a-target.loaded {
-            opacity: 1;
-        }
-        .nite-preload figure.error {
-            background: red;
-            transition: background-color .8s ease .4s;
-        }
-        .nite-preload figure.loaded {
-            transition: border .4s ease;
-            border: 22px solid darkgreen;
-        }
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta charset="UTF-8">
 
-        menu {
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 999;
-        }
+        <title>Nite Preloader Playground</title>
 
-        menu span {
-            display: inline-block;
-            background: white;
-            padding: 10px;
-        }
+    </head>
+    <body>
 
-        button {
-            display: inline-block;
-            padding: 10px;
-            background: beige;
-            color: black;
-            outline: none;
-        }
+        <div id="root">
 
-        .cover {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            flex-wrap: nowrap;
-            justify-content: center;
-            align-content: center;
-            align-items: center;
-        }
+            <nav></nav>
 
-    </style>
+            <div id="console"></div>
 
-</head>
-<body>
+            <main class="playground">
 
-<menu>
-    <button id="menu__instance--launch">Preload Some Random Stuff</button>
-    <button id="menu__instance--abort">Abort</button>
-    <span id="menu__instance--result"></span>
-    -
-    <button id="menu__domnow">Just Preload the whole document now!</button>
-</menu>
+                <span class="playground__percentage"> <i data-percentage></i></span>
 
-<section class="nite-preload">
+                <section class="playground__area">
 
-    <figure>
-        <img class="target" data-nite-src="http://placehold.it/720x720/c2b6f9.jpg" />
-    </figure>
+                    <div class="playground__area__inner">
 
-    <figure>
-        <img class="target" data-nite-src="http://placehold.it/720x720/fed4bc.jpg" />
-    </figure>
+                        <div class="playground__area__row">
 
-    <figure>
-        <img class="target" data-nite-src="http://placehold.it/720x720/bbefda.jpg" />
-    </figure>
+                            <div class="playground__col">
+                                <figure class="playground__item">
+                                    <img data-nite-src="http://placehold.it/720x720/c2b6f9.jpg" />
+                                </figure>
+                            </div>
 
-    <figure>
-        <img class="target" data-nite-src="err" />
-    </figure>
+                            <div class="playground__col">
+                                <figure class="playground__item">
+                                    <img data-nite-src="http://placehold.it/720x720/fed4bc.jpg" />
+                                </figure>
+                            </div>
 
-    <figure>
-        <img class="target" data-nite-src="http://placehold.it/720x720/e2fcea.jpg" />
-    </figure>
+                            <div class="playground__col">
+                                <figure class="playground__item">
+                                    <img data-nite-src="http://placehold.it/720x720/bbefda.jpg" />
+                                </figure>
+                            </div>
 
-    <figure>
-        <video autoplay muted loop class="target">
-            <source data-nite-src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
-            <source data-nite-src="https://www.w3schools.com/html/mov_bbb.ogg" type="video/ogg">
-        </video>
-    </figure>
+                            <div class="playground__col">
+                                <figure class="playground__item">
+                                    <img data-nite-src="http://placehold.it/720x720/e2fcea.jpg" />
+                                </figure>
+                            </div>
 
-    <figure>
-        <img class="not-a-target" data-src="//placehold.it/720x720/c0d4f7.jpg">
-        <div class="cover">
-            <button class="loadme">Caricami</button>
+                        </div>
+
+                    </div>
+
+                </section>
+
+                <section class="playground__area">
+
+                    <div class="playground__area__inner">
+
+                        <div class="playground__area__row">
+
+                            <div class="playground__col">
+                                <figure class="playground__item">
+                                    <img data-nite-src="http://placehold.it/720x720/d5dcfc.jpg" />
+                                </figure>
+                            </div>
+
+                            <div class="playground__col">
+                                <figure class="playground__item">
+                                    <img data-nite-src="#" />
+                                </figure>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+            </main>
+
+            <section class="playground">
+
+                <span class="playground__percentage"> <i data-percentage></i></span>
+
+                <section class="playground__area">
+
+                    <div class="playground__area__inner">
+
+                        <div class="playground__area__row">
+
+                            <div class="playground__col">
+                                <figure class="playground__item">
+                                    <img data-nite-src="http://placehold.it/720x720/d9cbf9.jpg" />
+                                </figure>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+                <section class="playground__area">
+
+                    <div class="playground__area__inner">
+
+                        <div class="playground__area__row">
+
+                            <div class="playground__col--full">
+
+                                <figure class="playground__item">
+
+                                    <video autoplay muted loop class="target">
+                                        <source data-nite-src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+                                        <source data-nite-src="https://www.w3schools.com/html/mov_bbb.ogg" type="video/ogg">
+                                    </video>
+
+                                </figure>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+            </section>
+
+            <section class="playground">
+
+                <span class="playground__percentage"> <i data-percentage></i></span>
+
+                <section class="playground__area">
+
+                    <div class="playground__area__inner">
+
+                        TODO
+
+                    </div>
+
+                </section>
+
+            </section>
+
         </div>
-    </figure>
 
-</section>
+        <script src="assets/dist/test.min.js"></script>
 
-<script>
-    (function($){
-
-        if( $.fn.niteCrop )
-            $('figure').niteCrop({
-                elements : '.target, .not-a-target'
-            });
-
-        const method_call = function(visible_opt){
-
-            $('section.nite-preload').nitePreload({
-
-                srcAttr       : 'data-nite-src',
-                srcsetAttr    : 'data-nite-srcset',
-
-                visible       : visible_opt,
-
-                sequential    : true,
-
-                backgrounds   : true,
-                extraAttrs    : [],
-
-                playthrough   : 'full',
-
-                early : true,
-                earlyTimeout : 6000,
-
-                onComplete : function(instance, resources){
-
-                    $(this).addClass('complete');
-
-                },
-
-                onProgress : function(instance, resource){
-
-                    $(this).attr('data-percentage', instance.percentage);
-                },
-
-                onLoad : function(instance, resource){
-
-                    $(this).addClass('has-loads');
-
-                },
-                onError : function(instance, resource){
-
-                    $(this).addClass('has-errors');
-
-                }
-
-            });
-
-        };
-
-        method_call(true);
-        $('#menu__domnow').click(function(){
-            method_call(false);
-        });
-
-        $(document).on('niteLoad.nite niteError.nite', function(e, element){
-            $(element).addClass('loaded'+( e.type === 'niteError' ? '-error' : '' ));
-        });
-
-        $(document).on('niteComplete.nite', function(e, element, resources){
-            $('#menu__domnow').fadeOut();
-        });
-
-        $('figure .target').on('niteError.nite', function(e, element, resource){
-            $(this).closest('figure').addClass('error');
-        });
-
-        $('figure .loadme').click(function(){
-            $(this).closest('figure').nitePreload(function(){
-                $(this).find('.loadme').fadeOut();
-            });
-        });
-
-    })(jQuery);
-    (function($){
-
-        let instance = null;
-
-        $('#menu__instance--launch').click(function(){
-
-            if( instance === null ) {
-
-                $(this).hide();
-                $('#menu__instance--abort').show();
-
-                let random_stuff = [];
-
-                for (let i = 0; i < 10; i++) {
-
-                    let letters = '0123456789ABCDEF',
-                        colors = [];
-
-                    for (let ii = 0; ii < 2; ii++) {
-                        let color = '';
-                        for (let c = 0; c < 6; c++)
-                            color += letters[Math.floor(Math.random() * 16)];
-                        colors[ii] = color;
-                    }
-
-                    random_stuff.push('//placehold.it/720x720/' + colors[0] + '/' + colors[1] + '.jpg');
-
-                }
-
-                instance = new $.nitePreload(random_stuff, {
-                    sequential : true
-                });
-
-                $('#menu__instance--result').html('0%');
-
-                instance.progress(function (resource) {
-
-                    console.log(this);
-
-                    $('#menu__instance--result').html(instance.percentage + '%');
-
-                });
-
-                instance.done(function (resources) {
-
-                    console.log(this);
-
-                    $('#menu__instance--result').append(' - Done!!');
-                    $('#menu__instance--abort').hide();
-                    $('#menu__instance--launch').show();
-
-                    instance = null;
-
-                });
-
-            }
-
-        });
-        $('#menu__instance--abort').hide().click(function(){
-
-            if( instance !== null ) {
-
-                $('#menu__instance--result').append(' - Aborted...');
-
-                instance.abort();
-                instance = null;
-
-                $(this).hide();
-                $('#menu__instance--launch').show();
-
-            }
-
-        });
-    })(jQuery);
-</script>
-
-</body>
+    </body>
 </html>

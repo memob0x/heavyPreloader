@@ -69,6 +69,7 @@
     // - - - - - - - - - - - - - - - - - - - -
 
 
+    let cache = [];
 
     const
 
@@ -122,18 +123,29 @@
 
         is_loaded = function(element){
 
-            return is_html_object(element)
+            return (
+                typeof element === 'string'
+                && $.inArray(element, cache) > -1
+            )
+            || (
+                is_html_object(element)
                 && ( 'currentSrc' in element && element.currentSrc.length )
-                && ( ( 'complete' in element && element.complete ) || ( 'readyState' in element && element.readyState >= 2 ) );
+                && ( ( 'complete' in element && element.complete ) || ( 'readyState' in element && element.readyState >= 2 ) )
+            );
 
         },
 
         is_broken = function(element){
 
             return is_loaded(element) && (
-                    ( 'naturalWidth' in element && Math.floor(element.naturalWidth) === 0 )
-                    ||
-                    ( 'videoWidth' in element && element.videoWidth === 0 )
+                    (
+                        typeof element === 'object' && (
+                            ( 'naturalWidth' in element && Math.floor(element.naturalWidth) === 0 )
+                            ||
+                            ( 'videoWidth' in element && element.videoWidth === 0 )
+                        )
+                    )
+                    || typeof element === 'string' // todo check if is url maybe?
                 );
 
         },
@@ -176,7 +188,8 @@
 
                                 matches64 = matches64[0];
 
-                                output.format = matches64.replace('data:' + format_queue[x] + '/g', '');
+                                output.format = format_queue[x];
+                                output.extension = matches64.replace('data:' + format_queue[x] + '/', '');
 
                                 break;
 
@@ -253,7 +266,12 @@
 
                 this._busy = false;
 
-                let this_arguments = [ this._element, e.type, this._element.currentSrc || this._element.src, this._id ];
+                const src = this._element.currentSrc || this._element.src;
+
+                if( $.inArray(src, cache) === -1 )
+                    cache.push(src);
+
+                let this_arguments = [ this._element, e.type, src, this._id ];
 
                 this[ e.type !== 'error' ? '_success' : '_error' ].apply(this, this_arguments);
                 this._done.apply(this, this_arguments);
@@ -273,6 +291,8 @@
 
             this._id = data.id;
             this._format = is_format(data.resource).format;
+
+            this._exists = element_resource; // todo maybe search for an element with this src
 
             if( string_resource ){
 
@@ -319,16 +339,16 @@
                 src = this._settings.srcAttr,
                 src_clean = this._settings.srcAttr.replace('data-', '');
 
-            if ( is_loaded(this._element) ) {
+            if ( is_loaded( this._exists ? this._element : this._resource ) ) {
 
                 if (!this._busy)
                     this._$element.off('.' + this._id_event); // todo this should be called when in callback
 
-                this._callback(new Event(!is_broken(this._element) ? 'load' : 'error'));
+                this._callback(new Event(!is_broken( this._exists ? this._element : this._resource ) ? 'load' : 'error'));
 
                 return false;
 
-            }else if( this._settings.visible && !is_visible(this._element) ){
+            }else if( this._exists && this._settings.visible && !is_visible(this._element) ){
 
                 return false;
 
@@ -524,7 +544,7 @@
             this._$element
                 .off('.' + this._id_event);
 
-            if( is_loaded(this._element) )
+            if( is_loaded(this._exists ? this._element : this._resource ) )
                 return;
 
             const
@@ -651,6 +671,7 @@
 
                         if( this._collection_pending.length ){
 
+                            this._collection_pending = this._collection_pending.filter(x => x.id !== id);
                             this._collection_pending = this._collection_pending.filter(x => x.id !== id);
 
                             if( this._collection_pending.length )
@@ -822,9 +843,14 @@
                     return $(this).css('background-image') !== 'none';
                 }).each(function () {
 
+                    const url = $(this).css('background-image').match(/\((.*?)\)/);
+
+                    if( null === url || url.length < 2 )
+                        return true;
+
                     let collection_item = {
                         element : this,
-                        resource : $(this).css('background-image').replace(/url\("|url\('|url\(|(("')\)$)/igm, '')
+                        resource : url[1].replace(/('|")/g,'')
                     };
 
                     if( is_plain_data_collection )

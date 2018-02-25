@@ -76,6 +76,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     // - - - - - - - - - - - - - - - - - - - -
 
 
+    var cache = [];
+
     var capitalize = function capitalize(string) {
         return string.charAt(0).toUpperCase() + string.slice(1);
     },
@@ -112,11 +114,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     },
         is_loaded = function is_loaded(element) {
 
-        return is_html_object(element) && 'currentSrc' in element && element.currentSrc.length && ('complete' in element && element.complete || 'readyState' in element && element.readyState >= 2);
+        return typeof element === 'string' && $.inArray(element, cache) > -1 || is_html_object(element) && 'currentSrc' in element && element.currentSrc.length && ('complete' in element && element.complete || 'readyState' in element && element.readyState >= 2);
     },
         is_broken = function is_broken(element) {
 
-        return is_loaded(element) && ('naturalWidth' in element && Math.floor(element.naturalWidth) === 0 || 'videoWidth' in element && element.videoWidth === 0);
+        return is_loaded(element) && ((typeof element === 'undefined' ? 'undefined' : _typeof(element)) === 'object' && ('naturalWidth' in element && Math.floor(element.naturalWidth) === 0 || 'videoWidth' in element && element.videoWidth === 0) || typeof element === 'string' // todo check if is url maybe?
+        );
     },
         is_format = function is_format(item, expected_format) {
 
@@ -153,7 +156,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
                             matches64 = matches64[0];
 
-                            output.format = matches64.replace('data:' + format_queue[x] + '/g', '');
+                            output.format = format_queue[x];
+                            output.extension = matches64.replace('data:' + format_queue[x] + '/', '');
 
                             break;
                         } else {
@@ -221,7 +225,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
                 _this._busy = false;
 
-                var this_arguments = [_this._element, e.type, _this._element.currentSrc || _this._element.src, _this._id];
+                var src = _this._element.currentSrc || _this._element.src;
+
+                if ($.inArray(src, cache) === -1) cache.push(src);
+
+                var this_arguments = [_this._element, e.type, src, _this._id];
 
                 _this[e.type !== 'error' ? '_success' : '_error'].apply(_this, this_arguments);
                 _this._done.apply(_this, this_arguments);
@@ -242,14 +250,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 var src = this._settings.srcAttr,
                     src_clean = this._settings.srcAttr.replace('data-', '');
 
-                if (is_loaded(this._element)) {
+                if (is_loaded(this._exists ? this._element : this._resource)) {
 
                     if (!this._busy) this._$element.off('.' + this._id_event); // todo this should be called when in callback
 
-                    this._callback(new Event(!is_broken(this._element) ? 'load' : 'error'));
+                    this._callback(new Event(!is_broken(this._exists ? this._element : this._resource) ? 'load' : 'error'));
 
                     return false;
-                } else if (this._settings.visible && !is_visible(this._element)) {
+                } else if (this._exists && this._settings.visible && !is_visible(this._element)) {
 
                     return false;
                 } else {
@@ -385,7 +393,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
                 this._$element.off('.' + this._id_event);
 
-                if (is_loaded(this._element)) return;
+                if (is_loaded(this._exists ? this._element : this._resource)) return;
 
                 var src = this._$element.attr('srcset'),
                     srcset = this._$element.attr('src');
@@ -405,6 +413,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
                 this._id = data.id;
                 this._format = is_format(data.resource).format;
+
+                this._exists = element_resource; // todo maybe search for an element with this src
 
                 if (string_resource) {
 
@@ -542,6 +552,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
                             if (_this4._collection_pending.length) {
 
+                                _this4._collection_pending = _this4._collection_pending.filter(function (x) {
+                                    return x.id !== id;
+                                });
                                 _this4._collection_pending = _this4._collection_pending.filter(function (x) {
                                     return x.id !== id;
                                 });
@@ -698,9 +711,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     return $(this).css('background-image') !== 'none';
                 }).each(function () {
 
+                    var url = $(this).css('background-image').match(/\((.*?)\)/);
+
+                    if (null === url || url.length < 2) return true;
+
                     var collection_item = {
                         element: this,
-                        resource: $(this).css('background-image').replace(/url\("|url\('|url\(|(("')\)$)/igm, '')
+                        resource: url[1].replace(/('|")/g, '')
                     };
 
                     if (is_plain_data_collection) collection_item = collection_item.resource;
