@@ -844,10 +844,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 method_collection = method_collection.filter(function (x) {
                     return x.id !== unique_method_namespace;
                 });
-                for (var key in method_collection) {
-                    var this_method_collection = method_collection[key];
+                method_collection.forEach(function (this_method_collection) {
                     if ($element.is(this_method_collection.element)) this_method_collection.instance.loop();
-                }
+                });
             });
 
             if (settings.visible) {
@@ -872,11 +871,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 }
             }
 
-            if (true === settings.early) for (var key in method_collection) {
-                if (method_collection[key].id === unique_method_namespace) {
-                    var _ret3 = function () {
+            if (true === settings.early) {
+                var _loop3 = function (key) {
 
-                        var this_method_collection = method_collection[key];
+                    var this_method_collection = method_collection[key];
+
+                    if (method_collection[key].id === unique_method_namespace) {
 
                         clearTimeout(this_method_collection.timeout);
 
@@ -890,7 +890,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                         }, $.isNumeric(settings.earlyTimeout) ? parseInt(settings.earlyTimeout) : 0);
 
                         return 'break';
-                    }();
+                    }
+                };
+
+                for (let key in method_collection) {
+                    var _ret3 = _loop3(key);
 
                     if (_ret3 === 'break') break;
                 }

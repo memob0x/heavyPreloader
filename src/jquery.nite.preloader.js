@@ -988,11 +988,10 @@
 
                 // refresh other method calls for same el (omitting this one)
                 method_collection = method_collection.filter( x => x.id !== unique_method_namespace );
-                for( let key in method_collection ) {
-                    let this_method_collection = method_collection[key];
+                method_collection.forEach((this_method_collection) => {
                     if ($element.is(this_method_collection.element))
                         this_method_collection.instance.loop();
-                }
+                });
 
             });
 
@@ -1019,14 +1018,15 @@
 
             }
 
-            if( true === settings.early ) for( let key in method_collection )
-                if( method_collection[key].id === unique_method_namespace ){
+            if( true === settings.early ) for( let key in method_collection ) {
 
-                    let this_method_collection = method_collection[key];
+                let this_method_collection = method_collection[key];
 
-                    clearTimeout( this_method_collection.timeout );
+                if (method_collection[key].id === unique_method_namespace) {
 
-                    this_method_collection.timeout = setTimeout(function(){
+                    clearTimeout(this_method_collection.timeout);
+
+                    this_method_collection.timeout = setTimeout(function () {
 
                         // todo appropriate method for setting settings?
                         this_method_collection.instance._settings.visible = false;
@@ -1034,11 +1034,13 @@
 
                         this_method_collection.instance.loop();
 
-                    }, $.isNumeric(settings.earlyTimeout) ? parseInt(settings.earlyTimeout) : 0 );
+                    }, $.isNumeric(settings.earlyTimeout) ? parseInt(settings.earlyTimeout) : 0);
 
                     break;
 
                 }
+
+            }
 
         });
 
