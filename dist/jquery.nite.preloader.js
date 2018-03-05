@@ -41,6 +41,26 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     // - - - - - - - - - - - - - - - - - - - -
 
 
+    // https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent/CustomEvent#Polyfill
+    // - - - - - - - - - - - - - - - - - - - -
+    (function () {
+
+        if (typeof window.CustomEvent === "function") return false; //If not IE
+
+        function CustomEvent(event, params) {
+            params = params || { bubbles: false, cancelable: false, detail: undefined };
+            var evt = document.createEvent('CustomEvent');
+            evt.initCustomEvent(event, params.bubbles, params.cancelable, params.detail);
+            return evt;
+        }
+
+        CustomEvent.prototype = window.Event.prototype;
+
+        window.CustomEvent = CustomEvent;
+    })();
+    // - - - - - - - - - - - - - - - - - - - -
+
+
     // thanks to https://github.com/jsPolyfill/Array.prototype.findIndex
     // todo check efficiency and reliability in MS Internet Explorer
     // - - - - - - - - - - - - - - - - - - - -
@@ -254,7 +274,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
                     if (!this._busy) this._$element.off('.' + this._id_event); // todo this should be called when in callback
 
-                    this._callback(new Event(!is_broken(this._exists ? this._element : this._resource) ? 'load' : 'error'));
+                    this._callback(new CustomEvent(!is_broken(this._exists ? this._element : this._resource) ? 'load' : 'error'));
 
                     return false;
                 } else if (this._exists && this._settings.visible && !is_visible(this._element)) {
@@ -331,7 +351,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
                         this._$element[this._busy ? 'on' : 'one']('loadedmetadata.' + this._id_event, function () {
 
-                            if (!is_playthrough_mode__normal && !is_playthrough_mode__full) _this2._callback(new Event('load'));
+                            if (!is_playthrough_mode__normal && !is_playthrough_mode__full) _this2._callback(new CustomEvent('load'));
 
                             if (is_playthrough_mode__full) {
 
@@ -347,7 +367,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
                                         clearInterval(on_progress_replacement_interval);
 
-                                        _this2._callback(new Event(!is_error ? 'load' : 'error'));
+                                        _this2._callback(new CustomEvent(!is_error ? 'load' : 'error'));
                                     } else {
 
                                         if (!_this2._element.paused) _this2._element.pause();
@@ -363,7 +383,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                             if (is_playthrough_mode__full && _this2._element.currentTime === 0 && !is_fully_buffered(_this2._element)) _this2._element.currentTime++;
                         })[this._busy ? 'on' : 'one']('canplaythrough.' + this._id_event, function () {
 
-                            if (is_playthrough_mode__normal) _this2._callback(new Event('load'));
+                            if (is_playthrough_mode__normal) _this2._callback(new CustomEvent('load'));
                         });
                     } else {
 

@@ -38,6 +38,28 @@
     // - - - - - - - - - - - - - - - - - - - -
 
 
+    // https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent/CustomEvent#Polyfill
+    // - - - - - - - - - - - - - - - - - - - -
+    (function () {
+
+        if ( typeof window.CustomEvent === "function" )
+            return false; //If not IE
+
+        function CustomEvent ( event, params ) {
+            params = params || { bubbles: false, cancelable: false, detail: undefined };
+            let evt = document.createEvent( 'CustomEvent' );
+            evt.initCustomEvent( event, params.bubbles, params.cancelable, params.detail );
+            return evt;
+        }
+
+        CustomEvent.prototype = window.Event.prototype;
+
+        window.CustomEvent = CustomEvent;
+
+    })();
+    // - - - - - - - - - - - - - - - - - - - -
+
+
     // thanks to https://github.com/jsPolyfill/Array.prototype.findIndex
     // todo check efficiency and reliability in MS Internet Explorer
     // - - - - - - - - - - - - - - - - - - - -
@@ -344,7 +366,7 @@
                 if (!this._busy)
                     this._$element.off('.' + this._id_event); // todo this should be called when in callback
 
-                this._callback(new Event(!is_broken( this._exists ? this._element : this._resource ) ? 'load' : 'error'));
+                this._callback(new CustomEvent(!is_broken( this._exists ? this._element : this._resource ) ? 'load' : 'error'));
 
                 return false;
 
@@ -462,7 +484,7 @@
                         [this._busy ? 'on' : 'one']('loadedmetadata.' + this._id_event, () => {
 
                             if ( !is_playthrough_mode__normal && !is_playthrough_mode__full )
-                                this._callback(new Event('load'));
+                                this._callback(new CustomEvent('load'));
 
                             if( is_playthrough_mode__full ) {
 
@@ -479,7 +501,7 @@
 
                                         clearInterval(on_progress_replacement_interval);
 
-                                        this._callback(new Event( !is_error ? 'load' : 'error' ));
+                                        this._callback(new CustomEvent( !is_error ? 'load' : 'error' ));
 
                                     } else {
 
@@ -507,7 +529,7 @@
                         [this._busy ? 'on' : 'one']('canplaythrough.' + this._id_event, () => {
 
                             if( is_playthrough_mode__normal )
-                                this._callback(new Event('load'));
+                                this._callback(new CustomEvent('load'));
 
                         });
 
