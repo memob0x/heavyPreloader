@@ -8,9 +8,7 @@
   "dependencies": {
     "jquery": ">=1.9.1"
   },
-  "devDependencies": {
-    "jquery": ">=1.9.1"
-  },
+  "devDependencies": { },
   "moduleType": [
     "es6"
   ],
