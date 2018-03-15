@@ -144,9 +144,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         is_format = function is_format(item, expected_format) {
 
         var format_extensions = {
-            image: 'jp[e]?g|gif|png|tif[f]?|bmp',
-            audio: 'mp3|ogg',
-            video: 'mp4|ogv|ogg|webm'
+            image: 'jp[e]?g||jpe|jif|jfif|jfi|gif|png|tif[f]?|bmp|dib|webp|ico|cur|svg',
+            audio: 'mp3|ogg|oga|spx|ogg|wav',
+            video: 'mp4|ogv|webm'
         },
             format_names = Object.keys(format_extensions),
             base64_heading = '\;base64\,';
