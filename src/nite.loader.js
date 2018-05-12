@@ -1,10 +1,10 @@
-/*! JQuery Nite Preloader | Daniele Fioroni | dfioroni91@gmail.com */
+/*! JQuery Nite Loader | Daniele Fioroni | dfioroni91@gmail.com */
 (function(window, document, $, undefined){
     'use strict';
 
     const
         namespace_prefix = 'nite',
-        namespace_method = namespace_prefix+'Preload',
+        namespace_method = namespace_prefix+'Load',
         namespace = namespace_method+'er';
 
 

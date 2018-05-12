@@ -11,7 +11,7 @@ var $ = jQuery,
     $console.scrollTop($list.height());
 };
 
-$('.playground').nitePreload({
+$('.playground').niteLoad({
 
     srcAttr: 'data-nite-src',
     srcsetAttr: 'data-nite-srcset',
@@ -49,33 +49,32 @@ $('.playground').nitePreload({
 
 });
 
+var instance = void 0;
+
 $(document).on('niteLoad.nite niteError.nite', function (e, element) {
 
-    console_log('jQuery.fn.nitePreload(): ' + element);
+    console_log('jQuery.fn.niteLoad(): ' + element);
 }).on('niteError.nite', 'figure img', function (e) {
 
     $(this).closest('figure').addClass('error');
 }).on('niteLoad.nite niteError.nite', 'figure img, figure video', function (e) {
 
     $(this).closest('figure').addClass('loaded' + (e.type === 'niteError' ? '-error' : ''));
-}).on('click', '.controls__button--generate', function () {
-
-    var $t = $(this),
-        instance = $t.data('instance');
+}).on('click', '[class*="nite-program-load"]', function () {
 
     if (instance) {
 
-        console_log(' - Aborted...');
+        console_log('Aborted...');
 
         instance.abort();
         instance = null;
 
-        $(this).hide();
-        $('#menu__instance--launch').show();
+        $('.nite-program-load--kill').hide();
+        $('.nite-program-load--run').show();
     } else {
 
-        $(this).hide();
-        $('#menu__instance--abort').show();
+        $('.nite-program-load--run').hide();
+        $('.nite-program-load--kill').show();
 
         var random_stuff = [];
 
@@ -94,30 +93,25 @@ $(document).on('niteLoad.nite niteError.nite', function (e, element) {
             random_stuff.push('//placehold.it/720x720/' + colors[0] + '/' + colors[1] + '.jpg');
         }
 
-        instance = new $.nitePreload(random_stuff, {
+        instance = new $.niteLoad(random_stuff, {
             sequential: true
         });
 
-        console_log('0%');
+        console_log('0% - Starting...');
 
         instance.progress(function (resource) {
-
-            console.log(this);
 
             console_log(instance.percentage + '%');
         });
 
         instance.done(function (resources) {
 
-            console.log(this);
-
-            console_log(' - Done!!');
-            $('#menu__instance--abort').hide();
-            $('#menu__instance--launch').show();
+            console_log('100% - Done!!');
+            $('.nite-program-load--run').show();
+            $('.nite-program-load--kill').hide();
 
             instance = null;
         });
     }
-
-    $t.data('instance', instance);
 });
+//# sourceMappingURL=test.js.map

@@ -6,53 +6,53 @@ const
 
     $console = $('#console'),
 
-    console_log = function(string){
+    console_log = function (string) {
 
-        if( $console.is(':empty') )
+        if ($console.is(':empty'))
             $console.append('<ol />');
 
-        const $list = $console.find('ol').append('<li>'+string+'</li>');
+        const $list = $console.find('ol').append('<li>' + string + '</li>');
 
         $console.scrollTop($list.height());
 
     };
 
-$('.playground').nitePreload({
+$('.playground').niteLoad({
 
-    srcAttr       : 'data-nite-src',
-    srcsetAttr    : 'data-nite-srcset',
+    srcAttr: 'data-nite-src',
+    srcsetAttr: 'data-nite-srcset',
 
-    visible       : true,
+    visible: true,
 
-    sequential    : true,
+    sequential: true,
 
-    backgrounds   : true,
-    extraAttrs    : [],
+    backgrounds: true,
+    extraAttrs: [],
 
-    playthrough   : 'full',
+    playthrough: 'full',
 
-    early : false,
-    earlyTimeout : 6000,
+    early: false,
+    earlyTimeout: 6000,
 
-    onComplete : function(instance, resources){
+    onComplete: function (instance, resources) {
 
         $(this).addClass('complete');
 
     },
 
-    onProgress : function(instance, resource){
+    onProgress: function (instance, resource) {
 
         $(this).find('[data-percentage]').attr('data-percentage', instance.percentage)
             .closest('.playground__percentage').addClass('visible');
 
     },
 
-    onLoad : function(instance, resource){
+    onLoad: function (instance, resource) {
 
         $(this).addClass('has-loads');
 
     },
-    onError : function(instance, resource){
+    onError: function (instance, resource) {
 
         $(this).addClass('has-errors');
 
@@ -60,45 +60,44 @@ $('.playground').nitePreload({
 
 });
 
+let instance;
+
 $(document)
 
-    .on('niteLoad.nite niteError.nite', function(e, element){
+    .on('niteLoad.nite niteError.nite', function (e, element) {
 
-        console_log('jQuery.fn.nitePreload(): ' + element);
+        console_log('jQuery.fn.niteLoad(): ' + element);
 
     })
 
-    .on('niteError.nite', 'figure img', function(e){
+    .on('niteError.nite', 'figure img', function (e) {
 
         $(this).closest('figure').addClass('error');
 
     })
 
-    .on('niteLoad.nite niteError.nite', 'figure img, figure video', function(e){
+    .on('niteLoad.nite niteError.nite', 'figure img, figure video', function (e) {
 
-        $(this).closest('figure').addClass('loaded'+( e.type === 'niteError' ? '-error' : '' ));
+        $(this).closest('figure').addClass('loaded' + (e.type === 'niteError' ? '-error' : ''));
 
     })
 
-    .on('click', '.controls__button--generate', function(){
+    .on('click', '[class*="nite-program-load"]', function () {
 
-        let $t = $(this),
-            instance = $t.data('instance');
+        if (instance) {
 
-        if( instance ) {
-
-            console_log(' - Aborted...');
+            console_log('Aborted...');
 
             instance.abort();
             instance = null;
 
-            $(this).hide();
-            $('#menu__instance--launch').show();
+            $('.nite-program-load--kill').hide();
+            $('.nite-program-load--run').show();
 
-        }else{
+        } else {
 
-            $(this).hide();
-            $('#menu__instance--abort').show();
+            $('.nite-program-load--run').hide();
+            $('.nite-program-load--kill').show();
 
             let random_stuff = [];
 
@@ -118,15 +117,13 @@ $(document)
 
             }
 
-            instance = new $.nitePreload(random_stuff, {
-                sequential : true
+            instance = new $.niteLoad(random_stuff, {
+                sequential: true
             });
 
-            console_log('0%');
+            console_log('0% - Starting...');
 
             instance.progress(function (resource) {
-
-                console.log(this);
 
                 console_log(instance.percentage + '%');
 
@@ -134,18 +131,14 @@ $(document)
 
             instance.done(function (resources) {
 
-                console.log(this);
-
-                console_log(' - Done!!');
-                $('#menu__instance--abort').hide();
-                $('#menu__instance--launch').show();
+                console_log('100% - Done!!');
+                $('.nite-program-load--run').show();
+                $('.nite-program-load--kill').hide();
 
                 instance = null;
 
             });
 
         }
-
-        $t.data('instance', instance);
 
     });

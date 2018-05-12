@@ -6,12 +6,12 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-/*! JQuery Nite Preloader | Daniele Fioroni | dfioroni91@gmail.com */
+/*! JQuery Nite Loader | Daniele Fioroni | dfioroni91@gmail.com */
 (function (window, document, $, undefined) {
     'use strict';
 
     var namespace_prefix = 'nite',
-        namespace_method = namespace_prefix + 'Preload',
+        namespace_method = namespace_prefix + 'Load',
         namespace = namespace_method + 'er';
 
     // thanks to https://github.com/paulmillr/console-polyfill
@@ -922,3 +922,4 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         });
     };
 })(window, document, jQuery);
+//# sourceMappingURL=nite.loader.js.map

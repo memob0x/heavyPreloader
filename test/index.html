@@ -4,7 +4,7 @@
 
         <script src="assets/vendors/jquery/dist/jquery.min.js"></script>
         <script src="../../nitejs/dist/jquery.nite.js"></script>
-        <script src="../dist/jquery.nite.preloader.js"></script>
+        <script src="../dist/nite.loader.js"></script>
 
         <link rel="stylesheet" type="text/css" href="assets/dist/test.min.css" />
 
@@ -13,7 +13,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta charset="UTF-8">
 
-        <title>Nite Preloader Playground</title>
+        <title>Nite Loader Playground</title>
 
     </head>
     <body>
@@ -141,13 +141,12 @@
 
             <section class="playground">
 
-                <span class="playground__percentage"> <i data-percentage></i></span>
-
                 <section class="playground__area">
 
                     <div class="playground__area__inner">
 
-                        TODO
+                        <button class="nite-program-load--run">Generate Programmatically</button>
+                        <button class="nite-program-load--kill" style="display:none;">Abort</button>
 
                     </div>
 
