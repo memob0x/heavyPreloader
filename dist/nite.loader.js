@@ -36,7 +36,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     // - - - - - - - - - - - - - - - - - - - -
     if (!$) {
         console.error('jQuery is needed for ' + namespace + ' to work!');
-        return undefined;
+        return void 0;
     }
     // - - - - - - - - - - - - - - - - - - - -
 
@@ -48,7 +48,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         if (typeof window.CustomEvent === "function") return false; //If not IE
 
         function CustomEvent(event, params) {
-            params = params || { bubbles: false, cancelable: false, detail: undefined };
+            params = params || { bubbles: false, cancelable: false, detail: void 0 };
             var evt = document.createEvent('CustomEvent');
             evt.initCustomEvent(event, params.bubbles, params.cancelable, params.detail);
             return evt;
@@ -160,7 +160,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
             if (item === '') return false;
 
-            var format_queue = undefined !== expected_format ? [expected_format] : format_names;
+            var format_queue = void 0 !== expected_format ? [expected_format] : format_names;
 
             for (var x in format_queue) {
 
@@ -418,9 +418,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 var src = this._$element.attr('srcset'),
                     srcset = this._$element.attr('src');
 
-                if (undefined !== src) this._$element.data(this._settings.srcAttr, src).attr(this._settings.srcAttr, src).removeAttr('src').removeAttr('srcset');
+                if (void 0 !== src) this._$element.data(this._settings.srcAttr, src).attr(this._settings.srcAttr, src).removeAttr('src').removeAttr('srcset');
 
-                if (undefined !== srcset) this._$element.data(this._settings.srcsetAttr, srcset).attr(this._settings.srcsetAttr, srcset).removeAttr('src').removeAttr('srcset');
+                if (void 0 !== srcset) this._$element.data(this._settings.srcsetAttr, srcset).attr(this._settings.srcsetAttr, srcset).removeAttr('src').removeAttr('srcset');
             }
         }, {
             key: 'resource',
@@ -458,7 +458,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 }
 
                 this._id_event = this._$element.data(namespace);
-                this._busy = this._id_event !== undefined;
+                this._busy = this._id_event !== void 0;
                 this._id_event = this._busy ? this._id_event : namespace + '_unique_' + this._element.tagName + '_' + unique_id();
             }
         }]);
