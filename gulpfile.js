@@ -87,9 +87,9 @@ gulp.task('default', (callback) => {
 
                 sourcemaps.init({ largeFile: true }),
 
-                babel({ compact: true }),//.on('error', function(error){ log(error); }),
-
                 minify(),
+
+                babel({ compact : true }),
 
                 rename({ suffix: '.min' }),
 
