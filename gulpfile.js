@@ -15,7 +15,6 @@ const
     postcss = require('gulp-postcss'),
     autoprefixer = require('autoprefixer'),
     clear = require('clear'),
-    uglify = require("gulp-uglify"),
 
     resources = [
 
@@ -90,7 +89,7 @@ gulp.task('default', (callback) => {
 
                 babel({ compact: true }),//.on('error', function(error){ log(error); }),
 
-                uglify(),
+                minify(),
 
                 rename({ suffix: '.min' }),
 
