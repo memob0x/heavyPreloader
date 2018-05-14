@@ -315,15 +315,14 @@
 
             if (string_resource) {
 
-                this._$element
-                    .data(this._settings.srcAttr.replace('data-', ''), this._resource) //FIXME: vanilla alt
-                    .data(this._settings.srcsetAttr.replace('data-', ''), this._resource) //FIXME: vanilla alt
-                    .attr(this._settings.srcAttr, this._resource) //FIXME: vanilla alt
-                    .attr(this._settings.srcsetAttr, this._resource); //FIXME: vanilla alt
+                this._element.dataset[this._settings.srcAttr.replace('data-', '')] = this._resource;
+                this._element.dataset[this._settings.srcsetAttr.replace('data-', '')] = this._resource;
+                this._element.setAttribute(this._settings.srcAttr, this._resourc);
+                this._element.setAttribute(this._settings.srcsetAttr, this._resourc);
 
             }
 
-            this._id_event = this._$element.data(pluginName); //FIXME: vanilla alt
+            this._id_event = this._element[pluginInstance+'_IDEvent'];
             this._busy = this._id_event !== undefined;
             this._id_event = this._busy ? this._id_event : pluginName + '_unique_' + this._element.tagName + '_' + generateInstanceID();
 
@@ -356,39 +355,39 @@
 
                 if (this._format === 'image') {
 
-                    this._$element[this._busy ? 'on' : 'one']('load.' + this._id_event + ' error.' + this._id_event, this._callback);
+                    this._$element[this._busy ? 'on' : 'one']('load.' + this._id_event + ' error.' + this._id_event, this._callback); //FIXME: vanilla alt
 
                     const
-                        $picture = this._$element.closest('picture'), //FIXME: vanilla alt
+                        picture = this._element.closest('picture'),
                         srcset = this._settings.srcsetAttr,
                         srcset_clean = this._settings.srcsetAttr.replace('data-', '');
 
-                    if ($picture.length && 'HTMLPictureElement' in window) {
+                    if ( picture && 'HTMLPictureElement' in window ) {
 
-                        this._$element
-                            .removeData(srcset_clean) //FIXME: vanilla alt
-                            .removeAttr(srcset) //FIXME: vanilla alt
-                            .removeData(src_clean) //FIXME: vanilla alt
-                            .removeAttr(src); //FIXME: vanilla alt
+                        delete this._element.dataset[srcset_clean];
+                        delete this._element.dataset[src_clean];
+                        this._element.removeAttribute(srcset);
+                        this._element.removeAttribute(src);
 
-                        $picture.find('source[' + srcset + ']') //FIXME: vanilla alt
-                            .attr('srcset', $picture.data(srcset_clean)) //FIXME: vanilla alt
-                            .removeData(srcset_clean) //FIXME: vanilla alt
-                            .removeAttr(srcset); //FIXME: vanilla alt
+                        picture.queryAll('source[' + srcset + ']').forEach((el) => {
+                            el.addAttribute('srcset', this._element.dataset[srcset_clean]);
+                            delete this._element.dataset[srcset_clean];
+                            el.removeAttribute(srcset);
+                        });
 
                     } else {
 
-                        if (this._$element.is('[' + srcset + ']'))//FIXME: vanilla alt
-                            this._$element
-                                .attr('srcset', this._$element.data(srcset_clean))//FIXME: vanilla alt
-                                .removeData(srcset_clean)//FIXME: vanilla alt
-                                .removeAttr(srcset);//FIXME: vanilla alt
+                        if (this._element.matches('[' + srcset + ']')){
+                            this._element.addAttribute('srcset', this._element.dataset[srcset_clean]);
+                            delete this._element.dataset[srcset_clean];
+                            this._element.removeAttribute(srcset);
+                        }
 
-                        if (this._$element.is('[' + src + ']'))//FIXME: vanilla alt
-                            this._$element
-                                .attr('src', this._$element.data(src_clean))//FIXME: vanilla alt
-                                .removeData(src_clean)//FIXME: vanilla alt
-                                .removeAttr(src);//FIXME: vanilla alt
+                        if (this._element.matches('[' + src + ']')){
+                            this._element.addAttribute('src', this._element.dataset[src_clean]);
+                            delete this._element.dataset[src_clean];
+                            this._element.removeAttribute(src);
+                        }
 
                     }
 
@@ -495,7 +494,7 @@
 
                             }, 500);
 
-                            this._$element.data(this._id_event, on_progress_replacement_interval); //FIXME: use a DOM property instead
+                            this._$element.data(this._id_event, on_progress_replacement_interval); //FIXME: use a DOM propiderty instead
 
                         }
 
@@ -520,7 +519,7 @@
                 }
 
                 if (!this._busy)
-                    this._$element.data(pluginName, this._id_event); //FIXME: use a DOM property instead
+                    this._element[pluginInstance+'_IDEvent'] = this._id_event;
 
             }
 
