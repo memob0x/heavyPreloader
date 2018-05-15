@@ -55,7 +55,6 @@
         }
         const
             list = Object(this),
-            // Makes sures is always has an positive integer as length.
             length = list.length >>> 0,
             thisArg = arguments[1];
         for (let i = 0; i < length; i++) {
@@ -90,12 +89,54 @@
 
     window[pluginName + 'Cache'] = [];
 
+    let innerEvents = {};
+
     const
         detachEventListener = (element, eventName) => {
-// TODO: func core + win global var with id .namspaced (like jQuery one)
+
+            const _eventName = eventName.split(','),
+                id = _eventName[1];
+
+            if( id ){
+
+                element.removeEventListener(_eventName[0], innerEvents[eventName].callback);
+
+                delete innerEvents[id];
+
+            }
+
         },
-        attachEventListener = (element, eventName, oneTime) => {
-// TODO: func core + win global var with id .namspaced (like jQuery one)
+        attachEventListener = (element, eventName, callback, oneTime) => {
+
+            let _callback = callback;
+
+            callback = (event) => {
+                
+                if( oneTime ){
+                    event.target.removeEventListener(event.type, arguments.callee);
+                }
+
+                _callback();
+
+            }
+
+            const
+                _eventName = eventName.split(','),
+                id = _eventName[1];
+
+            if( id ){
+
+                innerEvents[id] = {
+                    eventName : eventName,
+                    callback : callback
+                };
+
+                eventName = _eventName[0];
+
+            }
+
+            element.addEventListener(eventName, callback);
+
         },
         isInArray = (needle, stack) => {
             return stack.indexOf(needle) > -1;
@@ -351,7 +392,7 @@
             if (isLoaded(this._exists ? this._element : this._resource)) {
 
                 if (!this._busy) {
-                    detachEventListener(this._elemnt, '.' + this._id_event); //FIXME: vanilla alt //TODO: this should be called when in callback
+                    detachEventListener(this._elemnt, '.' + this._id_event); //TODO: this should be called when in callback
                 }
 
                 this._callback(new CustomEvent(!isBroken(this._exists ? this._element : this._resource) ? 'load' : 'error'));
