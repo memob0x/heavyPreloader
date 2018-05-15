@@ -90,24 +90,12 @@
 
     window[pluginName + 'Cache'] = [];
 
-    let innerEvents = [];
-
     const
         detachEventListener = (element, eventName) => {
-            //TODO: get id (.namespace) from eventName
-            element.removeEventListener(eventName, handler);
-            //TODO: remove from innerEvents array
+// TODO: func core + win global var with id .namspaced (like jQuery one)
         },
-        attachEventListener = (element, eventName, callback, oneTime) => {
-            //TODO: get id (.namespace) from eventName
-            let wrapper = (event) => {
-                if( oneTime ){
-                    event.target.removeEventListener(event.type, arguments.callee);
-                }
-                callback();
-            }
-            element.addEventListener(eventName, callback);
-            //TODO: push to innerEvents array
+        attachEventListener = (element, eventName, oneTime) => {
+// TODO: func core + win global var with id .namspaced (like jQuery one)
         },
         isInArray = (needle, stack) => {
             return stack.indexOf(needle) > -1;
@@ -1131,3 +1119,4 @@
     };
 
 })(window, document, jQuery);
+//# sourceMappingURL=nite.loader.js.map

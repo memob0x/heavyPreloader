@@ -9,12 +9,12 @@ const
     merge = require('gulp-merge'),
     rename = require('gulp-rename'),
     babel = require('gulp-babel'),
-    minify = require("gulp-babel-minify"),
     sass = require('gulp-sass'),
     log = require('fancy-log'),
     postcss = require('gulp-postcss'),
     autoprefixer = require('autoprefixer'),
     clear = require('clear'),
+    minify = require('gulp-minify'),
 
     resources = [
 
@@ -77,7 +77,7 @@ gulp.task('default', (callback) => {
 
                 sourcemaps.init({ largeFile: true }),
 
-                babel(),//.on('error', function(error){ log(error); }),
+                babel(),
 
                 sourcemaps.write('.'),
 
@@ -87,11 +87,7 @@ gulp.task('default', (callback) => {
 
                 sourcemaps.init({ largeFile: true }),
 
-                minify(),
-
-                babel({ compact : true }),
-
-                rename({ suffix: '.min' }),
+                minify({ ext : { min:'.min.js' } }),
 
                 sourcemaps.write('.'),
 

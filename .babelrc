@@ -1,4 +1,13 @@
 {
-  "presets" : [ ["es2015"] ],
-  "plugins": ["transform-regenerator","babel-plugin-transform-undefined-to-void"]
+  "presets": [
+    [
+      "es2017"
+    ]
+  ],
+  "plugins": [
+    "babel-preset-es2017",
+    "transform-regenerator",
+    "transform-object-rest-spread",
+    "babel-plugin-transform-undefined-to-void"
+  ]
 }

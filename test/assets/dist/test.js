@@ -1,15 +1,21 @@
 "use strict";
 
-var $ = jQuery,
+const
+
+    $ = jQuery,
+
     $console = $('#console'),
-    console_log = function console_log(string) {
 
-    if ($console.is(':empty')) $console.append('<ol />');
+    console_log = function (string) {
 
-    var $list = $console.find('ol').append('<li>' + string + '</li>');
+        if ($console.is(':empty'))
+            $console.append('<ol />');
 
-    $console.scrollTop($list.height());
-};
+        const $list = $console.find('ol').append('<li>' + string + '</li>');
+
+        $console.scrollTop($list.height());
+
+    };
 
 $('.playground').niteLoad({
 
@@ -28,90 +34,112 @@ $('.playground').niteLoad({
     early: false,
     earlyTimeout: 6000,
 
-    onComplete: function onComplete(instance, resources) {
+    onComplete: function (instance, resources) {
 
         $(this).addClass('complete');
+
     },
 
-    onProgress: function onProgress(instance, resource) {
+    onProgress: function (instance, resource) {
 
-        $(this).find('[data-percentage]').attr('data-percentage', instance.percentage).closest('.playground__percentage').addClass('visible');
+        $(this).find('[data-percentage]').attr('data-percentage', instance.percentage)
+            .closest('.playground__percentage').addClass('visible');
+
     },
 
-    onLoad: function onLoad(instance, resource) {
+    onLoad: function (instance, resource) {
 
         $(this).addClass('has-loads');
+
     },
-    onError: function onError(instance, resource) {
+    onError: function (instance, resource) {
 
         $(this).addClass('has-errors');
+
     }
 
 });
 
-var instance = void 0;
+let instance;
 
-$(document).on('niteLoad.nite niteError.nite', function (e, element) {
+$(document)
 
-    console_log('jQuery.fn.niteLoad(): ' + element);
-}).on('niteError.nite', 'figure img', function (e) {
+    .on('niteLoad.nite niteError.nite', function (e, element) {
 
-    $(this).closest('figure').addClass('error');
-}).on('niteLoad.nite niteError.nite', 'figure img, figure video', function (e) {
+        console_log('jQuery.fn.niteLoad(): ' + element);
 
-    $(this).closest('figure').addClass('loaded' + (e.type === 'niteError' ? '-error' : ''));
-}).on('click', '[class*="nite-program-load"]', function () {
+    })
 
-    if (instance) {
+    .on('niteError.nite', 'figure img', function (e) {
 
-        console_log('Aborted...');
+        $(this).closest('figure').addClass('error');
 
-        instance.abort();
-        instance = null;
+    })
 
-        $('.nite-program-load--kill').hide();
-        $('.nite-program-load--run').show();
-    } else {
+    .on('niteLoad.nite niteError.nite', 'figure img, figure video', function (e) {
 
-        $('.nite-program-load--run').hide();
-        $('.nite-program-load--kill').show();
+        $(this).closest('figure').addClass('loaded' + (e.type === 'niteError' ? '-error' : ''));
 
-        var random_stuff = [];
+    })
 
-        for (var i = 0; i < 10; i++) {
+    .on('click', '[class*="nite-program-load"]', function () {
 
-            var letters = '0123456789ABCDEF',
-                colors = [];
+        if (instance) {
 
-            for (var ii = 0; ii < 2; ii++) {
-                var color = '';
-                for (var c = 0; c < 6; c++) {
-                    color += letters[Math.floor(Math.random() * 16)];
-                }colors[ii] = color;
+            console_log('Aborted...');
+
+            instance.abort();
+            instance = null;
+
+            $('.nite-program-load--kill').hide();
+            $('.nite-program-load--run').show();
+
+        } else {
+
+            $('.nite-program-load--run').hide();
+            $('.nite-program-load--kill').show();
+
+            let random_stuff = [];
+
+            for (let i = 0; i < 10; i++) {
+
+                let letters = '0123456789ABCDEF',
+                    colors = [];
+
+                for (let ii = 0; ii < 2; ii++) {
+                    let color = '';
+                    for (let c = 0; c < 6; c++)
+                        color += letters[Math.floor(Math.random() * 16)];
+                    colors[ii] = color;
+                }
+
+                random_stuff.push('//placehold.it/720x720/' + colors[0] + '/' + colors[1] + '.jpg');
+
             }
 
-            random_stuff.push('//placehold.it/720x720/' + colors[0] + '/' + colors[1] + '.jpg');
+            instance = new $.niteLoad(random_stuff, {
+                sequential: true
+            });
+
+            console_log('0% - Starting...');
+
+            instance.progress(function (resource) {
+
+                console_log(instance.percentage + '%');
+
+            });
+
+            instance.done(function (resources) {
+
+                console_log('100% - Done!!');
+                $('.nite-program-load--run').show();
+                $('.nite-program-load--kill').hide();
+
+                instance = null;
+
+            });
+
         }
 
-        instance = new $.niteLoad(random_stuff, {
-            sequential: true
-        });
-
-        console_log('0% - Starting...');
-
-        instance.progress(function (resource) {
-
-            console_log(instance.percentage + '%');
-        });
-
-        instance.done(function (resources) {
-
-            console_log('100% - Done!!');
-            $('.nite-program-load--run').show();
-            $('.nite-program-load--kill').hide();
-
-            instance = null;
-        });
-    }
-});
+    });
 //# sourceMappingURL=test.js.map
