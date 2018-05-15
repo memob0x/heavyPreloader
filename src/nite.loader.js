@@ -84,12 +84,14 @@
 
     window[pluginName + 'Cache'] = [];
 
+    let innerEvents = [];
+
     const
         detachEventListener = (element, eventName) => {
-
+            element.removeEventListener(eventName, handler);
         },
-        attachEventListener = (element, eventName, oneTime) => {
-
+        attachEventListener = (element, eventName, callback, oneTime) => {
+            element.addEventListener(eventName, callback);
         },
         isInArray = (needle, stack) => {
             return stack.indexOf(needle) > -1;
