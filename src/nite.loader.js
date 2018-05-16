@@ -10,7 +10,7 @@
         }
         let con = window.console,
             prop, method,
-            dummy = () => {},
+            dummy = () => { },
             properties = ['memory'],
             methods = ('assert,clear,count,debug,dir,dirxml,error,exception,group,groupCollapsed,groupEnd,info,log,markTimeline,profile,profiles,profileEnd,show,table,time,timeEnd,timeline,timelineEnd,timeStamp,trace,warn').split(',');
         while (prop = properties.pop()) {
@@ -34,7 +34,7 @@
         }
         function CustomEvent(event, params) {
             params = params || { bubbles: false, cancelable: false, detail: undefined };
-            let evt = document.createEvent('CustomEvent');
+            const evt = document.createEvent('CustomEvent');
             evt.initCustomEvent(event, params.bubbles, params.cancelable, params.detail);
             return evt;
         }
@@ -43,25 +43,34 @@
     })();
     // - - - - - - - - - - - - - - - - - - - -
 
-    // thanks to https://github.com/jsPolyfill/Array.prototype.findIndex
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/findIndex#Polyfill
     // - - - - - - - - - - - - - - - - - - - -
-    Array.prototype.findIndex = Array.prototype.findIndex || function (callback) {
-        if (this === null) {
-            throw new TypeError('Array.prototype.findIndex called on null or undefined');
-        } else if (typeof callback !== 'function') {
-            throw new TypeError('callback must be a function');
-        }
-        const
-            list = Object(this),
-            length = list.length >>> 0,
-            thisArg = arguments[1];
-        for (let i = 0; i < length; i++) {
-            if (callback.call(thisArg, list[i], i, list)) {
-                return i;
-            }
-        }
-        return -1;
-    };
+    if (!Array.prototype.findIndex) {
+        Object.defineProperty(Array.prototype, 'findIndex', {
+            value: function (predicate) {
+                if (this == null) {
+                    throw new TypeError('"this" is null or not defined');
+                }
+                let o = Object(this);
+                let len = o.length >>> 0;
+                if (typeof predicate !== 'function') {
+                    throw new TypeError('predicate must be a function');
+                }
+                let thisArg = arguments[1];
+                let k = 0;
+                while (k < len) {
+                    let kValue = o[k];
+                    if (predicate.call(thisArg, kValue, k, o)) {
+                        return k;
+                    }
+                    k++;
+                }
+                return -1;
+            },
+            configurable: true,
+            writable: true
+        });
+    }
     // - - - - - - - - - - - - - - - - - - - -
 
     // https://developer.mozilla.org/it/docs/Web/JavaScript/Reference/Global_Objects/Array/isArray#Polyfill
@@ -69,6 +78,38 @@
     Array.isArray = Array.isArray || function (arg) {
         return Object.prototype.toString.call(arg) === '[object Array]';
     };
+    // - - - - - - - - - - - - - - - - - - - -
+
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter#Polyfill
+    // - - - - - - - - - - - - - - - - - - - -
+    Array.prototype.filter = Array.prototype.filter || function (func, thisArg) {
+        'use strict';
+        if (!((typeof func === 'Function' || typeof func === 'function') && this)) {
+            throw new TypeError();
+        }
+        let len = this.length >>> 0,
+            res = new Array(len),
+            t = this, c = 0, i = -1;
+        if (thisArg === undefined) {
+            while (++i !== len) {
+                if (i in this) {
+                    if (func(t[i], i, t)) {
+                        res[c++] = t[i];
+                    } else {
+                        while (++i !== len) {
+                            if (i in this) {
+                                if (func.call(thisArg, t[i], i, t)) {
+                                    res[c++] = t[i];
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        res.length = c;
+        return res;
+    }
     // - - - - - - - - - - - - - - - - - - - -
 
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/startsWith#Polyfill
@@ -91,11 +132,6 @@
             return this.indexOf(search, start) !== -1;
         }
     };
-    // - - - - - - - - - - - - - - - - - - - -
-
-    // thanks to https://gist.github.com/eliperelman/1031656
-    // - - - - - - - - - - - - - - - - - - - -
-    [].filter || (Array.prototype.filter = function (a, b, c, d, e) { c = this; d = []; for (e in c) ~~e + '' == e && e >= 0 && a.call(b, c[e], +e, c) && d.push(c[e]); return d })
     // - - - - - - - - - - - - - - - - - - - -
 
     const
@@ -121,7 +157,7 @@
 
             if (events.startsWith('.')) {
                 Object.keys(privateEventsStorage).forEach((key) => {
-                    if ( key.replace(eventNamespaceParserSeparator, '.').includes(events) && privateEventsStorage[key].element === element ){
+                    if (key.replace(eventNamespaceParserSeparator, '.').includes(events) && privateEventsStorage[key].element === element) {
                         detachEventListener(element, key.replace(eventNamespaceParserSeparator, '.'));
                     }
                 });
@@ -180,10 +216,12 @@
                 once = false;
             }
 
-            privateEventsStorage[events] = {...privateEventsStorage[events], ...{
-                handler: handler,
-                once: once
-            }};
+            privateEventsStorage[events] = {
+                ...privateEventsStorage[events], ...{
+                    handler: handler,
+                    once: once
+                }
+            };
             element.addEventListener(type, privateEventsStorage[events].handler, { once: once });
 
         },
@@ -243,9 +281,9 @@
                         typeof element === 'object'
                         &&
                         (
-                            ( 'naturalWidth' in element && Math.floor(element.naturalWidth) === 0 )
+                            ('naturalWidth' in element && Math.floor(element.naturalWidth) === 0)
                             ||
-                            ( 'videoWidth' in element && element.videoWidth === 0 )
+                            ('videoWidth' in element && element.videoWidth === 0)
                         )
                     )
                     ||
@@ -355,6 +393,23 @@
                 }, ...options
             };
 
+            this.srcAttr = '';
+            this.srcsetAttr = '';
+
+            if( !this._settings.srcAttr.startsWith('data-') ){
+                this.srcAttr = this._settings.srcAttr;
+                this._settings.srcAttr = 'data-'+this._settings.srcAttr;
+            }else{
+                this.srcAttr = this._settings.srcAttr.replace('data-', '');
+            }
+            
+            if( !this._settings.srcsetAttr.startsWith('data-') ){
+                this.srcsetAttr = this._settings.srcsetAttr;
+                this._settings.srcsetAttr = 'data-'+this._settings.srcsetAttr;
+            }else{
+                this.srcsetAttr = this._settings.srcsetAttr.replace('data-', '');
+            }
+
             this._id = null;
             this._id_event = null;
 
@@ -409,10 +464,12 @@
                 this._element = document.createElement(is_img ? 'img' : this._format);
 
                 if (is_img) {
-                    this._settings.srcsetAttr = 'data-srcset';
+                    this.srcsetAttr = 'srcset';
+                    this._settings.srcsetAttr = 'data-'+this.srcsetAttr;
                 }
 
-                this._settings.srcAttr = 'data-src';
+                this.srcAttr = 'src';
+                this._settings.srcAttr = 'data-'+this.srcAttr;
 
                 this._resource = data.resource;
 
@@ -423,12 +480,10 @@
             }
 
             if (string_resource) {
-
-                this._element.dataset[this._settings.srcAttr.replace('data-', '')] = this._resource;
-                this._element.dataset[this._settings.srcsetAttr.replace('data-', '')] = this._resource;
-                this._element.setAttribute(this._settings.srcAttr, this._resourc);
-                this._element.setAttribute(this._settings.srcsetAttr, this._resourc);
-
+                this._element.dataset[this.srcAttr] = this._resource;
+                this._element.dataset[this.srcsetAttr] = this._resource;
+                this._element.setAttribute(this._settings.srcAttr, this._resource);
+                this._element.setAttribute(this._settings.srcsetAttr, this._resource);
             }
 
             this._id_event = this._element[pluginInstance + '_IDEvent'];
@@ -442,10 +497,6 @@
          * @returns {boolean} se ha preso in carico il caricamento oppure no per vari motivi (è già caricato, non è nella viewport etc)
          */
         process() {
-
-            const
-                src = this._settings.srcAttr,
-                src_clean = this._settings.srcAttr.replace('data-', '');
 
             if (isLoaded(this._exists ? this._element : this._resource)) {
 
@@ -468,36 +519,28 @@
                     attachEventListener(this._element, 'load.' + this._id_event, this._callback, !this._busy);
                     attachEventListener(this._element, 'error.' + this._id_event, this._callback, !this._busy);
 
-                    const
-                        picture = this._element.closest('picture'),
-                        srcset = this._settings.srcsetAttr,
-                        srcset_clean = this._settings.srcsetAttr.replace('data-', '');
+                    const picture = this._element.closest('picture');
 
                     if (picture && 'HTMLPictureElement' in window) {
 
-                        delete this._element.dataset[srcset_clean];
-                        delete this._element.dataset[src_clean];
-                        this._element.removeAttribute(srcset);
-                        this._element.removeAttribute(src);
+                        delete this._element.dataset[this.srcsetAttr];
+                        delete this._element.dataset[this.srcAttr];
 
-                        picture.querySelectorAll('source[' + srcset + ']').forEach((el) => {
-                            el.setAttribute('srcset', this._element.dataset[srcset_clean]);
-                            delete this._element.dataset[srcset_clean];
-                            el.removeAttribute(srcset);
+                        picture.querySelectorAll('source[' + this._settings.srcsetAttr + ']').forEach((el) => {
+                            el.setAttribute('srcset', el.dataset[this.srcAttr]);
+                            delete el.dataset[this.srcAttr];
                         });
 
                     } else {
 
-                        if (this._element.matches('[' + srcset + ']')) {
-                            this._element.setAttribute('srcset', this._element.dataset[srcset_clean]);
-                            delete this._element.dataset[srcset_clean];
-                            this._element.removeAttribute(srcset);
+                        if (this._element.matches('[' + this._settings.srcsetAttr + ']')) {
+                            this._element.setAttribute('srcset', this._element.dataset[this.srcsetAttr]);
+                            delete this._element.dataset[this.srcsetAttr];
                         }
 
-                        if (this._element.matches('[' + src + ']')) {
-                            this._element.setAttribute('src', this._element.dataset[src_clean]);
-                            delete this._element.dataset[src_clean];
-                            this._element.removeAttribute(src);
+                        if (this._element.matches('[' + this._settings.srcAttr + ']')) {
+                            this._element.setAttribute('src', this._element.dataset[this.srcAttr]);
+                            delete this._element.dataset[this.srcAttr];
                         }
 
                     }
@@ -524,9 +567,8 @@
 
                             if (source.matches('[' + src + ']')) {
 
-                                source.setAttribute('src', source.dataset[src_clean]);
-                                delete source.dataset[src_clean];
-                                source.removeAttribute(src);
+                                source.setAttribute('src', source.dataset[this.srcAttr]);
+                                delete source.dataset[this.srcsetAttr];
 
                                 call_media_load = true;
 
@@ -538,7 +580,7 @@
 
                                 source[pluginInstance + '_' + sources_error_id] = true;
 
-                                if ( sources.length === [...sources].filter(thisSource => true === thisSource[pluginInstance + '_' + sources_error_id]).length ) {
+                                if (sources.length === [...sources].filter(thisSource => true === thisSource[pluginInstance + '_' + sources_error_id]).length) {
                                     this._callback(e);
                                 }
 
@@ -550,9 +592,8 @@
 
                         if (this._element.matches('[' + src + ']')) {
 
-                            this._element.setAttribute('src', this._$element.data(src_clean));
-                            delete this._element.dataset[src_clean];
-                            this._element.removeAttribute(src);
+                            this._element.setAttribute('src', this._element.dataset[this.srcAttr]);
+                            delete this._element.dataset[this.srcAttr];
 
                             attachEventListener(this._element, 'error.' + this._id_event, this._callback, !this._busy);
 
@@ -666,14 +707,14 @@
                 srcset = this._element.getAttribute('src');
 
             if (undefined !== src) {
-                this._element.dataset[src] = this._settings.srcAttr;
+                this._element.dataset[this._settings.srcAttr] = src;
                 this._element.setAttribute(this._settings.srcAttr, src);
                 this._element.removeAttribute('src');
                 this._element.removeAttribute('srcset');
             }
 
             if (undefined !== srcset) {
-                this._element.dataset[srcset] = this._settings.srcsetAttr;
+                this._element.dataset[this._settings.srcsetAttr] = srcset;
                 this._element.setAttribute(this._settings.srcsetAttr, srcset);
                 this._element.removeAttribute('src');
                 this._element.removeAttribute('srcset');
@@ -714,6 +755,23 @@
                     visible: false,
                 }, ...options
             };
+
+            this.srcAttr = '';
+            this.srcsetAttr = '';
+
+            if( !this._settings.srcAttr.startsWith('data-') ){
+                this.srcAttr = this._settings.srcAttr;
+                this._settings.srcAttr = 'data-'+this._settings.srcAttr;
+            }else{
+                this.srcAttr = this._settings.srcAttr.replace('data-', '');
+            }
+            
+            if( !this._settings.srcsetAttr.startsWith('data-') ){
+                this.srcsetAttr = this._settings.srcsetAttr;
+                this._settings.srcsetAttr = 'data-'+this._settings.srcsetAttr;
+            }else{
+                this.srcsetAttr = this._settings.srcsetAttr.replace('data-', '');
+            }
 
             this.percentage = 0;
 
@@ -763,7 +821,7 @@
                         return;
                     }
 
-                    let a_progress = !isInArray(id, this._collection_loaded);
+                    const a_progress = !isInArray(id, this._collection_loaded);
 
                     if (a_progress) {
 
@@ -774,7 +832,7 @@
                         this.percentage = this._loaded / this._collection.length * 100;
                         this.percentage = parseFloat(this.percentage.toFixed(4));
 
-                        let this_resource = { resource: resource, status: status, element: element }; // TODO: cleanup/refactory
+                        const this_resource = { resource: resource, status: status, element: element }; // TODO: cleanup/refactory
                         this._resources_loaded.push(this_resource);
 
                         this._progress.call(this, this_resource);
@@ -825,7 +883,7 @@
 
         }
 
-        done(callback) {// TODO: refactory
+        done(callback) { // TODO: refactory
 
             if (typeof callback !== 'function') {
                 return;
@@ -847,7 +905,7 @@
 
         };
 
-        progress(callback) {// TODO: refactory
+        progress(callback) { // TODO: refactory
 
             if (typeof callback !== 'function')
                 return;
@@ -866,7 +924,7 @@
 
         };
 
-        success(callback) {// TODO: refactory
+        success(callback) { // TODO: refactory
 
             if (typeof callback !== 'function') {
                 return;
@@ -886,7 +944,7 @@
 
         };
 
-        error(callback) {// TODO: refactory
+        error(callback) { // TODO: refactory
 
             if (typeof callback !== 'function') {
                 return;
@@ -925,10 +983,10 @@
     // requirejs syntax
     if (typeof define === 'function' && define.amd) {
         define(capitalize(pluginMethod), ResourceLoader);
-    // nodejs syntax
+        // nodejs syntax
     } else if ('object' === typeof exports) {
         module.exports[capitalize(pluginMethod)] = ResourceLoader;
-    // standard "global variable" syntax
+        // standard "global variable" syntax
     } else {
         window[capitalize(pluginMethod)] = ResourceLoader;
     }
@@ -962,6 +1020,14 @@
                     attributes: []
                 }, ...options
             };
+
+            if( !this._settings.srcAttr.startsWith('data-') ){
+                this._settings.srcAttr = 'data-'+this._settings.srcAttr;
+            }
+
+            if( !this._settings.srcsetAttr.startsWith('data-') ){
+                this._settings.srcsetAttr = 'data-'+this._settings.srcsetAttr;
+            }
 
         }
 
@@ -1125,6 +1191,14 @@
             }, ...options
         };
 
+        if( !settings.srcAttr.startsWith('data-') ){
+            settings.srcAttr = 'data-'+settings.srcAttr;
+        }
+
+        if( !settings.srcsetAttr.startsWith('data-') ){
+            settings.srcsetAttr = 'data-'+settings.srcsetAttr;
+        }
+
         let callback = settings.onComplete;
         if ($.isFunction(original_user_options)) {
             callback = original_user_options;
@@ -1207,7 +1281,7 @@
 
                     this_method_collection.timeout = setTimeout(function () {
 
-                       // TODO: appropriate method for setting settings?
+                        // TODO: appropriate method for setting settings?
                         this_method_collection.instance._settings.visible = false;
                         this_method_collection.instance._settings.sequential = true;
 
