@@ -10,11 +10,9 @@
         }
         let con = window.console,
             prop, method,
-            dummy = function () { },
+            dummy = () => { },
             properties = ['memory'],
-            methods = ('assert,clear,count,debug,dir,dirxml,error,exception,group,' +
-                'groupCollapsed,groupEnd,info,log,markTimeline,profile,profiles,profileEnd,' +
-                'show,table,time,timeEnd,timeline,timelineEnd,timeStamp,trace,warn').split(',');
+            methods = ('assert,clear,count,debug,dir,dirxml,error,exception,group,groupCollapsed,groupEnd,info,log,markTimeline,profile,profiles,profileEnd,show,table,time,timeEnd,timeline,timelineEnd,timeStamp,trace,warn').split(',');
         while (prop = properties.pop()) {
             if (!con[prop]) {
                 con[prop] = {};
@@ -32,7 +30,7 @@
     // - - - - - - - - - - - - - - - - - - - -
     (function () {
         if (typeof window.CustomEvent === "function") {
-            return false; //If not IE
+            return false;
         }
         function CustomEvent(event, params) {
             params = params || { bubbles: false, cancelable: false, detail: undefined };
@@ -66,10 +64,32 @@
     };
     // - - - - - - - - - - - - - - - - - - - -
 
-    // https://developer.mozilla.org/it/docs/Web/JavaScript/Reference/Global_Objects/Array/isArray
+    // https://developer.mozilla.org/it/docs/Web/JavaScript/Reference/Global_Objects/Array/isArray#Polyfill
     // - - - - - - - - - - - - - - - - - - - -
     Array.isArray = Array.isArray || function (arg) {
         return Object.prototype.toString.call(arg) === '[object Array]';
+    };
+    // - - - - - - - - - - - - - - - - - - - -
+
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/startsWith#Polyfill
+    // - - - - - - - - - - - - - - - - - - - -
+    String.prototype.startsWith = String.prototype.startsWith || function (search, pos) {
+        return this.substr(!pos || pos < 0 ? 0 : +pos, search.length) === search;
+    };
+    // - - - - - - - - - - - - - - - - - - - -
+
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/includes#Polyfill
+    // - - - - - - - - - - - - - - - - - - - -
+    String.prototype.includes = String.prototype.includes || function (search, start) {
+        'use strict';
+        if (typeof start !== 'number') {
+            start = 0;
+        }
+        if (start + search.length > this.length) {
+            return false;
+        } else {
+            return this.indexOf(search, start) !== -1;
+        }
     };
     // - - - - - - - - - - - - - - - - - - - -
 
@@ -89,53 +109,82 @@
 
     window[pluginName + 'Cache'] = [];
 
-    let innerEvents = {};
+    let privateEventsStorage = {};
 
     const
-        detachEventListener = (element, eventName) => {
+        eventNamespaceParserSeparator = '__namespace__',
+        detachEventListener = (element, events) => {
 
-            const _eventName = eventName.split(','),
-                id = _eventName[1];
+            if (!element || typeof events !== 'string') {
+                return;
+            }
 
-            if( id ){
+            if (events.startsWith('.')) {
+                Object.keys(privateEventsStorage).forEach((key) => {
+                    if ( key.replace(eventNamespaceParserSeparator, '.').includes(events) && privateEventsStorage[key].element === element ){
+                        detachEventListener(element, key.replace(eventNamespaceParserSeparator, '.'));
+                    }
+                });
+            } else {
 
-                element.removeEventListener(_eventName[0], innerEvents[eventName].callback);
+                events = events.split('.');
 
-                delete innerEvents[id];
+                const
+                    type = events[0],
+                    namespace = events[1];
 
+                if (namespace) {
+                    events = events.join(eventNamespaceParserSeparator);
+                }
+
+                if (events in privateEventsStorage) {
+                    element.removeEventListener(type, privateEventsStorage[events].handler);
+                    delete privateEventsStorage[events];
+                }
             }
 
         },
-        attachEventListener = (element, eventName, callback, oneTime) => {
+        attachEventListener = (element, events, handler, once) => {
 
-            let _callback = callback;
-
-            callback = (event) => {
-                
-                if( oneTime ){
-                    event.target.removeEventListener(event.type, arguments.callee);
-                }
-
-                _callback();
-
+            if (!element || typeof events !== 'string' || typeof handler !== 'function') {
+                return;
             }
+
+            events = events.split('.');
 
             const
-                _eventName = eventName.split(','),
-                id = _eventName[1];
+                type = events[0],
+                namespace = events[1];
 
-            if( id ){
-
-                innerEvents[id] = {
-                    eventName : eventName,
-                    callback : callback
-                };
-
-                eventName = _eventName[0];
-
+            if (namespace) {
+                events = events.join(eventNamespaceParserSeparator);
             }
 
-            element.addEventListener(eventName, callback);
+            privateEventsStorage[events] = {
+                element: element,
+                count: 0,
+                once: false
+            };
+
+            if (true === once) {
+                let _handler = handler;
+                handler = function (event) {
+                    privateEventsStorage[events].count++;
+                    if (privateEventsStorage[events].once && privateEventsStorage[events].count > 1) {
+                        return;
+                    }
+                    _handler.call(this, event);
+                    detachEventListener(element, events);
+                }
+            } else {
+                once = false;
+            }
+
+            privateEventsStorage[events] = {...privateEventsStorage[events], ...{
+                handler: handler,
+                once: once
+            }};
+            element.addEventListener(type, privateEventsStorage[events].handler, { once: once });
 
         },
         isInArray = (needle, stack) => {
@@ -146,56 +195,63 @@
         },
         isVisible = (element) => {
 
+            if (window.getComputedStyle(element, 'display') === 'none') {
+                return false;
+            }
+
             const
                 bodyEl = document.getElementsByTagName('body')[0],
                 winWidth = window.innerWidth || documnt.documentElement.clientWidth || bodyEl.clientWidth,
                 winHeight = window.innerHeight || documnt.documentElement.clientHeight || bodyEl.clientHeight,
                 rect = element.getBoundingClientRect();
 
-            return !(rect.right < 0 || rect.bottom < 0 || rect.left > winWidth || rect.top > winHeight) && window.getComputedStyle(element, 'display') !== 'none';
+            return !(rect.right < 0 || rect.bottom < 0 || rect.left > winWidth || rect.top > winHeight);
 
         },
         isHTMLObject = function (object) {
-
             if (typeof object !== 'object') {
                 return false;
             }
-
             try {
                 return object instanceof HTMLElement;
             }
             catch (e) {
                 return object.nodeType === 1 && typeof object.style === 'object' && typeof object.ownerDocument === 'object';
             }
-
         },
         isLoaded = function (element) {
-
             return (
-                typeof element === 'string'
-                &&
-                isInArray(element, window[pluginName + 'Cache'])
-            )
-                || (
+                (
+                    typeof element === 'string'
+                    &&
+                    isInArray(element, window[pluginName + 'Cache'])
+                )
+                ||
+                (
                     isHTMLObject(element)
                     && ('currentSrc' in element && element.currentSrc.length)
                     && (('complete' in element && element.complete) || ('readyState' in element && element.readyState >= 2))
-                );
-
+                )
+            );
         },
         isBroken = function (element) {
-
-            return isLoaded(element) && (
+            return (
+                isLoaded(element)
+                &&
                 (
-                    typeof element === 'object' && (
-                        ('naturalWidth' in element && Math.floor(element.naturalWidth) === 0)
-                        ||
-                        ('videoWidth' in element && element.videoWidth === 0)
+                    (
+                        typeof element === 'object'
+                        &&
+                        (
+                            ( 'naturalWidth' in element && Math.floor(element.naturalWidth) === 0 )
+                            ||
+                            ( 'videoWidth' in element && element.videoWidth === 0 )
+                        )
                     )
+                    ||
+                    typeof element === 'string'// TODO: check if is url maybe?
                 )
-                || typeof element === 'string' // todo check if is url maybe?
             );
-
         },
         isFormat = function (item, expectedFormat) {
 
@@ -283,19 +339,21 @@
 
         };
 
+    // TODO: Promise?
     class ResourceLoader {
 
         constructor(options) {
 
-            // todo make _vars really private
-            // todo think about useful vars (this class is not public but its vars are returned in .progress() callback)
+            // TODO: private
+            // TODO: think about useful vars (this class is not public but its vars are returned in .progress() callback)
             this._settings = {
-                srcAttr: 'data-src',
-                srcsetAttr: 'data-srcset',
-                playthrough: false,
-                visible: false,
+                ...{
+                    srcAttr: 'data-src',
+                    srcsetAttr: 'data-srcset',
+                    playthrough: false,
+                    visible: false,
+                }, ...options
             };
-            this._settings = { ...this._settings, ...options };
 
             this._id = null;
             this._id_event = null;
@@ -307,9 +365,9 @@
 
             this._format = null;
 
-            this._done = () => {};
-            this._success = () => {};
-            this._error = () => {};
+            this._done = () => { };
+            this._success = () => { };
+            this._error = () => { };
 
             this._callback = (e) => {
 
@@ -342,7 +400,7 @@
             this._id = data.id;
             this._format = isFormat(data.resource).format;
 
-            this._exists = element_resource; // todo maybe search for an element with this src
+            this._exists = element_resource; // TODO: maybe search for an element with this src
 
             if (string_resource) {
 
@@ -392,7 +450,7 @@
             if (isLoaded(this._exists ? this._element : this._resource)) {
 
                 if (!this._busy) {
-                    detachEventListener(this._elemnt, '.' + this._id_event); //TODO: this should be called when in callback
+                    detachEventListener(this._element, '.' + this._id_event); // TODO: mayabe this should be called in this._callback
                 }
 
                 this._callback(new CustomEvent(!isBroken(this._exists ? this._element : this._resource) ? 'load' : 'error'));
@@ -422,8 +480,8 @@
                         this._element.removeAttribute(srcset);
                         this._element.removeAttribute(src);
 
-                        picture.queryAll('source[' + srcset + ']').forEach((el) => {
-                            el.addAttribute('srcset', this._element.dataset[srcset_clean]);
+                        picture.querySelectorAll('source[' + srcset + ']').forEach((el) => {
+                            el.setAttribute('srcset', this._element.dataset[srcset_clean]);
                             delete this._element.dataset[srcset_clean];
                             el.removeAttribute(srcset);
                         });
@@ -431,13 +489,13 @@
                     } else {
 
                         if (this._element.matches('[' + srcset + ']')) {
-                            this._element.addAttribute('srcset', this._element.dataset[srcset_clean]);
+                            this._element.setAttribute('srcset', this._element.dataset[srcset_clean]);
                             delete this._element.dataset[srcset_clean];
                             this._element.removeAttribute(srcset);
                         }
 
                         if (this._element.matches('[' + src + ']')) {
-                            this._element.addAttribute('src', this._element.dataset[src_clean]);
+                            this._element.setAttribute('src', this._element.dataset[src_clean]);
                             delete this._element.dataset[src_clean];
                             this._element.removeAttribute(src);
                         }
@@ -451,7 +509,7 @@
                         is_playthrough_mode__normal = true === this._settings.playthrough,
                         is_playthrough_mode__full = 'full' === this._settings.playthrough,
 
-                        sources = this._element.queryAll('source'),
+                        sources = this._element.querySelectorAll('source'),
                         isFullyBuffered = function (media) {
 
                             return media.buffered.length && Math.round(media.buffered.end(0)) / Math.round(media.seekable.end(0)) === 1;
@@ -477,13 +535,13 @@
                             attachEventListener(source, 'error.' + this._id_event, (e) => {
 
                                 const sources_error_id = pluginName + '_error';
-    
+
                                 source[pluginInstance + '_' + sources_error_id] = true;
-    
-                                if ( sources.length === sources.filter(() => true === source[pluginInstance + '_' + sources_error_id] ).length ) {
+
+                                if ( sources.length === [...sources].filter(thisSource => true === thisSource[pluginInstance + '_' + sources_error_id]).length ) {
                                     this._callback(e);
                                 }
-    
+
                             }, !this._busy);
 
                         });
@@ -547,7 +605,7 @@
 
                             }, 500);
 
-                            this._element[ pluginName +'_'+ this._id_event ] = on_progress_replacement_interval;
+                            this._element[pluginName + '_' + this._id_event] = on_progress_replacement_interval;
 
                         }
 
@@ -597,7 +655,7 @@
 
         abort() {
 
-            detachEventListener(this._elemnt, '.' + this._id_event);
+            detachEventListener(this._element, '.' + this._id_event);
 
             if (isLoaded(this._exists ? this._element : this._resource)) {
                 return;
@@ -625,11 +683,12 @@
 
     }
 
+    // TODO: Promise?
     class ResourcesLoader {
 
         constructor(collection, options) {
 
-            // todo make _vars really private
+            // TODO: private
             this._collection = [];
             this._collection_loaded = [];
             this._collection_instances = [];
@@ -648,12 +707,13 @@
             }
 
             this._settings = {
-                srcAttr: 'data-src',
-                srcsetAttr: 'data-srcset',
-                playthrough: false,
-                visible: false,
+                ...{
+                    srcAttr: 'data-src',
+                    srcsetAttr: 'data-srcset',
+                    playthrough: false,
+                    visible: false,
+                }, ...options
             };
-            this._settings = { ...this._settings, ...options };
 
             this.percentage = 0;
 
@@ -714,15 +774,14 @@
                         this.percentage = this._loaded / this._collection.length * 100;
                         this.percentage = parseFloat(this.percentage.toFixed(4));
 
-                        let this_resource = { resource: resource, status: status };
+                        let this_resource = { resource: resource, status: status, element: element }; // TODO: cleanup/refactory
                         this._resources_loaded.push(this_resource);
 
                         this._progress.call(this, this_resource);
                         this[status !== 'error' ? '_success' : '_error'].call(this, this_resource);
 
-                        if( $ ){ // TODO: clean?
-                            $(element).trigger(pluginPrefix + capitalize(status) + '.' + pluginPrefix, [element, resource]);
-                        }
+                        // TODO: dispatch event on element maybe?
+                        // element.dispatchEvent(new CustomEvent(pluginPrefix + capitalize(status) + '.' + pluginPrefix));
 
                     }
 
@@ -766,7 +825,7 @@
 
         }
 
-        done(callback) { // todo refactory
+        done(callback) {// TODO: refactory
 
             if (typeof callback !== 'function') {
                 return;
@@ -788,7 +847,7 @@
 
         };
 
-        progress(callback) { // todo refactory
+        progress(callback) {// TODO: refactory
 
             if (typeof callback !== 'function')
                 return;
@@ -807,7 +866,7 @@
 
         };
 
-        success(callback) { // todo refactory
+        success(callback) {// TODO: refactory
 
             if (typeof callback !== 'function') {
                 return;
@@ -827,7 +886,7 @@
 
         };
 
-        error(callback) { // todo refactory
+        error(callback) {// TODO: refactory
 
             if (typeof callback !== 'function') {
                 return;
@@ -865,13 +924,13 @@
     // - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // requirejs syntax
     if (typeof define === 'function' && define.amd) {
-        define(pluginMethod, pluginMethod);
-        // nodejs syntax
+        define(capitalize(pluginMethod), ResourceLoader);
+    // nodejs syntax
     } else if ('object' === typeof exports) {
-        module.exports[pluginMethod] = pluginMethod;
-        // standard "global variable" syntax
+        module.exports[capitalize(pluginMethod)] = ResourceLoader;
+    // standard "global variable" syntax
     } else {
-        window[pluginMethod] = pluginMethod;
+        window[capitalize(pluginMethod)] = ResourceLoader;
     }
     // - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -884,6 +943,10 @@
 
     $[pluginMethod] = ResourcesLoader;
 
+    // TODO: this class is only called once:
+    // POSSIBLE SOLUTIONS:
+    // 1. convert to vanillajs and expose it as a public interface
+    // 2. convert to singleton when used
     class CollectionPopulator {
 
         constructor($element, options) {
@@ -892,12 +955,13 @@
             this._element = $element[0];
 
             this._settings = {
-                srcAttr: 'data-src',
-                srcsetAttr: 'data-srcset',
-                backgrounds: false,
-                attributes: []
+                ...{
+                    srcAttr: 'data-src',
+                    srcsetAttr: 'data-srcset',
+                    backgrounds: false,
+                    attributes: []
+                }, ...options
             };
-            this._settings = {...this._settings, ...options};
 
         }
 
@@ -1035,30 +1099,31 @@
         }
 
         let settings = {
+            ...{
 
-            srcAttr: 'data-src',
-            srcsetAttr: 'data-srcset',
+                srcAttr: 'data-src',
+                srcsetAttr: 'data-srcset',
 
-            visible: false,
+                visible: false,
 
-            sequential: false,
+                sequential: false,
 
-            backgrounds: false,
-            extraAttrs: [],
+                backgrounds: false,
+                extraAttrs: [],
 
-            playthrough: false,
+                playthrough: false,
 
-            early: false,
-            earlyTimeout: 0,
+                early: false,
+                earlyTimeout: 0,
 
-            onProgress: () => { },
-            onLoad: () => { },
-            onError: () => { },
+                onProgress: () => { },
+                onLoad: () => { },
+                onError: () => { },
 
-            onComplete: () => { },
+                onComplete: () => { },
 
+            }, ...options
         };
-        settings = {...settings,...options};
 
         let callback = settings.onComplete;
         if ($.isFunction(original_user_options)) {
@@ -1089,8 +1154,9 @@
                 timeout: null
             });
 
-            this_load_instance.progress(function (resource) {
+            this_load_instance.progress((resource) => {
 
+                $(resource.element).trigger(pluginPrefix + capitalize(resource.status) + '.' + pluginPrefix, [resource.element, resource.resource]);
                 $element.trigger(pluginPrefix + 'Progress.' + pluginPrefix, [element, resource]);
 
                 const this_arguments = [this_load_instance, resource];
@@ -1106,7 +1172,7 @@
 
             });
 
-            this_load_instance.done(function (resources) {
+            this_load_instance.done((resources) => {
 
                 $element.trigger(pluginPrefix + 'Complete.' + pluginPrefix, [element, resources]);
                 callback.apply(element, [this_load_instance, resources]);
@@ -1141,7 +1207,7 @@
 
                     this_method_collection.timeout = setTimeout(function () {
 
-                        // todo appropriate method for setting settings?
+                       // TODO: appropriate method for setting settings?
                         this_method_collection.instance._settings.visible = false;
                         this_method_collection.instance._settings.sequential = true;
 
