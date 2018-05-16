@@ -1003,25 +1003,13 @@
     }
     // - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    // from here jQuery is needed
-    // - - - - - - - - - - - - - - - - - - - -
-    if (!$) {
-        return undefined;
-    }
-    // - - - - - - - - - - - - - - - - - - - -
-
-    $[pluginMethod] = ResourcesLoader;
-
-    // TODO: this class is only called once:
-    // POSSIBLE SOLUTIONS:
-    // 1. convert to vanillajs and expose it as a public interface
-    // 2. convert to singleton when used
+    // FIXME: vanillajs
     class CollectionPopulator {
 
-        constructor($element, options) {
+        constructor($element, options) { // FIXME: vanillajs
 
-            this._$element = $element;
-            this._element = $element[0];
+            this._$element = $element; // FIXME: vanillajs
+            this._element = $element[0]; // FIXME: vanillajs
 
             this._settings = {
                 ...{
@@ -1055,20 +1043,20 @@
                 targets = 'img, video, audio',
                 targetsExtended = targets + ', picture, source';
 
-            let $targets = this._$element.find(targets);
-            if (this._$element.is(targets)) {
-                $targets = $targets.add(this._$element);
+            let $targets = this._$element.find(targets); // FIXME: vanillajs
+            if (this._$element.is(targets)) { // FIXME: vanillajs
+                $targets = $targets.add(this._$element); // FIXME: vanillajs
             }
-            $targets = $targets.filter(function () {
-                let $t = $(this),
+            $targets = $targets.filter(function () { // FIXME: vanillajs
+                let $t = $(this), // FIXME: vanillajs
                     filter = '[' + src + '], [' + srcset + ']';
-                return $t.is(filter) || $t.children(targetsExtended).filter(filter).length;
+                return $t.is(filter) || $t.children(targetsExtended).filter(filter).length; // FIXME: vanillajs
             });
-            $targets.each(function () {
+            $targets.each(function () { // FIXME: vanillajs
 
                 let collectionItem = {
                     element: this,
-                    resource: $(this).attr(src) || $(this).attr(srcset)
+                    resource: $(this).attr(src) || $(this).attr(srcset) // FIXME: vanillajs
                 };
 
                 if (isPlainDataCollection) {
@@ -1080,11 +1068,11 @@
             });
 
             if (true === this._settings.backgrounds)
-                this._$element.find('*').addBack().not(targetsExtended).filter(function () {
-                    return $(this).css('background-image') !== 'none';
-                }).each(function () {
+                this._$element.find('*').addBack().not(targetsExtended).filter(function () { // FIXME: vanillajs
+                    return $(this).css('background-image') !== 'none'; // FIXME: vanillajs
+                }).each(function () { // FIXME: vanillajs
 
-                    const url = $(this).css('background-image').match(/\((.*?)\)/);
+                    const url = $(this).css('background-image').match(/\((.*?)\)/); // FIXME: vanillajs
 
                     if (null === url || url.length < 2) {
                         return true;
@@ -1107,11 +1095,11 @@
                 for (const attr in this._settings.attributes) {
                     if (this._settings.attributes.hasOwnProperty(attr)) {
 
-                        this._$element.find('[' + attr + ']:not(' + targetsExtended + ')').each(function () {
+                        this._$element.find('[' + attr + ']:not(' + targetsExtended + ')').each(function () { // FIXME: vanillajs
 
                             let collectionItem = {
                                 element: this,
-                                resource: $(this).attr(attr)
+                                resource: $(this).attr(attr) // FIXME: vanillajs
                             };
 
                             if (isPlainDataCollection) {
@@ -1122,11 +1110,11 @@
 
                         });
 
-                        if (this._$element.is('[' + attr + ']') && !this._$element.is(targetsExtended)) {
+                        if (this._$element.is('[' + attr + ']') && !this._$element.is(targetsExtended)) { // FIXME: vanillajs
 
                             let collectionItem = {
                                 element: this._element,
-                                resource: this._$element.attr(attr)
+                                resource: this._$element.attr(attr) // FIXME: vanillajs
                             };
 
                             if (isPlainDataCollection) {
@@ -1145,6 +1133,15 @@
         }
 
     }
+
+    // from here jQuery is needed
+    // - - - - - - - - - - - - - - - - - - - -
+    if (!$) {
+        return undefined;
+    }
+    // - - - - - - - - - - - - - - - - - - - -
+
+    $[pluginMethod] = ResourcesLoader;
 
     const
         $document = $(document),
