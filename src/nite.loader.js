@@ -225,6 +225,9 @@
             element.addEventListener(type, privateEventsStorage[events].handler, { once: once });
 
         },
+        hyphensToCamelCase = (hyphens) => {
+            return hyphens.replace(/-([a-z])/g, g => g[1].toUpperCase());
+        },
         isInArray = (needle, stack) => {
             return stack.indexOf(needle) > -1;
         },
@@ -410,6 +413,9 @@
                 this.srcsetAttr = this._settings.srcsetAttr.replace('data-', '');
             }
 
+            this.srcAttr = hyphensToCamelCase(this.srcAttr);
+            this.srcsetAttr = hyphensToCamelCase(this.srcsetAttr);
+
             this._id = null;
             this._id_event = null;
 
@@ -466,10 +472,12 @@
                 if (is_img) {
                     this.srcsetAttr = 'srcset';
                     this._settings.srcsetAttr = 'data-'+this.srcsetAttr;
+                    this.srcsetAttr = hyphensToCamelCase(this.srcsetAttr);
                 }
 
                 this.srcAttr = 'src';
                 this._settings.srcAttr = 'data-'+this.srcAttr;
+                this.srcAttr = hyphensToCamelCase(this.srcAttr);
 
                 this._resource = data.resource;
 
@@ -565,7 +573,7 @@
 
                         sources.forEach((source) => {
 
-                            if (source.matches('[' + src + ']')) {
+                            if (source.matches('[' + this._settings.srcAttr + ']')) {
 
                                 source.setAttribute('src', source.dataset[this.srcAttr]);
                                 delete source.dataset[this.srcsetAttr];
@@ -707,14 +715,14 @@
                 srcset = this._element.getAttribute('src');
 
             if (undefined !== src) {
-                this._element.dataset[this._settings.srcAttr] = src;
+                this._element.dataset[this.srcAttr] = src;
                 this._element.setAttribute(this._settings.srcAttr, src);
                 this._element.removeAttribute('src');
                 this._element.removeAttribute('srcset');
             }
 
             if (undefined !== srcset) {
-                this._element.dataset[this._settings.srcsetAttr] = srcset;
+                this._element.dataset[this.srcsetAttr] = srcset;
                 this._element.setAttribute(this._settings.srcsetAttr, srcset);
                 this._element.removeAttribute('src');
                 this._element.removeAttribute('srcset');
@@ -772,6 +780,9 @@
             }else{
                 this.srcsetAttr = this._settings.srcsetAttr.replace('data-', '');
             }
+            
+            this.srcAttr = hyphensToCamelCase(this.srcAttr);
+            this.srcsetAttr = hyphensToCamelCase(this.srcsetAttr);
 
             this.percentage = 0;
 
