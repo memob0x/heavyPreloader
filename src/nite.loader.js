@@ -127,7 +127,6 @@
         if (typeof start !== 'number') {
             start = 0;
         }
-
         if (start + search.length > this.length) {
             return false;
         } else {
@@ -160,7 +159,7 @@
         pluginName = pluginMethod + 'er',
         pluginInstance = generateInstanceID();
 
-    window[pluginName + 'Cache'] = [];
+    window[pluginName + 'Cache'] = []; // FIXME: remove
 
     let privateEventsStorage = {};
 
@@ -256,7 +255,8 @@
         isInArray = (needle, stack) => {
             return stack.indexOf(needle) > -1;
         },
-        isVisible = element => { // TODO: add insersection observer
+        // TODO: add insersection observer
+        isVisible = element => {
 
             if (window.getComputedStyle(element, 'display') === 'none') {
                 return false;
@@ -284,12 +284,7 @@
         },
         isLoaded = element => {
             return (
-                (
-                    typeof element === 'string'
-                    &&
-                    isInArray(element, window[pluginName + 'Cache'])
-                )
-                ||
+                ( typeof element === 'string' && isInArray(element, window[pluginName + 'Cache']) ) || // FIXME: remove
                 (
                     isHTMLObject(element)
                     && ('currentSrc' in element && element.currentSrc.length)
@@ -312,7 +307,7 @@
                         )
                     )
                     ||
-                    typeof element === 'string'// TODO: check if is url maybe?
+                    typeof element === 'string'
                 )
             );
         },
@@ -402,8 +397,7 @@
 
         };
 
-    // TODO: Promise?
-    // TODO: private vars
+    // TODO: Promise support maybe
     // TODO: think about useful vars in callback args (this class is not public but its vars are returned in .progress() callback)
     class SingleLoader {
 
@@ -456,8 +450,7 @@
 
                 const src = this._element.currentSrc || this._element.src;
 
-                if (!isInArray(src, window[pluginName + 'Cache']))
-                    window[pluginName + 'Cache'].push(src);
+                if (!isInArray(src, window[pluginName + 'Cache'])) window[pluginName + 'Cache'].push(src); // FIXME: remove
 
                 let thisArguments = [this._element, e.type, src, this._id];
 
@@ -543,7 +536,8 @@
             if (isLoaded(this._exists ? this._element : this._resource)) {
 
                 if (!this._busy) {
-                    detachEventListener(this._element, '.' + this._idEvent); // TODO: mayabe this should be called in this._callback
+                    // TODO: mayabe this should be called in this._callback
+                    detachEventListener(this._element, '.' + this._idEvent);
                 }
 
                 this._callback(new CustomEvent(!isBroken(this._exists ? this._element : this._resource) ? 'load' : 'error'));
@@ -766,9 +760,9 @@
 
     }
 
-    // TODO: Promise?
+    // TODO: Promise support
     // TODO: private vars
-    // TODO: refactory succes/done/progress...
+    // TODO: refactory succes/done/progress code...
     class Loader {
 
         constructor(options) {
@@ -977,7 +971,8 @@
 
         load() {
 
-            this._collectionPending = []; // resets pending elements (sequential opt helper array) every time we loop
+            // resets pending elements (sequential opt helper array) every time we loop
+            this._collectionPending = [];
 
             const sequentialMode = true === this._settings.sequential;
 
