@@ -60,7 +60,7 @@ $('.playground').niteLoad({
 
 });
 
-let instance;
+let instance, instanceSequentialMode = true;
 
 $(document)
 
@@ -80,6 +80,25 @@ $(document)
 
         $(this).closest('figure').addClass('loaded' + (e.type === 'niteError' ? '-error' : ''));
 
+    })
+
+    .on('click', '.nite-program-mode--sequential', function () {
+        if( instance !== null ){
+            return;
+        }
+        $('.nite-program-mode--parallel').show();
+        $(this).hide();
+        instanceSequentialMode = true;
+        console_log('$.NiteLoader(): Sequential Mode');
+    })
+    .on('click', '.nite-program-mode--parallel', function () {
+        if( instance !== null ){
+            return;
+        }
+        $('.nite-program-mode--sequential').show();
+        $(this).hide();
+        instanceSequentialMode = false;
+        console_log('$.NiteLoader(): Parallel Mode');
     })
 
     .on('click', '[class*="nite-program-load"]', function () {
@@ -119,7 +138,7 @@ $(document)
             }
 
             instance = new $.NiteLoader({
-                sequential: true
+                sequential: instanceSequentialMode
             });
 
             instance.collection = random_stuff;

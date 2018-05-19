@@ -222,11 +222,13 @@
             if (true === once) {
                 let _handler = handler;
                 handler = function (event) {
-                    privateEventsStorage[events].count++;
-                    if (privateEventsStorage[events].once && privateEventsStorage[events].count > 1) {
-                        return;
+                    if( events in privateEventsStorage ){
+                        privateEventsStorage[events].count++;
+                        if (privateEventsStorage[events].once && privateEventsStorage[events].count > 1) {
+                            return;
+                        }
+                        _handler.call(this, event);
                     }
-                    _handler.call(this, event);
                     detachEventListener(element, events);
                 }
             } else {
@@ -254,7 +256,7 @@
         isInArray = (needle, stack) => {
             return stack.indexOf(needle) > -1;
         },
-        isVisible = element => {
+        isVisible = element => { // TODO: add insersection observer
 
             if (window.getComputedStyle(element, 'display') === 'none') {
                 return false;
@@ -444,7 +446,6 @@
             this._resource = null;
             this._format = null;
 
-
             this._done = () => { };
             this._success = () => { };
             this._error = () => { };
@@ -510,23 +511,8 @@
             this._exists = elementResource;
 
             if (stringResource) {
-
-                let isImg = this._format === 'image';
-
-                this._element = document.createElement(isImg ? 'img' : this._format);
-
-                if (isImg) {
-                    this.srcsetAttr = 'srcset';
-                    this._settings.srcsetAttr = 'data-' + this.srcsetAttr;
-                    this.srcsetAttr = hyphensToCamelCase(this.srcsetAttr);
-                }
-
-                this.srcAttr = 'src';
-                this._settings.srcAttr = 'data-' + this.srcAttr;
-                this.srcAttr = hyphensToCamelCase(this.srcAttr);
-
+                this._element = document.createElement(this._format === 'image' ? 'img' : this._format);
                 this._resource = data.resource;
-
             }
 
             if (elementResource) {
@@ -536,8 +522,6 @@
             if (stringResource) {
                 this._element.dataset[this.srcAttr] = this._resource;
                 this._element.dataset[this.srcsetAttr] = this._resource;
-                this._element.setAttribute(this._settings.srcAttr, this._resource);
-                this._element.setAttribute(this._settings.srcsetAttr, this._resource);
             }
 
             this._idEvent = this._element[pluginInstance + '_IDEvent'];
