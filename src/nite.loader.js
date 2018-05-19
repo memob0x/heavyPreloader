@@ -118,6 +118,23 @@
         return this.substr(!pos || pos < 0 ? 0 : +pos, search.length) === search;
     };
     // - - - - - - - - - - - - - - - - - - - -
+    // - - - - - - - - - - - - - - - - - - - -
+
+    // https://developer.mozilla.org/it/docs/Web/JavaScript/Reference/Global_Objects/String/includes#Polyfill
+    // - - - - - - - - - - - - - - - - - - - -
+    String.prototype.includes = String.prototype.includes || function (search, start) {
+        'use strict';
+        if (typeof start !== 'number') {
+            start = 0;
+        }
+
+        if (start + search.length > this.length) {
+            return false;
+        } else {
+            return this.indexOf(search, start) !== -1;
+        }
+    };
+    // - - - - - - - - - - - - - - - - - - - -
 
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/includes#Polyfill
     // - - - - - - - - - - - - - - - - - - - -
@@ -156,7 +173,7 @@
             }
 
             if (events.startsWith('.')) {
-                Object.keys(privateEventsStorage).forEach((key) => {
+                Object.keys(privateEventsStorage).forEach(key => {
                     if (key.replace(eventNamespaceParserSeparator, '.').includes(events) && privateEventsStorage[key].element === element) {
                         detachEventListener(element, key.replace(eventNamespaceParserSeparator, '.'));
                     }
@@ -225,16 +242,19 @@
             element.addEventListener(type, privateEventsStorage[events].handler, { once: once });
 
         },
-        hyphensToCamelCase = (hyphens) => {
-            return hyphens.replace(/-([a-z])/g, g => g[1].toUpperCase());
+        hyphensToCamelCase = string => {
+            return string.replace(/-([a-z])/g, g => g[1].toUpperCase());
+        },
+        capitalize = string => {
+            return string.charAt(0).toUpperCase() + string.slice(1);
+        },
+        nodelistToArray = nodelist => {
+            return [...nodelist];
         },
         isInArray = (needle, stack) => {
             return stack.indexOf(needle) > -1;
         },
-        capitalize = (string) => {
-            return string.charAt(0).toUpperCase() + string.slice(1);
-        },
-        isVisible = (element) => {
+        isVisible = element => {
 
             if (window.getComputedStyle(element, 'display') === 'none') {
                 return false;
@@ -249,7 +269,7 @@
             return !(rect.right < 0 || rect.bottom < 0 || rect.left > winWidth || rect.top > winHeight);
 
         },
-        isHTMLObject = function (object) {
+        isHTMLObject = object => {
             if (typeof object !== 'object') {
                 return false;
             }
@@ -260,7 +280,7 @@
                 return object.nodeType === 1 && typeof object.style === 'object' && typeof object.ownerDocument === 'object';
             }
         },
-        isLoaded = function (element) {
+        isLoaded = element => {
             return (
                 (
                     typeof element === 'string'
@@ -275,7 +295,7 @@
                 )
             );
         },
-        isBroken = function (element) {
+        isBroken = element => {
             return (
                 isLoaded(element)
                 &&
@@ -294,7 +314,7 @@
                 )
             );
         },
-        isFormat = function (item, expectedFormat) {
+        decodeResource = (item, expectedFormat) => {
 
             const
                 formatExtensions = {
@@ -381,12 +401,12 @@
         };
 
     // TODO: Promise?
-    class ResourceLoader {
+    // TODO: private vars
+    // TODO: think about useful vars in callback args (this class is not public but its vars are returned in .progress() callback)
+    class SingleLoader {
 
         constructor(options) {
 
-            // TODO: private
-            // TODO: think about useful vars (this class is not public but its vars are returned in .progress() callback)
             this._settings = {
                 ...{
                     srcAttr: 'data-src',
@@ -399,17 +419,17 @@
             this.srcAttr = '';
             this.srcsetAttr = '';
 
-            if( !this._settings.srcAttr.startsWith('data-') ){
+            if (!this._settings.srcAttr.startsWith('data-')) {
                 this.srcAttr = this._settings.srcAttr;
-                this._settings.srcAttr = 'data-'+this._settings.srcAttr;
-            }else{
+                this._settings.srcAttr = 'data-' + this._settings.srcAttr;
+            } else {
                 this.srcAttr = this._settings.srcAttr.replace('data-', '');
             }
-            
-            if( !this._settings.srcsetAttr.startsWith('data-') ){
+
+            if (!this._settings.srcsetAttr.startsWith('data-')) {
                 this.srcsetAttr = this._settings.srcsetAttr;
-                this._settings.srcsetAttr = 'data-'+this._settings.srcsetAttr;
-            }else{
+                this._settings.srcsetAttr = 'data-' + this._settings.srcsetAttr;
+            } else {
                 this.srcsetAttr = this._settings.srcsetAttr.replace('data-', '');
             }
 
@@ -418,12 +438,10 @@
 
             this._id = null;
             this._idEvent = null;
-
-            this._element = null;
-
-            this._resource = null;
             this._busy = false;
 
+            this._element = null;
+            this._resource = null;
             this._format = null;
 
             this._done = () => { };
@@ -450,6 +468,33 @@
 
         set resource(data) {
 
+            /* TODO:
+            if( typeof data === 'object' && 'id' in data && 'element' in data && 'resource' in data ){
+
+                this._id = data.id;
+                this._element = data.element;
+                this._resource = data.resource;
+
+                this._format = decodeResource(this._resource).format;
+                this._exists = isHTMLObject(this._element);
+
+                if (!this._exists) {
+
+                    let isImg = this._format === 'image';
+
+                    this._element = document.createElement(isImg ? 'img' : this._format);
+
+                    this._element.dataset[this.srcAttr] = this._resource;
+                    this._element.dataset[this.srcsetAttr] = this._resource;
+
+                }
+
+                this._idEvent = this._element[pluginInstance + '_IDEvent'];
+                this._busy = this._idEvent !== undefined;
+                this._idEvent = this._busy ? this._idEvent : pluginName + '_unique_' + this._element.tagName + '_' + generateInstanceID();
+            
+            }*/
+
             const
                 elementResource = isHTMLObject(data.resource),
                 stringResource = typeof data.resource === 'string';
@@ -459,9 +504,9 @@
             }
 
             this._id = data.id;
-            this._format = isFormat(data.resource).format;
+            this._format = decodeResource(data.resource).format;
 
-            this._exists = elementResource; // TODO: maybe search for an element with this src
+            this._exists = elementResource;
 
             if (stringResource) {
 
@@ -471,12 +516,12 @@
 
                 if (isImg) {
                     this.srcsetAttr = 'srcset';
-                    this._settings.srcsetAttr = 'data-'+this.srcsetAttr;
+                    this._settings.srcsetAttr = 'data-' + this.srcsetAttr;
                     this.srcsetAttr = hyphensToCamelCase(this.srcsetAttr);
                 }
 
                 this.srcAttr = 'src';
-                this._settings.srcAttr = 'data-'+this.srcAttr;
+                this._settings.srcAttr = 'data-' + this.srcAttr;
                 this.srcAttr = hyphensToCamelCase(this.srcAttr);
 
                 this._resource = data.resource;
@@ -500,11 +545,15 @@
 
         }
 
+        get resource(){
+            return this._resource;
+        }
+
         /**
          *
          * @returns {boolean} se ha preso in carico il caricamento oppure no per vari motivi (è già caricato, non è nella viewport etc)
          */
-        process() {
+        load() {
 
             if (isLoaded(this._exists ? this._element : this._resource)) {
 
@@ -588,7 +637,7 @@
 
                                 source[pluginInstance + '_' + sourcesErrorId] = true;
 
-                                if (sources.length === [...sources].filter(thisSource => true === thisSource[pluginInstance + '_' + sourcesErrorId]).length) {
+                                if (sources.length === nodelistToArray(sources).filter(thisSource => true === thisSource[pluginInstance + '_' + sourcesErrorId]).length) {
                                     this._callback(e);
                                 }
 
@@ -733,16 +782,96 @@
     }
 
     // TODO: Promise?
-    class ResourcesLoader {
+    // TODO: private vars
+    // TODO: refactory succes/done/progress...
+    class Loader {
 
-        constructor(collection, options) {
+        constructor(options) {
 
-            // TODO: private
             this._collection = [];
             this._collectionLoaded = [];
             this._collectionInstances = [];
             this._collectionPending = [];
             this._resourcesLoaded = [];
+
+            this._settings = {
+                ...{
+                    srcAttr: 'data-src',
+                    srcsetAttr: 'data-srcset',
+                    playthrough: false,
+                    visible: false,
+                    backgrounds: false,
+                    attributes: []
+                }, ...options
+            };
+
+            this.srcAttr = '';
+            this.srcsetAttr = '';
+            if (!this._settings.srcAttr.startsWith('data-')) {
+                this.srcAttr = this._settings.srcAttr;
+                this._settings.srcAttr = 'data-' + this._settings.srcAttr;
+            } else {
+                this.srcAttr = this._settings.srcAttr.replace('data-', '');
+            }
+            if (!this._settings.srcsetAttr.startsWith('data-')) {
+                this.srcsetAttr = this._settings.srcsetAttr;
+                this._settings.srcsetAttr = 'data-' + this._settings.srcsetAttr;
+            } else {
+                this.srcsetAttr = this._settings.srcsetAttr.replace('data-', '');
+            }
+
+            if (typeof this._settings.attributes === 'string') {
+                this._settings.attributes = this._settings.attributes.split(this._settings.attributes.contains(',') ? ',' :' ');
+            }
+            if (!Array.isArray(this._settings.attributes)) {
+                this._settings.attributes = [];
+            }
+
+            this.srcAttr = hyphensToCamelCase(this.srcAttr);
+            this.srcsetAttr = hyphensToCamelCase(this.srcsetAttr);
+
+            this.percentage = 0;
+
+            this._done = () => { };
+            this._progress = () => { };
+            this._success = () => { };
+            this._error = () => { };
+            this._loop = this.load;
+
+            this._abort = false;
+            this._loaded = 0;
+            this._complete = false;
+            this._busy = false;
+
+        }
+
+        set collection(collection) {
+
+            //TODO:
+            /*
+            if (!Array.isArray(collection)){
+                collection = [];
+            }
+
+            collection.forEach(item => {
+
+                let element = {
+                    resource: '',
+                    element: null,
+                    id: generateInstanceID()
+                };
+
+                if (typeof item === 'string') {
+                    element.resource = item;
+                } else if (typeof item === 'object' && 'resource' in item) {
+                    element = { ...element, ...item };
+                } else {
+                    return;
+                }
+
+                this._collection.push(element);
+
+            });*/
 
             if (Array.isArray(collection) && (typeof collection[0] === 'string' || isHTMLObject(collection[0]))) {
                 for (const resource in collection) {
@@ -755,53 +884,113 @@
                 this._collection.push({ id: generateInstanceID(), resource: collection });
             }
 
-            this._settings = {
-                ...{
-                    srcAttr: 'data-src',
-                    srcsetAttr: 'data-srcset',
-                    playthrough: false,
-                    visible: false,
-                }, ...options
-            };
+        }
 
-            this.srcAttr = '';
-            this.srcsetAttr = '';
+        get collection() {
 
-            if( !this._settings.srcAttr.startsWith('data-') ){
-                this.srcAttr = this._settings.srcAttr;
-                this._settings.srcAttr = 'data-'+this._settings.srcAttr;
-            }else{
-                this.srcAttr = this._settings.srcAttr.replace('data-', '');
-            }
-            
-            if( !this._settings.srcsetAttr.startsWith('data-') ){
-                this.srcsetAttr = this._settings.srcsetAttr;
-                this._settings.srcsetAttr = 'data-'+this._settings.srcsetAttr;
-            }else{
-                this.srcsetAttr = this._settings.srcsetAttr.replace('data-', '');
-            }
-            
-            this.srcAttr = hyphensToCamelCase(this.srcAttr);
-            this.srcsetAttr = hyphensToCamelCase(this.srcsetAttr);
-
-            this.percentage = 0;
-
-            this._done = () => { };
-            this._progress = () => { };
-            this._success = () => { };
-            this._error = () => { };
-
-            this._abort = false;
-            this._loaded = 0;
-            this._complete = false;
-            this._busy = false;
-
-            // self invoking this._loop + force asynchrony (gives time to chain methods synchronously)
-            (this._loop = () => setTimeout(() => this.loop(), 25))();
+            return this._collection;
 
         }
 
-        loop() {
+        collect(element) {
+
+            const
+                targets = 'img, video, audio',
+                targetsExtended = targets + ', picture, source';
+
+            let
+                collection = [],
+                targetsTags = nodelistToArray(element.querySelectorAll(targets));
+
+            if (element.matches(targets)) {
+                targetsTags.push(element);
+            }
+
+            targetsTags = targetsTags.filter((target) => {
+                let filter = '[' + this._settings.srcAttr + '], [' + this._settings.srcsetAttr + ']',
+                    children = nodelistToArray(target.children);
+                children = children.filter(x => x.matches(targetsExtended));
+                children = children.filter(x => x.matches(filter));
+                return target.matches(filter) || children.length;
+            });
+
+            targetsTags.forEach((target) => {
+
+                let collectionItem = {
+                    element: target,
+                    resource: target.getAttribute(this._settings.srcAttr) || target.getAttribute(this._settings.srcsetAttr)
+                };
+
+                collectionItem = collectionItem.element;
+
+                collection.push(collectionItem);
+
+            });
+
+            if (true === this._settings.backgrounds) {
+                let targetsBg = nodelistToArray(element.querySelectorAll('*'));
+                targetsBg.push(element);
+                targetsBg = targetsBg.filter(target => !target.matches(targetsExtended));
+                targetsBg = targetsBg.filter(target => getComputedStyle(target).backgroundImage !== 'none');
+                targetsBg.forEach((target) => {
+
+                    const url = getComputedStyle(target).backgroundImage.match(/\((.*?)\)/);
+
+                    if (null === url || url.length < 2) {
+                        return true;
+                    }
+
+                    let collectionItem = {
+                        element: target,
+                        resource: url[1].replace(/('|")/g, '')
+                    };
+
+                    collectionItem = collectionItem.resource;
+
+                    collection.push(collectionItem);
+
+                });
+            }
+
+            if (this._settings.attributes.length) {
+                for (const attr in this._settings.attributes) {
+                    if (this._settings.attributes.hasOwnProperty(attr)) {
+
+                        nodelistToArray(element.querySelectorAll('[' + attr + ']:not(' + targetsExtended + ')')).forEach((target) => {
+
+                            let collectionItem = {
+                                element: target,
+                                resource: target.getAttribute(attr)
+                            };
+
+                            collectionItem = collectionItem.resource;
+
+                            collection.push(collectionItem);
+
+                        });
+
+                        if (element.matches('[' + attr + ']') && !element.matches(targetsExtended)) {
+
+                            let collectionItem = {
+                                element: element,
+                                resource: element.getAttribute(attr)
+                            };
+
+                            collectionItem = collectionItem.resource;
+
+                            collection.push(collectionItem);
+
+                        }
+
+                    }
+                }
+            }
+
+            this.collection = collection;
+
+        }
+
+        load() {
 
             this._collectionPending = []; // resets pending elements (sequential opt helper array) every time we loop
 
@@ -815,7 +1004,7 @@
 
                 let thisLoadId = this._collection[i].id,
                     thisLoadIndex = this._collectionInstances.findIndex(x => x.id === thisLoadId),
-                    thisLoadInstance = new ResourceLoader(this._settings);
+                    thisLoadInstance = new SingleLoader(this._settings);
 
                 if (thisLoadIndex === -1) {
                     this._collectionInstances.push({ id: thisLoadId, instance: thisLoadInstance });
@@ -843,7 +1032,8 @@
                         this.percentage = this._loaded / this._collection.length * 100;
                         this.percentage = parseFloat(this.percentage.toFixed(4));
 
-                        const thisResource = { resource: resource, status: status, element: element }; // TODO: cleanup/refactory
+                        // TODO: cleanup/refactory
+                        const thisResource = { resource: resource, status: status, element: element };
                         this._resourcesLoaded.push(thisResource);
 
                         this._progress.call(this, thisResource);
@@ -860,17 +1050,12 @@
 
                         this._complete = true;
 
-                    } else if (aProgress && sequentialMode) {
+                    } else if (aProgress && sequentialMode && this._collectionPending.length) {
+
+                        this._collectionPending = this._collectionPending.filter(x => x.id !== id);
 
                         if (this._collectionPending.length) {
-
-                            this._collectionPending = this._collectionPending.filter(x => x.id !== id);
-                            this._collectionPending = this._collectionPending.filter(x => x.id !== id);
-
-                            if (this._collectionPending.length) {
-                                this._busy = this._collectionPending[0].instance.process();
-                            }
-
+                            this._busy = this._collectionPending[0].instance.load();
                         }
 
                     }
@@ -878,15 +1063,11 @@
                 });
 
                 if (!sequentialMode || (sequentialMode && !this._busy)) {
-                    this._busy = thisLoadInstance.process();
-                }
-
-                else if (sequentialMode && this._busy) {
-
-                    if (!this._settings.visible || (this._settings.visible && isVisible(thisLoadInstance._element))) {
-                        this._collectionPending.push({ id: thisLoadId, instance: thisLoadInstance });
-                    }
-
+                    this._busy = thisLoadInstance.load();
+                
+                }else if (sequentialMode && this._busy && (!this._settings.visible || (this._settings.visible && isVisible(thisLoadInstance._element)) ) ){
+                    this._collectionPending.push({ id: thisLoadId, instance: thisLoadInstance });
+                
                 }
 
 
@@ -894,7 +1075,7 @@
 
         }
 
-        done(callback) { // TODO: refactory
+        done(callback) {
 
             if (typeof callback !== 'function') {
                 return;
@@ -908,7 +1089,7 @@
 
                 this._done = _func;
 
-                this._loop();
+                //this._loop();
 
             } else {
                 _func();
@@ -916,7 +1097,7 @@
 
         };
 
-        progress(callback) { // TODO: refactory
+        progress(callback) {
 
             if (typeof callback !== 'function')
                 return;
@@ -929,13 +1110,13 @@
 
                 this._progress = _func;
 
-                this._loop();
+                //this._loop();
 
             }
 
         };
 
-        success(callback) { // TODO: refactory
+        success(callback) {
 
             if (typeof callback !== 'function') {
                 return;
@@ -949,13 +1130,13 @@
 
                 this._success = _func;
 
-                this._loop();
+                //this._loop();
 
             }
 
         };
 
-        error(callback) { // TODO: refactory
+        error(callback) {
 
             if (typeof callback !== 'function') {
                 return;
@@ -969,7 +1150,7 @@
 
                 this._error = _func;
 
-                this._loop();
+                //this._loop();
 
             }
 
@@ -989,159 +1170,27 @@
 
     }
 
-    // vanilla public interface
+    // public interface
     // - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // requirejs syntax
+    // requirejs
     if (typeof define === 'function' && define.amd) {
-        define(capitalize(pluginMethod), ResourcesLoader);
-        // nodejs syntax
+        define(capitalize(pluginName), Loader);
+        // nodejs
     } else if ('object' === typeof exports) {
-        module.exports[capitalize(pluginMethod)] = ResourcesLoader;
-        // standard "global variable" syntax
+        module.exports[capitalize(pluginName)] = Loader;
+        // vanilla
     } else {
-        window[capitalize(pluginMethod)] = ResourcesLoader;
+        window[capitalize(pluginName)] = Loader;
     }
     // - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    // FIXME: vanillajs
-    class CollectionPopulator {
-
-        constructor($element, options) { // FIXME: vanillajs
-
-            this._$element = $element; // FIXME: vanillajs
-            this._element = $element[0]; // FIXME: vanillajs
-
-            this._settings = {
-                ...{
-                    srcAttr: 'data-src',
-                    srcsetAttr: 'data-srcset',
-                    backgrounds: false,
-                    attributes: []
-                }, ...options
-            };
-
-            if( !this._settings.srcAttr.startsWith('data-') ){
-                this._settings.srcAttr = 'data-'+this._settings.srcAttr;
-            }
-
-            if( !this._settings.srcsetAttr.startsWith('data-') ){
-                this._settings.srcsetAttr = 'data-'+this._settings.srcsetAttr;
-            }
-
-        }
-
-        collect(output) {
-
-            let collection = [];
-
-            const
-                isPlainDataCollection = output === 'plain',
-
-                src = this._settings.srcAttr,
-                srcset = this._settings.srcsetAttr,
-
-                targets = 'img, video, audio',
-                targetsExtended = targets + ', picture, source';
-
-            let $targets = this._$element.find(targets); // FIXME: vanillajs
-            if (this._$element.is(targets)) { // FIXME: vanillajs
-                $targets = $targets.add(this._$element); // FIXME: vanillajs
-            }
-            $targets = $targets.filter(function () { // FIXME: vanillajs
-                let $t = $(this), // FIXME: vanillajs
-                    filter = '[' + src + '], [' + srcset + ']';
-                return $t.is(filter) || $t.children(targetsExtended).filter(filter).length; // FIXME: vanillajs
-            });
-            $targets.each(function () { // FIXME: vanillajs
-
-                let collectionItem = {
-                    element: this,
-                    resource: $(this).attr(src) || $(this).attr(srcset) // FIXME: vanillajs
-                };
-
-                if (isPlainDataCollection) {
-                    collectionItem = collectionItem.element;
-                }
-
-                collection.push(collectionItem);
-
-            });
-
-            if (true === this._settings.backgrounds)
-                this._$element.find('*').addBack().not(targetsExtended).filter(function () { // FIXME: vanillajs
-                    return $(this).css('background-image') !== 'none'; // FIXME: vanillajs
-                }).each(function () { // FIXME: vanillajs
-
-                    const url = $(this).css('background-image').match(/\((.*?)\)/); // FIXME: vanillajs
-
-                    if (null === url || url.length < 2) {
-                        return true;
-                    }
-
-                    let collectionItem = {
-                        element: this,
-                        resource: url[1].replace(/('|")/g, '')
-                    };
-
-                    if (isPlainDataCollection) {
-                        collectionItem = collectionItem.resource;
-                    }
-
-                    collection.push(collectionItem);
-
-                });
-
-            if (this._settings.attributes.length)
-                for (const attr in this._settings.attributes) {
-                    if (this._settings.attributes.hasOwnProperty(attr)) {
-
-                        this._$element.find('[' + attr + ']:not(' + targetsExtended + ')').each(function () { // FIXME: vanillajs
-
-                            let collectionItem = {
-                                element: this,
-                                resource: $(this).attr(attr) // FIXME: vanillajs
-                            };
-
-                            if (isPlainDataCollection) {
-                                collectionItem = collectionItem.resource;
-                            }
-
-                            collection.push(collectionItem);
-
-                        });
-
-                        if (this._$element.is('[' + attr + ']') && !this._$element.is(targetsExtended)) { // FIXME: vanillajs
-
-                            let collectionItem = {
-                                element: this._element,
-                                resource: this._$element.attr(attr) // FIXME: vanillajs
-                            };
-
-                            if (isPlainDataCollection) {
-                                collectionItem = collectionItem.resource;
-                            }
-
-                            collection.push(collectionItem);
-
-                        }
-
-                    }
-                }
-
-            return collection;
-
-        }
-
-    }
-
-    // from here jQuery is needed
+    // jQuery interface
     // - - - - - - - - - - - - - - - - - - - -
     if (!$) {
         return undefined;
     }
-    // - - - - - - - - - - - - - - - - - - - -
 
-    $[pluginMethod] = ResourcesLoader;
+    $[capitalize(pluginName)] = Loader;
 
     const
         $document = $(document),
@@ -1199,65 +1248,49 @@
             }, ...options
         };
 
-        if( !settings.srcAttr.startsWith('data-') ){
-            settings.srcAttr = 'data-'+settings.srcAttr;
-        }
-
-        if( !settings.srcsetAttr.startsWith('data-') ){
-            settings.srcsetAttr = 'data-'+settings.srcsetAttr;
-        }
-
         let callback = settings.onComplete;
         if ($.isFunction(originalUserOptions)) {
             callback = originalUserOptions;
         }
 
-        if (!$.isArray(settings.attributes)) {
-            settings.attributes = [];
-        }
-        if (typeof settings.attributes === 'string') {
-            settings.attributes = settings.attributes.split(' ');
-        }
-
         return this.each(function (i) {
 
             const
-                element = this,
-                $element = $(element),
-                collection = new CollectionPopulator($element, settings).collect('plain'),
+                $element = $(this),
                 uniqueMethodPluginName = generateInstanceID() + i,
+                thisLoadInstance = new Loader(settings);
 
-                thisLoadInstance = new ResourcesLoader(collection, settings);
+            thisLoadInstance.collect(this);
 
             methodCollection.push({
                 id: uniqueMethodPluginName,
                 instance: thisLoadInstance,
-                element: element,
+                element: this,
                 timeout: null
             });
 
             thisLoadInstance.progress((resource) => {
 
                 $(resource.element).trigger(pluginPrefix + capitalize(resource.status) + '.' + pluginPrefix, [resource.element, resource.resource]);
-                $element.trigger(pluginPrefix + 'Progress.' + pluginPrefix, [element, resource]);
+                $element.trigger(pluginPrefix + 'Progress.' + pluginPrefix, [this, resource]);
 
                 const thisArguments = [thisLoadInstance, resource];
 
                 if (typeof settings.onProgress === 'function') {
-                    settings.onProgress.apply(element, thisArguments);
+                    settings.onProgress.apply(this, thisArguments);
                 }
 
                 let eventName = capitalize(resource.status);
                 if (typeof settings['on' + eventName] === 'function') {
-                    settings['on' + eventName].apply(element, thisArguments);
+                    settings['on' + eventName].apply(this, thisArguments);
                 }
 
             });
 
-            thisLoadInstance.done((resources) => {
+            thisLoadInstance.done(resources => {
 
-                $element.trigger(pluginPrefix + 'Complete.' + pluginPrefix, [element, resources]);
-                callback.apply(element, [thisLoadInstance, resources]);
+                $element.trigger(pluginPrefix + 'Complete.' + pluginPrefix, [this, resources]);
+                callback.apply(this, [thisLoadInstance, resources]);
 
                 if (settings.visible) {
                     $window.off('scroll.' + uniqueMethodPluginName);
@@ -1265,16 +1298,18 @@
 
                 // refresh other method calls for same el (omitting this one)
                 methodCollection = methodCollection.filter(x => x.id !== uniqueMethodPluginName);
-                methodCollection.forEach((thisMethodCollection) => {
+                methodCollection.forEach(thisMethodCollection => {
                     if ($element.is(thisMethodCollection.element)) {
-                        thisMethodCollection.instance.loop();
+                        thisMethodCollection.instance.load();
                     }
                 });
 
             });
 
+            thisLoadInstance.load();
+
             if (settings.visible) {
-                $window.on('scroll.' + uniqueMethodPluginName, throttle(() => thisLoadInstance.loop(), 250));
+                $window.on('scroll.' + uniqueMethodPluginName, throttle(() => thisLoadInstance.load(), 250));
             }
 
             if (true === settings.early) for (let key in methodCollection) {
@@ -1289,11 +1324,11 @@
 
                     thisMethodCollection.timeout = setTimeout(function () {
 
-                        // TODO: appropriate method for setting settings?
+                        // TODO: appropriate method to set/update settings?
                         thisMethodCollection.instance._settings.visible = false;
                         thisMethodCollection.instance._settings.sequential = true;
 
-                        thisMethodCollection.instance.loop();
+                        thisMethodCollection.instance.load();
 
                     }, !isNaN(timeout) && isFinite(timeout) ? timeout : 0);
 

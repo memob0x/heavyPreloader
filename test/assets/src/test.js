@@ -86,7 +86,7 @@ $(document)
 
         if (instance) {
 
-            console_log('Aborted...');
+            console_log('$.NiteLoader(): Aborted...');
 
             instance.abort();
             instance = null;
@@ -108,8 +108,9 @@ $(document)
 
                 for (let ii = 0; ii < 2; ii++) {
                     let color = '';
-                    for (let c = 0; c < 6; c++)
+                    for (let c = 0; c < 6; c++){
                         color += letters[Math.floor(Math.random() * 16)];
+                    }
                     colors[ii] = color;
                 }
 
@@ -117,27 +118,31 @@ $(document)
 
             }
 
-            instance = new $.niteLoad(random_stuff, {
+            instance = new $.NiteLoader({
                 sequential: true
             });
 
-            console_log('0% - Starting...');
+            instance.collection = random_stuff;
 
-            instance.progress(function (resource) {
+            console_log('$.NiteLoader(): 0% - Starting...');
 
-                console_log(instance.percentage + '%');
+            instance.progress((resource) => {
+
+                console_log('$.NiteLoader(): '+instance.percentage + '%');
 
             });
 
-            instance.done(function (resources) {
+            instance.done((resources) => {
 
-                console_log('100% - Done!!');
+                console_log('$.NiteLoader(): 100% - Done!!');
                 $('.nite-program-load--run').show();
                 $('.nite-program-load--kill').hide();
 
                 instance = null;
 
             });
+
+            instance.load();
 
         }
 
