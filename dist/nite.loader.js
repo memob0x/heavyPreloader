@@ -218,14 +218,14 @@
             return !(rect.right < 0 || rect.bottom < 0 || rect.left > winWidth || rect.top > winHeight);
 
         },
-        isHTMLObject = object => {
-            if (typeof object !== 'object') {
+        isHTMLObject = element => {
+            if (typeof element !== 'object') {
                 return false;
             }
             try {
-                return object instanceof HTMLElement;
+                return element instanceof HTMLElement;
             } catch (e) {
-                return object.nodeType === 1 && typeof object.style === 'object' && typeof object.ownerDocument === 'object';
+                return element.nodeType === 1 && typeof element.style === 'object' && typeof element.ownerDocument === 'object';
             }
         },
         isLoaded = source => {
@@ -239,9 +239,12 @@
                 (
                     isHTMLObject(source)
                     &&
-                    ('currentSrc' in source && source.currentSrc.length)
+                    ('currentSrc' in source && source.currentSrc.length > 0)
                     &&
-                    (('complete' in source && source.complete) || ('readyState' in source && source.readyState >= 2))
+                    (
+                        ('complete' in source && source.complete)
+                        ||
+                        ('readyState' in source && source.readyState >= 2))
                 )
             );
         },
@@ -264,65 +267,67 @@
                 )
             );
         },
-        decodeResource = (item, expectedFormat) => {
+        decodeResource = resource => {
 
             const
                 formatExtensions = {
-                    image: 'jp[e]?g||jpe|jif|jfif|jfi|gif|png|tif[f]?|bmp|dib|webp|ico|cur|svg',
+                    image: 'jp[e]?g|jpe|jif|jfif|jfi|gif|png|tif[f]?|bmp|dib|webp|ico|cur|svg',
                     audio: 'mp3|ogg|oga|spx|ogg|wav',
                     video: 'mp4|ogv|webm'
                 },
-                formatNames = Object.keys(formatExtensions),
+                formatTagNames = {
+                    image: 'img|picture|source',
+                    audio: 'audio|source',
+                    video: 'video|source'
+                },
                 base64Heading = '\;base64\,';
 
-            let output = { format: null, extension: null };
+            let
+                output = {
+                    format: null,
+                    extension: null,
+                    tag: null,
+                    exists: false
+                },
+                breakLoop = false;
 
-            if (typeof item === 'string') {
+            resource.resource = resource.resource.split('?')[0];
+            resource.resource = resource.resource.split('#')[0];
+            Object.keys(formatExtensions).forEach(formatCandidate => {
 
-                item = item.split('?')[0];
-                item = item.split('#')[0];
-
-                if (item === '') {
-                    return false;
+                if (breakLoop) {
+                    return;
                 }
 
-                let formatQueue = undefined !== expectedFormat ? [expectedFormat] : formatNames;
+                if (new RegExp('(\.(' + formatExtensions[formatCandidate] + ')$)|' + base64Heading, 'g').test(resource.resource)) {
 
-                for (const x in formatQueue) {
+                    if (new RegExp(base64Heading, 'g').test(resource.resource)) {
 
-                    if (formatQueue.hasOwnProperty(x)) {
+                        let matches64 = resource.resource.match(new RegExp('^data:' + formatCandidate + '\/(' + formatExtensions[formatCandidate] + ')', 'g'));
 
-                        if (new RegExp('(\.(' + formatExtensions[formatQueue[x]] + ')$)|' + base64Heading, 'g').test(item)) {
+                        if (null === matches64) {
+                            return;
+                        }
 
-                            if (new RegExp(base64Heading, 'g').test(item)) {
+                        matches64 = matches64[0];
 
-                                let matches64 = item.match(new RegExp('^data:' + formatQueue[x] + '\/(' + formatExtensions[formatQueue[x]] + ')', 'g'));
+                        output.format = formatCandidate;
+                        output.extension = matches64.replace('data:' + formatCandidate + '/', '');
+                        output.tag = formatTagNames[formatCandidate];
 
-                                if (!matches64 || null === matches64) {
-                                    continue;
-                                }
+                        breakLoop = true;
 
-                                matches64 = matches64[0];
+                    } else {
 
-                                output.format = formatQueue[x];
-                                output.extension = matches64.replace('data:' + formatQueue[x] + '/', '');
+                        let matches = resource.resource.match(new RegExp(formatExtensions[formatCandidate], 'g'));
 
-                                break;
+                        if (matches) {
 
-                            } else {
+                            output.format = formatCandidate;
+                            output.extension = matches[0];
+                            output.tag = formatTagNames[formatCandidate];
 
-                                let matches = item.match(new RegExp(formatExtensions[formatQueue[x]], 'g'));
-
-                                if (matches) {
-
-                                    output.format = formatQueue[x];
-                                    output.extension = matches[0];
-
-                                    break;
-
-                                }
-
-                            }
+                            breakLoop = true;
 
                         }
 
@@ -330,27 +335,44 @@
 
                 }
 
+            });
+
+            if (isHTMLObject(resource.element)) {
+
+                let
+                    tagName = resource.element.tagName.toLowerCase(),
+                    allTags = '';
+
+                Object.values(formatTagNames).forEach(tags => {
+                    allTags += '|' + tags;
+                });
+
+                allTags = allTags.split('|');
+
+                if (isInArray(tagName, allTags)) {
+                    output.tag = tagName;
+                    output.exists = true;
+                    if( output.format === null ){
+                        Object.keys(formatTagNames).forEach(format => {
+                            if( formatTagNames[format].includes(output.tag) ){
+                                output.format = format;
+                            }
+                        });
+                    }
+                }
+
             }
 
-            if (isHTMLObject(item)) {
-
-                let tagName = item.tagName.toLowerCase();
-
-                if (isInArray(tagName, formatNames)) {
-                    output.format = item.tagName.toLowerCase();
-                }
-
-                if (tagName === 'img') {
-                    output.format = 'image';
-                }
-
+            if (output.tag.includes('|')) {
+                output.tag = output.tag.split('|')[0];
             }
 
             return output;
 
         };
 
-    let privateEventsStorage = {},
+    let
+        privateEventsStorage = {},
         privateCache = [];
 
     // TODO: Promise support maybe
@@ -421,63 +443,27 @@
 
         set resource(data) {
 
-            /* TODO:
-            if( typeof data === 'object' && 'id' in data && 'element' in data && 'resource' in data ){
+            if (typeof data === 'object' && 'id' in data && 'element' in data && 'resource' in data) {
 
                 this._id = data.id;
                 this._element = data.element;
                 this._resource = data.resource;
 
-                this._format = decodeResource(this._resource).format;
-                this._exists = isHTMLObject(this._element);
+                let info = decodeResource({ resource: this._resource, element: this._element });
+                this._tag = info.tag;
+                this._exists = info.exists;
+                this._format = info.format;
 
                 if (!this._exists) {
-
-                    let isImg = this._format === 'image';
-
-                    this._element = document.createElement(isImg ? 'img' : this._format);
-
+                    this._element = document.createElement(this._tag);
                     this._element.dataset[this.srcAttr] = this._resource;
-                    this._element.dataset[this.srcsetAttr] = this._resource;
-
                 }
 
                 this._idEvent = this._element[pluginInstance + '_IDEvent'];
                 this._busy = this._idEvent !== undefined;
                 this._idEvent = this._busy ? this._idEvent : pluginName + '_unique_' + this._element.tagName + '_' + generateInstanceID();
-            
-            }*/
 
-            const
-                elementResource = isHTMLObject(data.resource),
-                stringResource = typeof data.resource === 'string';
-
-            if (!elementResource && !stringResource) {
-                return;
             }
-
-            this._id = data.id;
-            this._format = decodeResource(data.resource).format;
-
-            this._exists = elementResource;
-
-            if (stringResource) {
-                this._element = document.createElement(this._format === 'image' ? 'img' : this._format);
-                this._resource = data.resource;
-            }
-
-            if (elementResource) {
-                this._element = data.resource;
-            }
-
-            if (stringResource) {
-                this._element.dataset[this.srcAttr] = this._resource;
-                this._element.dataset[this.srcsetAttr] = this._resource;
-            }
-
-            this._idEvent = this._element[pluginInstance + '_IDEvent'];
-            this._busy = this._idEvent !== undefined;
-            this._idEvent = this._busy ? this._idEvent : pluginName + '_unique_' + this._element.tagName + '_' + generateInstanceID();
 
         }
 
@@ -542,15 +528,11 @@
                 } else if (this._format === 'video' || this._format === 'audio') {
 
                     const
-
                         isPlaythroughModeNormal = true === this._settings.playthrough,
                         isPlaythroughModeFull = 'full' === this._settings.playthrough,
-
                         sources = this._element.querySelectorAll('source'),
                         isFullyBuffered = function (media) {
-
                             return media.buffered.length && Math.round(media.buffered.end(0)) / Math.round(media.seekable.end(0)) === 1;
-
                         };
 
                     let callMediaLoad = false;
@@ -582,25 +564,20 @@
 
                         });
 
-                    } else {
+                    } else if (this._element.matches('[' + this._settings.srcAttr + ']')) {
 
-                        if (this._element.matches('[' + src + ']')) {
+                        this._element.setAttribute('src', this._element.dataset[this.srcAttr]);
+                        delete this._element.dataset[this.srcAttr];
 
-                            this._element.setAttribute('src', this._element.dataset[this.srcAttr]);
-                            delete this._element.dataset[this.srcAttr];
+                        attachEventListener(this._element, 'error.' + this._idEvent, this._callback, !this._busy);
 
-                            attachEventListener(this._element, 'error.' + this._idEvent, this._callback, !this._busy);
-
-                            callMediaLoad = true;
-
-                        }
+                        callMediaLoad = true;
 
                     }
 
                     if (callMediaLoad) {
                         this._element.load();
                     }
-
 
                     attachEventListener(this._element, 'loadedmetadata.' + this._idEvent, () => {
 
@@ -784,9 +761,7 @@
 
         set collection(collection) {
 
-            //TODO:
-            /*
-            if (!Array.isArray(collection)){
+            if (!Array.isArray(collection)) {
                 collection = [];
             }
 
@@ -808,67 +783,46 @@
 
                 this._collection.push(element);
 
-            });*/
-
-            if (Array.isArray(collection) && (typeof collection[0] === 'string' || isHTMLObject(collection[0]))) {
-                for (const resource in collection) {
-                    if (collection.hasOwnProperty(resource)) {
-                        this._collection.push({ id: generateInstanceID(), resource: collection[resource] });
-                    }
-                }
-            }
-
-            if (typeof collection === 'string' || isHTMLObject(collection)) {
-                this._collection.push({ id: generateInstanceID(), resource: collection });
-            }
+            });
 
         }
 
         get collection() {
-
             return this._collection;
-
         }
 
         collect(element) {
 
             const
                 targets = 'img, video, audio',
-                targetsExtended = targets + ', picture, source';
+                targetsExtended = targets + ', picture, source',
+                targetsFilter = '[' + this._settings.srcAttr + '], [' + this._settings.srcsetAttr + ']';
 
             let
                 collection = [],
                 targetsTags = nodelistToArray(element.querySelectorAll(targets));
 
-            if (element.matches(targets)) {
+            if (element.matches(targetsExtended)) {
                 targetsTags.push(element);
             }
 
             targetsTags = targetsTags.filter((target) => {
-                let filter = '[' + this._settings.srcAttr + '], [' + this._settings.srcsetAttr + ']',
-                    children = nodelistToArray(target.children);
+                let children = nodelistToArray(target.children);
                 children = children.filter(x => x.matches(targetsExtended));
-                children = children.filter(x => x.matches(filter));
-                return target.matches(filter) || children.length;
+                children = children.filter(x => x.matches(targetsFilter));
+                return target.matches(targetsFilter) || children.length;
             });
 
             targetsTags.forEach((target) => {
-
-                let collectionItem = {
-                    element: target,
-                    resource: target.getAttribute(this._settings.srcAttr) || target.getAttribute(this._settings.srcsetAttr)
-                };
-
-                collectionItem = collectionItem.element;
-
-                collection.push(collectionItem);
-
-                /*TODO:
+                let targetSource = target;
+                if (!targetSource.matches(targetsFilter)) {
+                    targetSource = targetSource.querySelectorAll(targetsFilter);
+                    targetSource = [...targetSource][0];
+                }
                 collection.push({
                     element: target,
-                    resource: target.getAttribute(this._settings.srcAttr) || target.getAttribute(this._settings.srcsetAttr)
-                });*/
-
+                    resource: targetSource.getAttribute(this._settings.srcAttr) || targetSource.getAttribute(this._settings.srcsetAttr)
+                });
             });
 
             if (true === this._settings.backgrounds) {
@@ -884,20 +838,10 @@
                         return true;
                     }
 
-                    let collectionItem = {
-                        element: target,
-                        resource: url[1].replace(/('|")/g, '')
-                    };
-
-                    collectionItem = collectionItem.resource;
-
-                    collection.push(collectionItem);
-
-                    /* TODO:
                     collection.push({
                         element: target,
                         resource: url[1].replace(/('|")/g, '')
-                    });*/
+                    });
 
                 });
             }
@@ -907,41 +851,17 @@
                     if (this._settings.attributes.hasOwnProperty(attr)) {
 
                         nodelistToArray(element.querySelectorAll('[' + attr + ']:not(' + targetsExtended + ')')).forEach((target) => {
-
-                            let collectionItem = {
-                                element: target,
-                                resource: target.getAttribute(attr)
-                            };
-
-                            collectionItem = collectionItem.resource;
-
-                            collection.push(collectionItem);
-
-                            /*TODO:
                             collection.push({
                                 element: target,
                                 resource: target.getAttribute(attr)
-                            });*/
-
+                            });
                         });
 
                         if (element.matches('[' + attr + ']') && !element.matches(targetsExtended)) {
-
-                            let collectionItem = {
-                                element: element,
-                                resource: element.getAttribute(attr)
-                            };
-
-                            collectionItem = collectionItem.resource;
-
-                            collection.push(collectionItem);
-
-                            /* TODO:
                             collection.push({
                                 element: element,
                                 resource: element.getAttribute(attr)
-                            });*/
-
+                            });
                         }
 
                     }
@@ -995,13 +915,10 @@
                         this.percentage = this._loaded / this._collection.length * 100;
                         this.percentage = parseFloat(this.percentage.toFixed(4));
 
-                        // TODO: cleanup/refactory
                         const thisResource = { resource: resource, status: status, element: element };
                         this._resourcesLoaded.push(thisResource);
-
                         this._progress.call(this, thisResource);
                         this[status !== 'error' ? '_success' : '_error'].call(this, thisResource);
-
                         // TODO: dispatch event on element maybe?
                         // element.dispatchEvent(new CustomEvent(pluginPrefix + capitalize(status) + '.' + pluginPrefix));
 
@@ -1028,7 +945,7 @@
                 if (!sequentialMode || (sequentialMode && !this._busy)) {
                     this._busy = thisLoadInstance.load();
 
-                } else if (sequentialMode && this._busy && (!this._settings.visible || (this._settings.visible && isVisible(thisLoadInstance._element)))) {
+                } else if (sequentialMode && this._busy && (!this._settings.visible || !thisLoadInstance._exists || (this._settings.visible && thisLoadInstance._exists && isVisible(thisLoadInstance._element)))) {
                     this._collectionPending.push({ id: thisLoadId, instance: thisLoadInstance });
 
                 }
@@ -1049,11 +966,7 @@
             };
 
             if (this._collection.length) {
-
                 this._done = _func;
-
-                //this._loop();
-
             } else {
                 _func();
             }
@@ -1070,11 +983,7 @@
             };
 
             if (this._collection.length) {
-
                 this._progress = _func;
-
-                //this._loop();
-
             }
 
         };
@@ -1090,11 +999,7 @@
             };
 
             if (this._collection.length) {
-
                 this._success = _func;
-
-                //this._loop();
-
             }
 
         };
@@ -1110,11 +1015,7 @@
             };
 
             if (this._collection.length) {
-
                 this._error = _func;
-
-                //this._loop();
-
             }
 
         };
