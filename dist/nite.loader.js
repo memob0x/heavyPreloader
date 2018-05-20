@@ -1,33 +1,8 @@
-/*! JQuery Nite Loader | Daniele Fioroni | dfioroni91@gmail.com */
+/*! Nite Loader | Daniele Fioroni | dfioroni91@gmail.com */
 (function (window, document, $, undefined) {
     'use strict';
 
-    // thanks to https://github.com/paulmillr/console-polyfill
-    // - - - - - - - - - - - - - - - - - - - -
-    (function () {
-        if (!window.console) {
-            window.console = {};
-        }
-        let con = window.console,
-            prop, method,
-            dummy = () => { },
-            properties = ['memory'],
-            methods = ('assert,clear,count,debug,dir,dirxml,error,exception,group,groupCollapsed,groupEnd,info,log,markTimeline,profile,profiles,profileEnd,show,table,time,timeEnd,timeline,timelineEnd,timeStamp,trace,warn').split(',');
-        while (prop = properties.pop()) {
-            if (!con[prop]) {
-                con[prop] = {};
-            }
-        }
-        while (method = methods.pop()) {
-            if (!con[method]) {
-                con[method] = dummy;
-            }
-        }
-    })();
-    // - - - - - - - - - - - - - - - - - - - -
-
     // https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent/CustomEvent#Polyfill
-    // - - - - - - - - - - - - - - - - - - - -
     (function () {
         if (typeof window.CustomEvent === "function") {
             return false;
@@ -41,23 +16,23 @@
         CustomEvent.prototype = window.Event.prototype;
         window.CustomEvent = CustomEvent;
     })();
-    // - - - - - - - - - - - - - - - - - - - -
 
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/findIndex#Polyfill
-    // - - - - - - - - - - - - - - - - - - - -
     if (!Array.prototype.findIndex) {
         Object.defineProperty(Array.prototype, 'findIndex', {
             value: function (predicate) {
                 if (this == null) {
                     throw new TypeError('"this" is null or not defined');
                 }
-                let o = Object(this);
-                let len = o.length >>> 0;
+                let
+                    o = Object(this),
+                    len = o.length >>> 0;
                 if (typeof predicate !== 'function') {
                     throw new TypeError('predicate must be a function');
                 }
-                let thisArg = arguments[1];
-                let k = 0;
+                let
+                    thisArg = arguments[1],
+                    k = 0;
                 while (k < len) {
                     let kValue = o[k];
                     if (predicate.call(thisArg, kValue, k, o)) {
@@ -71,23 +46,20 @@
             writable: true
         });
     }
-    // - - - - - - - - - - - - - - - - - - - -
 
     // https://developer.mozilla.org/it/docs/Web/JavaScript/Reference/Global_Objects/Array/isArray#Polyfill
-    // - - - - - - - - - - - - - - - - - - - -
     Array.isArray = Array.isArray || function (arg) {
         return Object.prototype.toString.call(arg) === '[object Array]';
     };
-    // - - - - - - - - - - - - - - - - - - - -
 
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter#Polyfill
-    // - - - - - - - - - - - - - - - - - - - -
     Array.prototype.filter = Array.prototype.filter || function (func, thisArg) {
         'use strict';
         if (!((typeof func === 'Function' || typeof func === 'function') && this)) {
             throw new TypeError();
         }
-        let len = this.length >>> 0,
+        let
+            len = this.length >>> 0,
             res = new Array(len),
             t = this, c = 0, i = -1;
         if (thisArg === undefined) {
@@ -110,18 +82,13 @@
         res.length = c;
         return res;
     }
-    // - - - - - - - - - - - - - - - - - - - -
 
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/startsWith#Polyfill
-    // - - - - - - - - - - - - - - - - - - - -
     String.prototype.startsWith = String.prototype.startsWith || function (search, pos) {
         return this.substr(!pos || pos < 0 ? 0 : +pos, search.length) === search;
     };
-    // - - - - - - - - - - - - - - - - - - - -
-    // - - - - - - - - - - - - - - - - - - - -
 
     // https://developer.mozilla.org/it/docs/Web/JavaScript/Reference/Global_Objects/String/includes#Polyfill
-    // - - - - - - - - - - - - - - - - - - - -
     String.prototype.includes = String.prototype.includes || function (search, start) {
         'use strict';
         if (typeof start !== 'number') {
@@ -133,22 +100,6 @@
             return this.indexOf(search, start) !== -1;
         }
     };
-    // - - - - - - - - - - - - - - - - - - - -
-
-    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/includes#Polyfill
-    // - - - - - - - - - - - - - - - - - - - -
-    String.prototype.includes = String.prototype.includes || function (search, start) {
-        'use strict';
-        if (typeof start !== 'number') {
-            start = 0;
-        }
-        if (start + search.length > this.length) {
-            return false;
-        } else {
-            return this.indexOf(search, start) !== -1;
-        }
-    };
-    // - - - - - - - - - - - - - - - - - - - -
 
     const
         generateInstanceID = function () {
@@ -157,13 +108,7 @@
         pluginPrefix = 'nite',
         pluginMethod = pluginPrefix + 'Load',
         pluginName = pluginMethod + 'er',
-        pluginInstance = generateInstanceID();
-
-    window[pluginName + 'Cache'] = []; // FIXME: remove
-
-    let privateEventsStorage = {};
-
-    const
+        pluginInstance = generateInstanceID(),
         eventNamespaceParserSeparator = '__namespace__',
         detachEventListener = (element, events) => {
 
@@ -193,6 +138,7 @@
                     element.removeEventListener(type, privateEventsStorage[events].handler);
                     delete privateEventsStorage[events];
                 }
+
             }
 
         },
@@ -221,7 +167,7 @@
             if (true === once) {
                 let _handler = handler;
                 handler = function (event) {
-                    if( events in privateEventsStorage ){
+                    if (events in privateEventsStorage) {
                         privateEventsStorage[events].count++;
                         if (privateEventsStorage[events].once && privateEventsStorage[events].count > 1) {
                             return;
@@ -240,6 +186,7 @@
                     once: once
                 }
             };
+
             element.addEventListener(type, privateEventsStorage[events].handler, { once: once });
 
         },
@@ -255,7 +202,7 @@
         isInArray = (needle, stack) => {
             return stack.indexOf(needle) > -1;
         },
-        // TODO: add insersection observer
+        // TODO: intersection observer
         isVisible = element => {
 
             if (window.getComputedStyle(element, 'display') === 'none') {
@@ -277,37 +224,43 @@
             }
             try {
                 return object instanceof HTMLElement;
-            }
-            catch (e) {
+            } catch (e) {
                 return object.nodeType === 1 && typeof object.style === 'object' && typeof object.ownerDocument === 'object';
             }
         },
-        isLoaded = element => {
+        isLoaded = source => {
             return (
-                ( typeof element === 'string' && isInArray(element, window[pluginName + 'Cache']) ) || // FIXME: remove
                 (
-                    isHTMLObject(element)
-                    && ('currentSrc' in element && element.currentSrc.length)
-                    && (('complete' in element && element.complete) || ('readyState' in element && element.readyState >= 2))
+                    typeof source === 'string'
+                    &&
+                    isInArray(source, privateCache)
+                )
+                ||
+                (
+                    isHTMLObject(source)
+                    &&
+                    ('currentSrc' in source && source.currentSrc.length)
+                    &&
+                    (('complete' in source && source.complete) || ('readyState' in source && source.readyState >= 2))
                 )
             );
         },
-        isBroken = element => {
+        isBroken = source => {
             return (
-                isLoaded(element)
+                isLoaded(source)
                 &&
                 (
                     (
-                        typeof element === 'object'
+                        typeof source === 'object'
                         &&
                         (
-                            ('naturalWidth' in element && Math.floor(element.naturalWidth) === 0)
+                            ('naturalWidth' in source && Math.floor(source.naturalWidth) === 0)
                             ||
-                            ('videoWidth' in element && element.videoWidth === 0)
+                            ('videoWidth' in source && source.videoWidth === 0)
                         )
                     )
                     ||
-                    typeof element === 'string'
+                    typeof source === 'string'
                 )
             );
         },
@@ -326,8 +279,8 @@
 
             if (typeof item === 'string') {
 
-                item = item.split('?')[0]; // this gets rid of query strings
-                item = item.split('#')[0]; // this gets rid of hashes
+                item = item.split('?')[0];
+                item = item.split('#')[0];
 
                 if (item === '') {
                     return false;
@@ -397,6 +350,9 @@
 
         };
 
+    let privateEventsStorage = {},
+        privateCache = [];
+
     // TODO: Promise support maybe
     // TODO: think about useful vars in callback args (this class is not public but its vars are returned in .progress() callback)
     class SingleLoader {
@@ -450,7 +406,9 @@
 
                 const src = this._element.currentSrc || this._element.src;
 
-                if (!isInArray(src, window[pluginName + 'Cache'])) window[pluginName + 'Cache'].push(src); // FIXME: remove
+                if (!isInArray(src, privateCache)) {
+                    privateCache.push(src);
+                }
 
                 let thisArguments = [this._element, e.type, src, this._id];
 
@@ -523,7 +481,7 @@
 
         }
 
-        get resource(){
+        get resource() {
             return this._resource;
         }
 
@@ -800,7 +758,7 @@
             }
 
             if (typeof this._settings.attributes === 'string') {
-                this._settings.attributes = this._settings.attributes.split(this._settings.attributes.contains(',') ? ',' :' ');
+                this._settings.attributes = this._settings.attributes.split(this._settings.attributes.contains(',') ? ',' : ' ');
             }
             if (!Array.isArray(this._settings.attributes)) {
                 this._settings.attributes = [];
@@ -859,6 +817,7 @@
                     }
                 }
             }
+
             if (typeof collection === 'string' || isHTMLObject(collection)) {
                 this._collection.push({ id: generateInstanceID(), resource: collection });
             }
@@ -904,6 +863,12 @@
 
                 collection.push(collectionItem);
 
+                /*TODO:
+                collection.push({
+                    element: target,
+                    resource: target.getAttribute(this._settings.srcAttr) || target.getAttribute(this._settings.srcsetAttr)
+                });*/
+
             });
 
             if (true === this._settings.backgrounds) {
@@ -928,6 +893,12 @@
 
                     collection.push(collectionItem);
 
+                    /* TODO:
+                    collection.push({
+                        element: target,
+                        resource: url[1].replace(/('|")/g, '')
+                    });*/
+
                 });
             }
 
@@ -946,6 +917,12 @@
 
                             collection.push(collectionItem);
 
+                            /*TODO:
+                            collection.push({
+                                element: target,
+                                resource: target.getAttribute(attr)
+                            });*/
+
                         });
 
                         if (element.matches('[' + attr + ']') && !element.matches(targetsExtended)) {
@@ -958,6 +935,12 @@
                             collectionItem = collectionItem.resource;
 
                             collection.push(collectionItem);
+
+                            /* TODO:
+                            collection.push({
+                                element: element,
+                                resource: element.getAttribute(attr)
+                            });*/
 
                         }
 
@@ -1044,10 +1027,10 @@
 
                 if (!sequentialMode || (sequentialMode && !this._busy)) {
                     this._busy = thisLoadInstance.load();
-                
-                }else if (sequentialMode && this._busy && (!this._settings.visible || (this._settings.visible && isVisible(thisLoadInstance._element)) ) ){
+
+                } else if (sequentialMode && this._busy && (!this._settings.visible || (this._settings.visible && isVisible(thisLoadInstance._element)))) {
                     this._collectionPending.push({ id: thisLoadId, instance: thisLoadInstance });
-                
+
                 }
 
 
@@ -1273,6 +1256,7 @@
                 callback.apply(this, [thisLoadInstance, resources]);
 
                 if (settings.visible) {
+                    // TODO: intersection observer
                     $window.off('scroll.' + uniqueMethodPluginName);
                 }
 
@@ -1289,6 +1273,7 @@
             thisLoadInstance.load();
 
             if (settings.visible) {
+                // TODO: intersection observer
                 $window.on('scroll.' + uniqueMethodPluginName, throttle(() => thisLoadInstance.load(), 250));
             }
 
