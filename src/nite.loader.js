@@ -202,8 +202,11 @@
         isInArray = (needle, stack) => {
             return stack.indexOf(needle) > -1;
         },
-        // TODO: intersection observer
         isVisible = element => {
+
+            if( 'IntersectionObserver' in window && 'intersectionRatio' in element ){
+                return element.intersectionRatio > 0;
+            }
 
             if (window.getComputedStyle(element, 'display') === 'none') {
                 return false;
@@ -352,9 +355,9 @@
                 if (isInArray(tagName, allTags)) {
                     output.tag = tagName;
                     output.exists = true;
-                    if( output.format === null ){
+                    if (output.format === null) {
                         Object.keys(formatTagNames).forEach(format => {
-                            if( formatTagNames[format].includes(output.tag) ){
+                            if (formatTagNames[format].includes(output.tag)) {
                                 output.format = format;
                             }
                         });
@@ -375,7 +378,7 @@
         privateEventsStorage = {},
         privateCache = [];
 
-    // TODO: Promise support maybe
+    // TODO: Promise support
     // TODO: think about useful vars in callback args (this class is not public but its vars are returned in .progress() callback)
     class SingleLoader {
 
@@ -417,6 +420,7 @@
             this._element = null;
             this._resource = null;
             this._format = null;
+            this._observer = null;
 
             this._done = () => { };
             this._success = () => { };
@@ -425,6 +429,9 @@
             this._callback = (e) => {
 
                 this._busy = false;
+                if( null !== this._observer ){
+                    this._observer.unobserve(this._element);
+                }
 
                 const src = this._element.currentSrc || this._element.src;
 
@@ -455,8 +462,22 @@
                 this._format = info.format;
 
                 if (!this._exists) {
+
                     this._element = document.createElement(this._tag);
                     this._element.dataset[this.srcAttr] = this._resource;
+
+                }else if( this._settings.visible && 'IntersectionObserver' in window ){
+
+                    this._observer = new IntersectionObserver((entries, observer) => {
+                        entries.forEach(entry => entry.target.intersectionRatio = entry.intersectionRatio);
+                    }, {
+                        root: null,
+                        rootMargin: '0px',
+                        threshold: 0.1
+                    });
+
+                    this._observer.observe(this._element);
+
                 }
 
                 this._idEvent = this._element[pluginInstance + '_IDEvent'];
@@ -1119,6 +1140,8 @@
 
         return this.each(function (i) {
 
+            // TODO: mutation observer when new children are appended
+
             const
                 $element = $(this),
                 uniqueMethodPluginName = generateInstanceID() + i,
@@ -1157,8 +1180,15 @@
                 callback.apply(this, [thisLoadInstance, resources]);
 
                 if (settings.visible) {
-                    // TODO: intersection observer
-                    $window.off('scroll.' + uniqueMethodPluginName);
+                    //if ('IntersectionObserver' in window) {
+
+                        //thisLoadInstance.collection.forEach(item => item.element.intersectionObserver.unobserve());
+
+                    //} else {
+
+                        $window.off('scroll.' + uniqueMethodPluginName);
+
+                    //}
                 }
 
                 // refresh other method calls for same el (omitting this one)
@@ -1174,33 +1204,64 @@
             thisLoadInstance.load();
 
             if (settings.visible) {
-                // TODO: intersection observer
-                $window.on('scroll.' + uniqueMethodPluginName, throttle(() => thisLoadInstance.load(), 250));
+               /* if ('IntersectionObserver' in window) {
+
+                    thisLoadInstance.collection.forEach(item => {
+
+                        item.element.intersectionObserver = new IntersectionObserver((entries, observer) => {
+                            entries.forEach(entry => {
+                                if( entry.intersectionRatio > 0 ){
+                                    thisLoadInstance.load();
+                                }
+                            });
+                        }, {
+                            root: null,
+                            rootMargin: '0px',
+                            threshold: 0.0
+                        });
+
+                        item.element.intersectionObserver.observe(item.element);
+
+                    });
+
+                } else {*/
+
+                    $window.on('scroll.' + uniqueMethodPluginName, throttle(() => thisLoadInstance.load(), 250));
+
+               // }
             }
 
-            if (true === settings.early) for (let key in methodCollection) {
+            if (true === settings.early) {
 
-                let thisMethodCollection = methodCollection[key];
+                let breakLoop = false;
 
-                if (methodCollection[key].id === uniqueMethodPluginName) {
+                methodCollection.forEach(thisMethodCollection => {
 
-                    clearTimeout(thisMethodCollection.timeout);
+                    if (breakLoop) {
+                        return;
+                    }
 
-                    let timeout = parseInt(settings.earlyTimeout);
+                    if (methodCollection[key].id === uniqueMethodPluginName) {
 
-                    thisMethodCollection.timeout = setTimeout(function () {
+                        clearTimeout(thisMethodCollection.timeout);
 
-                        // TODO: appropriate method to set/update settings?
-                        thisMethodCollection.instance._settings.visible = false;
-                        thisMethodCollection.instance._settings.sequential = true;
+                        let timeout = parseInt(settings.earlyTimeout);
 
-                        thisMethodCollection.instance.load();
+                        thisMethodCollection.timeout = setTimeout(() => {
 
-                    }, !isNaN(timeout) && isFinite(timeout) ? timeout : 0);
+                            // TODO: appropriate method to set/update settings?
+                            thisMethodCollection.instance._settings.visible = false;
+                            thisMethodCollection.instance._settings.sequential = true;
 
-                    break;
+                            thisMethodCollection.instance.load();
 
-                }
+                        }, !isNaN(timeout) && isFinite(timeout) ? timeout : 0);
+
+                        breakLoop = true;
+
+                    }
+
+                });
 
             }
 
