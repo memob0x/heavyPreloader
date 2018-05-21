@@ -1180,12 +1180,10 @@
                 callback.apply(this, [thisLoadInstance, resources]);
 
                 if (settings.visible) {
-                    //if ('IntersectionObserver' in window) {
+                    /*if ('IntersectionObserver' in window) {
+                        thisLoadInstance.collection.forEach(item => item.element.intersectionObserver.unobserve(item.element));
 
-                        //thisLoadInstance.collection.forEach(item => item.element.intersectionObserver.unobserve());
-
-                    //} else {
-
+                    } else {*/
                         $window.off('scroll.' + uniqueMethodPluginName);
 
                     //}
@@ -1228,7 +1226,7 @@
 
                     $window.on('scroll.' + uniqueMethodPluginName, throttle(() => thisLoadInstance.load(), 250));
 
-               // }
+               //}
             }
 
             if (true === settings.early) {
