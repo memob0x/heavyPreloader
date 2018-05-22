@@ -2,107 +2,11 @@
 (function (window, document, $, undefined) {
     'use strict';
 
-    // https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent/CustomEvent#Polyfill
-    (function () {
-        if (typeof window.CustomEvent === "function") {
-            return false;
-        }
-        function CustomEvent(event, params) {
-            params = params || { bubbles: false, cancelable: false, detail: undefined };
-            const evt = document.createEvent('CustomEvent');
-            evt.initCustomEvent(event, params.bubbles, params.cancelable, params.detail);
-            return evt;
-        }
-        CustomEvent.prototype = window.Event.prototype;
-        window.CustomEvent = CustomEvent;
-    })();
-
-    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/findIndex#Polyfill
-    if (!Array.prototype.findIndex) {
-        Object.defineProperty(Array.prototype, 'findIndex', {
-            value: function (predicate) {
-                if (this == null) {
-                    throw new TypeError('"this" is null or not defined');
-                }
-                let
-                    o = Object(this),
-                    len = o.length >>> 0;
-                if (typeof predicate !== 'function') {
-                    throw new TypeError('predicate must be a function');
-                }
-                let
-                    thisArg = arguments[1],
-                    k = 0;
-                while (k < len) {
-                    let kValue = o[k];
-                    if (predicate.call(thisArg, kValue, k, o)) {
-                        return k;
-                    }
-                    k++;
-                }
-                return -1;
-            },
-            configurable: true,
-            writable: true
-        });
-    }
-
-    // https://developer.mozilla.org/it/docs/Web/JavaScript/Reference/Global_Objects/Array/isArray#Polyfill
-    Array.isArray = Array.isArray || function (arg) {
-        return Object.prototype.toString.call(arg) === '[object Array]';
-    };
-
-    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter#Polyfill
-    Array.prototype.filter = Array.prototype.filter || function (func, thisArg) {
-        'use strict';
-        if (!((typeof func === 'Function' || typeof func === 'function') && this)) {
-            throw new TypeError();
-        }
-        let
-            len = this.length >>> 0,
-            res = new Array(len),
-            t = this, c = 0, i = -1;
-        if (thisArg === undefined) {
-            while (++i !== len) {
-                if (i in this) {
-                    if (func(t[i], i, t)) {
-                        res[c++] = t[i];
-                    } else {
-                        while (++i !== len) {
-                            if (i in this) {
-                                if (func.call(thisArg, t[i], i, t)) {
-                                    res[c++] = t[i];
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        res.length = c;
-        return res;
-    }
-
-    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/startsWith#Polyfill
-    String.prototype.startsWith = String.prototype.startsWith || function (search, pos) {
-        return this.substr(!pos || pos < 0 ? 0 : +pos, search.length) === search;
-    };
-
-    // https://developer.mozilla.org/it/docs/Web/JavaScript/Reference/Global_Objects/String/includes#Polyfill
-    String.prototype.includes = String.prototype.includes || function (search, start) {
-        'use strict';
-        if (typeof start !== 'number') {
-            start = 0;
-        }
-        if (start + search.length > this.length) {
-            return false;
-        } else {
-            return this.indexOf(search, start) !== -1;
-        }
-    };
-
     const
-        generateInstanceID = function () {
+        /**
+         * @returns {string}
+         */
+        generateInstanceID = () => {
             return Math.floor(Math.random() * (9999 - 1000)) + 1000;
         },
         pluginPrefix = 'nite',
@@ -110,16 +14,65 @@
         pluginName = pluginMethod + 'er',
         pluginInstance = generateInstanceID(),
         eventNamespaceParserSeparator = '__namespace__',
+        CustomEvent = window.CustomEvent || (() => {
+            const _polyfill = (event, params) => {
+                params = params || { bubbles: false, cancelable: false, detail: undefined };
+                const evt = document.createEvent('CustomEvent');
+                evt.initCustomEvent(event, params.bubbles, params.cancelable, params.detail);
+                return evt;
+            };
+            _polyfill.prototype = window.Event.prototype;
+            return _polyfill;
+        })(),
+        /**
+         * @param {string} heystack
+         * @param {string} needle
+         * @returns {boolean}
+         */
+        stringContains = (heystack, needle) => {
+            return String.prototype.includes ? heystack.includes(needle) : heystack.indexOf(needle, 0) !== -1
+        },
+        /**
+         * @param {string} heystack
+         * @param {string} needle
+         * @returns {boolean}
+         */
+        stringStartsWith = (heystack, needle) => {
+            return String.prototype.startsWith ? heystack.startsWith(needle) : heystack.substr(0, needle.length) === needle;
+        },
+        /**
+         * @param {Array} heystack
+         * @param {Function} filter
+         * @returns {number}
+         */
+        arrayFindIndex = (heystack, filter) => {
+            return Array.prototype.findIndex ? heystack.findIndex(filter) : (() => {
+                let length = heystack.length,
+                    index = -1;
+                while (++index < length) {
+                    if (filter(heystack[index], index, heystack)) {
+                        return index;
+                    }
+                }
+                return -1;
+            })();
+        },
+        /**
+         * @param {HTMLElement} element
+         * @param {string} events
+         * @returns {undefined}
+         */
         detachEventListener = (element, events) => {
 
             if (!element || typeof events !== 'string') {
                 return;
             }
 
-            if (events.startsWith('.')) {
+            if (stringStartsWith(events, '.')) {
                 Object.keys(privateEventsStorage).forEach(key => {
-                    if (key.replace(eventNamespaceParserSeparator, '.').includes(events) && privateEventsStorage[key].element === element) {
-                        detachEventListener(element, key.replace(eventNamespaceParserSeparator, '.'));
+                    const eventNameWithNamespace = key.replace(eventNamespaceParserSeparator, '.');
+                    if (stringContains(eventNameWithNamespace, events) && privateEventsStorage[key].element === element) {
+                        detachEventListener(element, eventNameWithNamespace);
                     }
                 });
             } else {
@@ -142,6 +95,13 @@
             }
 
         },
+        /**
+         * @param {HTMLElement} element
+         * @param {string} events
+         * @param {Function} handler
+         * @param {boolean} once
+         * @returns {undefined}
+         */
         attachEventListener = (element, events, handler, once) => {
 
             if (!element || typeof events !== 'string' || typeof handler !== 'function') {
@@ -190,18 +150,39 @@
             element.addEventListener(type, privateEventsStorage[events].handler, { once: once });
 
         },
+        /**
+         * @param {string} string
+         * @returns {string}
+         */
         hyphensToCamelCase = string => {
             return string.replace(/-([a-z])/g, g => g[1].toUpperCase());
         },
+        /**
+         * @param {string} string
+         * @returns {string}
+         */
         capitalize = string => {
             return string.charAt(0).toUpperCase() + string.slice(1);
         },
+        /**
+         * @param {NodeList} nodelist
+         * @returns {Array}
+         */
         nodelistToArray = nodelist => {
             return [...nodelist];
         },
-        isInArray = (needle, stack) => {
-            return stack.indexOf(needle) > -1;
+        /**
+         * @param {*} needle
+         * @param {Array} heystack
+         * @returns {boolean}
+         */
+        isInArray = (needle, heystack) => {
+            return heystack.indexOf(needle) > -1;
         },
+        /**
+         * @param {HTMLElement} element
+         * @returns {boolean}
+         */
         isVisible = element => {
 
             if( 'IntersectionObserver' in window && 'intersectionRatio' in element ){
@@ -221,7 +202,11 @@
             return !(rect.right < 0 || rect.bottom < 0 || rect.left > winWidth || rect.top > winHeight);
 
         },
-        isHTMLObject = element => {
+        /**
+         * @param {HTMLElement} element
+         * @returns {boolean}
+         */
+        isHTMLElement = element => {
             if (typeof element !== 'object') {
                 return false;
             }
@@ -231,6 +216,10 @@
                 return element.nodeType === 1 && typeof element.style === 'object' && typeof element.ownerDocument === 'object';
             }
         },
+        /**
+         * @param {string|HTMLElement} source
+         * @returns {boolean}
+         */
         isLoaded = source => {
             return (
                 (
@@ -240,7 +229,7 @@
                 )
                 ||
                 (
-                    isHTMLObject(source)
+                    isHTMLElement(source)
                     &&
                     ('currentSrc' in source && source.currentSrc.length > 0)
                     &&
@@ -251,13 +240,17 @@
                 )
             );
         },
+        /**
+         * @param {string|HTMLElement} source
+         * @returns {boolean}
+         */
         isBroken = source => {
             return (
                 isLoaded(source)
                 &&
                 (
                     (
-                        typeof source === 'object'
+                        isHTMLElement(source)
                         &&
                         (
                             ('naturalWidth' in source && Math.floor(source.naturalWidth) === 0)
@@ -270,6 +263,10 @@
                 )
             );
         },
+        /**
+         * @param {Object} resource
+         * @returns {Object}
+         */
         decodeResource = resource => {
 
             const
@@ -340,7 +337,7 @@
 
             });
 
-            if (isHTMLObject(resource.element)) {
+            if (isHTMLElement(resource.element)) {
 
                 let
                     tagName = resource.element.tagName.toLowerCase(),
@@ -357,7 +354,7 @@
                     output.exists = true;
                     if (output.format === null) {
                         Object.keys(formatTagNames).forEach(format => {
-                            if (formatTagNames[format].includes(output.tag)) {
+                            if (stringContains(formatTagNames[format], output.tag)) {
                                 output.format = format;
                             }
                         });
@@ -366,7 +363,7 @@
 
             }
 
-            if (output.tag.includes('|')) {
+            if (stringContains(output.tag, '|')) {
                 output.tag = output.tag.split('|')[0];
             }
 
@@ -396,14 +393,14 @@
             this.srcAttr = '';
             this.srcsetAttr = '';
 
-            if (!this._settings.srcAttr.startsWith('data-')) {
+            if (!stringStartsWith(this._settings.srcAttr, 'data-')) {
                 this.srcAttr = this._settings.srcAttr;
                 this._settings.srcAttr = 'data-' + this._settings.srcAttr;
             } else {
                 this.srcAttr = this._settings.srcAttr.replace('data-', '');
             }
 
-            if (!this._settings.srcsetAttr.startsWith('data-')) {
+            if (!stringStartsWith(this._settings.srcsetAttr, 'data-')) {
                 this.srcsetAttr = this._settings.srcsetAttr;
                 this._settings.srcsetAttr = 'data-' + this._settings.srcsetAttr;
             } else {
@@ -742,13 +739,13 @@
 
             this.srcAttr = '';
             this.srcsetAttr = '';
-            if (!this._settings.srcAttr.startsWith('data-')) {
+            if (!stringStartsWith(this._settings.srcAttr, 'data-')) {
                 this.srcAttr = this._settings.srcAttr;
                 this._settings.srcAttr = 'data-' + this._settings.srcAttr;
             } else {
                 this.srcAttr = this._settings.srcAttr.replace('data-', '');
             }
-            if (!this._settings.srcsetAttr.startsWith('data-')) {
+            if (!stringStartsWith(this._settings.srcsetAttr, 'data-')) {
                 this.srcsetAttr = this._settings.srcsetAttr;
                 this._settings.srcsetAttr = 'data-' + this._settings.srcsetAttr;
             } else {
@@ -907,12 +904,12 @@
                 }
 
                 let thisLoadId = this._collection[i].id,
-                    thisLoadIndex = this._collectionInstances.findIndex(x => x.id === thisLoadId),
+                    thisLoadIndex = arrayFindIndex(this._collectionInstances, x => x.id === thisLoadId),
                     thisLoadInstance = new SingleLoader(this._settings);
 
                 if (thisLoadIndex === -1) {
                     this._collectionInstances.push({ id: thisLoadId, instance: thisLoadInstance });
-                    thisLoadIndex = this._collectionInstances.findIndex(x => x.id === thisLoadId);
+                    thisLoadIndex = arrayFindIndex(this._collectionInstances, x => x.id === thisLoadId);
                 } else {
                     this._collectionInstances[thisLoadIndex].instance = thisLoadInstance;
                 }
