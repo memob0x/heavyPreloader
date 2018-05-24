@@ -24,6 +24,18 @@
             _polyfill.prototype = window.Event.prototype;
             return _polyfill;
         })(),
+        supportedExtensions = {
+            image: 'jp[e]?g|jpe|jif|jfif|jfi|gif|png|tif[f]?|bmp|dib|webp|ico|cur|svg',
+            audio: 'mp3|ogg|oga|spx|ogg|wav',
+            video: 'mp4|ogv|webm'
+        },
+        supportedTags = {
+            image: 'img|picture|source',
+            audio: 'audio|source',
+            video: 'video|source'
+        },
+        IntersectionObserverSupported = 'IntersectionObserver' in window,
+        pictureElementSupported = 'HTMLPictureElement' in window,
         /**
          * @param {string} heystack
          * @param {string} needle
@@ -185,7 +197,7 @@
          */
         isVisible = element => {
 
-            if( 'IntersectionObserver' in window && 'intersectionRatio' in element ){
+            if( IntersectionObserverSupported && 'intersectionRatio' in element ){
                 return element.intersectionRatio > 0;
             }
 
@@ -236,7 +248,8 @@
                     (
                         ('complete' in source && source.complete)
                         ||
-                        ('readyState' in source && source.readyState >= 2))
+                        ('readyState' in source && source.readyState >= 2)
+                    )
                 )
             );
         },
@@ -269,41 +282,30 @@
          */
         decodeResource = resource => {
 
-            const
-                formatExtensions = {
-                    image: 'jp[e]?g|jpe|jif|jfif|jfi|gif|png|tif[f]?|bmp|dib|webp|ico|cur|svg',
-                    audio: 'mp3|ogg|oga|spx|ogg|wav',
-                    video: 'mp4|ogv|webm'
-                },
-                formatTagNames = {
-                    image: 'img|picture|source',
-                    audio: 'audio|source',
-                    video: 'video|source'
-                },
-                base64Heading = '\;base64\,';
-
             let
                 output = {
                     format: null,
                     extension: null,
                     tag: null,
-                    exists: false
+                    consistent: false // true if tag match the resource type
                 },
                 breakLoop = false;
 
             resource.resource = resource.resource.split('?')[0];
             resource.resource = resource.resource.split('#')[0];
-            Object.keys(formatExtensions).forEach(formatCandidate => {
+            Object.keys(supportedExtensions).forEach(formatCandidate => {
 
                 if (breakLoop) {
                     return;
                 }
 
-                if (new RegExp('(\.(' + formatExtensions[formatCandidate] + ')$)|' + base64Heading, 'g').test(resource.resource)) {
+                const base64Heading = '\;base64\,';
+
+                if (new RegExp('(\.(' + supportedExtensions[formatCandidate] + ')$)|' + base64Heading, 'g').test(resource.resource)) {
 
                     if (new RegExp(base64Heading, 'g').test(resource.resource)) {
 
-                        let matches64 = resource.resource.match(new RegExp('^data:' + formatCandidate + '\/(' + formatExtensions[formatCandidate] + ')', 'g'));
+                        let matches64 = resource.resource.match(new RegExp('^data:' + formatCandidate + '\/(' + supportedExtensions[formatCandidate] + ')', 'g'));
 
                         if (null === matches64) {
                             return;
@@ -313,19 +315,19 @@
 
                         output.format = formatCandidate;
                         output.extension = matches64.replace('data:' + formatCandidate + '/', '');
-                        output.tag = formatTagNames[formatCandidate];
+                        output.tag = supportedTags[formatCandidate];
 
                         breakLoop = true;
 
                     } else {
 
-                        let matches = resource.resource.match(new RegExp(formatExtensions[formatCandidate], 'g'));
+                        let matches = resource.resource.match(new RegExp(supportedExtensions[formatCandidate], 'g'));
 
                         if (matches) {
 
                             output.format = formatCandidate;
                             output.extension = matches[0];
-                            output.tag = formatTagNames[formatCandidate];
+                            output.tag = supportedTags[formatCandidate];
 
                             breakLoop = true;
 
@@ -343,7 +345,7 @@
                     tagName = resource.element.tagName.toLowerCase(),
                     allTags = '';
 
-                Object.values(formatTagNames).forEach(tags => {
+                Object.values(supportedTags).forEach(tags => {
                     allTags += '|' + tags;
                 });
 
@@ -351,10 +353,10 @@
 
                 if (isInArray(tagName, allTags)) {
                     output.tag = tagName;
-                    output.exists = true;
+                    output.consistent = true;
                     if (output.format === null) {
-                        Object.keys(formatTagNames).forEach(format => {
-                            if (stringContains(formatTagNames[format], output.tag)) {
+                        Object.keys(supportedTags).forEach(format => {
+                            if (stringContains(supportedTags[format], output.tag)) {
                                 output.format = format;
                             }
                         });
@@ -377,8 +379,15 @@
 
     // TODO: Promise support
     // TODO: think about useful vars in callback args (this class is not public but its vars are returned in .progress() callback)
+    /** TODO: description of the MyClass constructor function.
+     * @class
+     * @classdesc TODO: description of the SingleLoader class.
+     */
     class SingleLoader {
 
+        /**
+         * @param {Object} options
+         */
         constructor(options) {
 
             this._settings = {
@@ -445,6 +454,9 @@
 
         }
 
+        /**
+         * @param {Object} data
+         */
         set resource(data) {
 
             if (typeof data === 'object' && 'id' in data && 'element' in data && 'resource' in data) {
@@ -455,16 +467,17 @@
 
                 let info = decodeResource({ resource: this._resource, element: this._element });
                 this._tag = info.tag;
-                this._exists = info.exists;
+                this._consistent = info.consistent;
                 this._format = info.format;
+                this._exists = this._element !== null;
+                this._originalElement = this._element;
 
-                if (!this._exists) {
-
+                if ( !this._exists || !this._consistent ) {
                     this._element = document.createElement(this._tag);
                     this._element.dataset[this.srcAttr] = this._resource;
-
-                }else if( this._settings.visible && 'IntersectionObserver' in window ){
-
+                }
+                
+                if( this._exists && this._settings.visible && IntersectionObserverSupported ){
                     this._observer = new IntersectionObserver((entries, observer) => {
                         entries.forEach(entry => entry.target.intersectionRatio = entry.intersectionRatio);
                     }, {
@@ -472,9 +485,7 @@
                         rootMargin: '0px',
                         threshold: 0.1
                     });
-
-                    this._observer.observe(this._element);
-
+                    this._observer.observe(this._originalElement);
                 }
 
                 this._idEvent = this._element[pluginInstance + '_IDEvent'];
@@ -485,28 +496,30 @@
 
         }
 
+        /**
+         * @returns {string} 
+         */
         get resource() {
             return this._resource;
         }
 
         /**
-         *
          * @returns {boolean} se ha preso in carico il caricamento oppure no per vari motivi (è già caricato, non è nella viewport etc)
          */
         load() {
 
-            if (isLoaded(this._exists ? this._element : this._resource)) {
+            if (isLoaded(this._exists && this._consistent ? this._element : this._resource)) {
 
                 if (!this._busy) {
                     // TODO: mayabe this should be called in this._callback
                     detachEventListener(this._element, '.' + this._idEvent);
                 }
 
-                this._callback(new CustomEvent(!isBroken(this._exists ? this._element : this._resource) ? 'load' : 'error'));
+                this._callback(new CustomEvent(!isBroken(this._exists && this._consistent ? this._element : this._resource) ? 'load' : 'error'));
 
                 return false;
 
-            } else if (this._exists && this._settings.visible && !isVisible(this._element)) {
+            } else if (this._exists && this._settings.visible && !isVisible(this._originalElement)) {
 
                 return false;
 
@@ -519,7 +532,7 @@
 
                     const picture = this._element.closest('picture');
 
-                    if (picture && 'HTMLPictureElement' in window) {
+                    if (picture && pictureElementSupported) {
 
                         delete this._element.dataset[this.srcsetAttr];
                         delete this._element.dataset[this.srcAttr];
@@ -671,6 +684,10 @@
 
         }
 
+        /**
+         * @param {Function} callback
+         * @returns {undefined}
+         */
         done(callback) {
 
             if (typeof callback !== 'function') {
@@ -683,6 +700,9 @@
 
         };
 
+        /**
+         * @returns {undefined}
+         */
         abort() {
 
             detachEventListener(this._element, '.' + this._idEvent);
@@ -716,8 +736,15 @@
     // TODO: Promise support
     // TODO: private vars
     // TODO: refactory succes/done/progress code...
+    /** TODO: description of the MyClass constructor function.
+     * @class
+     * @classdesc TODO: description of the Loader class.
+     */
     class Loader {
 
+        /**
+         * @param {Object} options
+         */
         constructor(options) {
 
             this._collection = [];
@@ -777,6 +804,9 @@
 
         }
 
+        /**
+         * @param {Array} collection
+         */
         set collection(collection) {
 
             if (!Array.isArray(collection)) {
@@ -805,10 +835,17 @@
 
         }
 
+        /**
+         * @returns {Array} collection
+         */
         get collection() {
             return this._collection;
         }
 
+        /**
+         * @param {HTMLElement} element
+         * @returns {undefined}
+         */
         collect(element) {
 
             const
@@ -830,20 +867,24 @@
                 children = children.filter(x => x.matches(targetsFilter));
                 return target.matches(targetsFilter) || children.length;
             });
-
             targetsTags.forEach((target) => {
+
                 let targetSource = target;
+
                 if (!targetSource.matches(targetsFilter)) {
                     targetSource = targetSource.querySelectorAll(targetsFilter);
                     targetSource = [...targetSource][0];
                 }
+
                 collection.push({
                     element: target,
                     resource: targetSource.getAttribute(this._settings.srcAttr) || targetSource.getAttribute(this._settings.srcsetAttr)
                 });
+
             });
 
             if (true === this._settings.backgrounds) {
+
                 let targetsBg = nodelistToArray(element.querySelectorAll('*'));
                 targetsBg.push(element);
                 targetsBg = targetsBg.filter(target => !target.matches(targetsExtended));
@@ -852,44 +893,42 @@
 
                     const url = getComputedStyle(target).backgroundImage.match(/\((.*?)\)/);
 
-                    if (null === url || url.length < 2) {
-                        return true;
+                    if (null !== url && url.length >= 2) {
+                        collection.push({
+                            element: target,
+                            resource: url[1].replace(/('|")/g, '')
+                        });
                     }
-
-                    collection.push({
-                        element: target,
-                        resource: url[1].replace(/('|")/g, '')
-                    });
 
                 });
+
             }
 
-            if (this._settings.attributes.length) {
-                for (const attr in this._settings.attributes) {
-                    if (this._settings.attributes.hasOwnProperty(attr)) {
+            this._settings.attributes.forEach(attr => {
 
-                        nodelistToArray(element.querySelectorAll('[' + attr + ']:not(' + targetsExtended + ')')).forEach((target) => {
-                            collection.push({
-                                element: target,
-                                resource: target.getAttribute(attr)
-                            });
-                        });
+                nodelistToArray(element.querySelectorAll('[' + attr + ']:not(' + targetsExtended + ')')).forEach((target) => {
+                    collection.push({
+                        element: target,
+                        resource: target.getAttribute(attr)
+                    });
+                });
 
-                        if (element.matches('[' + attr + ']') && !element.matches(targetsExtended)) {
-                            collection.push({
-                                element: element,
-                                resource: element.getAttribute(attr)
-                            });
-                        }
-
-                    }
+                if (element.matches('[' + attr + ']') && !element.matches(targetsExtended)) {
+                    collection.push({
+                        element: element,
+                        resource: element.getAttribute(attr)
+                    });
                 }
-            }
+
+            });
 
             this.collection = collection;
 
         }
 
+        /**
+         * @returns {undefined}
+         */
         load() {
 
             // resets pending elements (sequential opt helper array) every time we loop
@@ -963,7 +1002,7 @@
                 if (!sequentialMode || (sequentialMode && !this._busy)) {
                     this._busy = thisLoadInstance.load();
 
-                } else if (sequentialMode && this._busy && (!this._settings.visible || !thisLoadInstance._exists || (this._settings.visible && thisLoadInstance._exists && isVisible(thisLoadInstance._element)))) {
+                } else if (sequentialMode && this._busy && (!this._settings.visible || !thisLoadInstance._exists || (this._settings.visible && thisLoadInstance._exists && isVisible(thisLoadInstance._originalElement)))) {
                     this._collectionPending.push({ id: thisLoadId, instance: thisLoadInstance });
 
                 }
@@ -973,55 +1012,68 @@
 
         }
 
+        /**
+         * @param {Function} callback
+         * @returns {undefined}
+         */
         done(callback) {
 
             if (typeof callback !== 'function') {
                 return;
             }
 
-            const _func = function (resources) {
+            const _done = function (resources) {
                 callback.call(this, resources);
             };
 
             if (this._collection.length) {
-                this._done = _func;
+                this._done = _done;
             } else {
-                _func();
+                _done();
             }
 
         };
 
+        /**
+         * @param {Function} callback
+         * @returns {undefined}
+         */
         progress(callback) {
 
-            if (typeof callback !== 'function')
+            if (typeof callback !== 'function'){
                 return;
-
-            const _func = function (resource) {
-                callback.call(this, resource);
-            };
+            }
 
             if (this._collection.length) {
-                this._progress = _func;
+                this._progress = function (resource) {
+                    callback.call(this, resource);
+                };
             }
 
         };
 
+        /**
+         * @param {Function} callback
+         * @returns {undefined}
+         */
         success(callback) {
 
             if (typeof callback !== 'function') {
                 return;
             }
 
-            const _func = function (resource) {
-                callback.call(this, resource);
-            };
-
             if (this._collection.length) {
-                this._success = _func;
+                this._success = function (resource) {
+                    callback.call(this, resource);
+                };
             }
 
         };
 
+        /**
+         * @param {Function} callback
+         * @returns {undefined}
+         */
         error(callback) {
 
             if (typeof callback !== 'function') {
@@ -1038,11 +1090,14 @@
 
         };
 
+        /**
+         * @returns {undefined}
+         */
         abort() {
 
-            for (const key in this._collectionInstances) {
-                this._collectionInstances[key].instance.abort();
-            }
+            this._collectionInstances.forEach(thisInstance => {
+                thisInstance.instance.abort();
+            });
 
             if (this._collection.length) {
                 this._abort = true;
@@ -1177,7 +1232,7 @@
                 callback.apply(this, [thisLoadInstance, resources]);
 
                 if (settings.visible) {
-                    /*if ('IntersectionObserver' in window) {
+                    /*if (IntersectionObserverSupported) {
                         thisLoadInstance.collection.forEach(item => item.element.intersectionObserver.unobserve(item.element));
 
                     } else {*/
@@ -1199,7 +1254,7 @@
             thisLoadInstance.load();
 
             if (settings.visible) {
-               /* if ('IntersectionObserver' in window) {
+               /* if (IntersectionObserverSupported) {
 
                     thisLoadInstance.collection.forEach(item => {
 
