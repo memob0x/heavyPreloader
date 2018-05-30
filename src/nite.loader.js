@@ -809,6 +809,85 @@
          */
         set collection(collection) {
 
+            if( isHTMLElement(collection) || collection === document ){ // TODO: check collection
+                        
+                const
+                    targets = 'img, video, audio',
+                    targetsExtended = targets + ', picture, source',
+                    targetsFilter = '[' + this._settings.srcAttr + '], [' + this._settings.srcsetAttr + ']';
+
+                let
+                    element = collection,
+                    collection = [],
+                    targetsTags = nodelistToArray(element.querySelectorAll(targets));
+
+                if (element.matches(targetsExtended)) {
+                    targetsTags.push(element);
+                }
+
+                targetsTags = targetsTags.filter((target) => {
+                    let children = nodelistToArray(target.children);
+                    children = children.filter(x => x.matches(targetsExtended));
+                    children = children.filter(x => x.matches(targetsFilter));
+                    return target.matches(targetsFilter) || children.length;
+                });
+                targetsTags.forEach((target) => {
+
+                    let targetSource = target;
+
+                    if (!targetSource.matches(targetsFilter)) {
+                        targetSource = targetSource.querySelectorAll(targetsFilter);
+                        targetSource = [...targetSource][0];
+                    }
+
+                    collection.push({
+                        element: target,
+                        resource: targetSource.getAttribute(this._settings.srcAttr) || targetSource.getAttribute(this._settings.srcsetAttr)
+                    });
+
+                });
+
+                if (true === this._settings.backgrounds) {
+
+                    let targetsBg = nodelistToArray(element.querySelectorAll('*'));
+                    targetsBg.push(element);
+                    targetsBg = targetsBg.filter(target => !target.matches(targetsExtended));
+                    targetsBg = targetsBg.filter(target => getComputedStyle(target).backgroundImage !== 'none');
+                    targetsBg.forEach((target) => {
+
+                        const url = getComputedStyle(target).backgroundImage.match(/\((.*?)\)/);
+
+                        if (null !== url && url.length >= 2) {
+                            collection.push({
+                                element: target,
+                                resource: url[1].replace(/('|")/g, '')
+                            });
+                        }
+
+                    });
+
+                }
+
+                this._settings.attributes.forEach(attr => {
+
+                    nodelistToArray(element.querySelectorAll('[' + attr + ']:not(' + targetsExtended + ')')).forEach((target) => {
+                        collection.push({
+                            element: target,
+                            resource: target.getAttribute(attr)
+                        });
+                    });
+
+                    if (element.matches('[' + attr + ']') && !element.matches(targetsExtended)) {
+                        collection.push({
+                            element: element,
+                            resource: element.getAttribute(attr)
+                        });
+                    }
+
+                });
+
+            }
+
             if (!Array.isArray(collection)) {
                 collection = [];
             }
@@ -840,90 +919,6 @@
          */
         get collection() {
             return this._collection;
-        }
-
-        /**
-         * @param {HTMLElement} element
-         * @returns {undefined}
-         */
-        collect(element) {
-
-            const
-                targets = 'img, video, audio',
-                targetsExtended = targets + ', picture, source',
-                targetsFilter = '[' + this._settings.srcAttr + '], [' + this._settings.srcsetAttr + ']';
-
-            let
-                collection = [],
-                targetsTags = nodelistToArray(element.querySelectorAll(targets));
-
-            if (element.matches(targetsExtended)) {
-                targetsTags.push(element);
-            }
-
-            targetsTags = targetsTags.filter((target) => {
-                let children = nodelistToArray(target.children);
-                children = children.filter(x => x.matches(targetsExtended));
-                children = children.filter(x => x.matches(targetsFilter));
-                return target.matches(targetsFilter) || children.length;
-            });
-            targetsTags.forEach((target) => {
-
-                let targetSource = target;
-
-                if (!targetSource.matches(targetsFilter)) {
-                    targetSource = targetSource.querySelectorAll(targetsFilter);
-                    targetSource = [...targetSource][0];
-                }
-
-                collection.push({
-                    element: target,
-                    resource: targetSource.getAttribute(this._settings.srcAttr) || targetSource.getAttribute(this._settings.srcsetAttr)
-                });
-
-            });
-
-            if (true === this._settings.backgrounds) {
-
-                let targetsBg = nodelistToArray(element.querySelectorAll('*'));
-                targetsBg.push(element);
-                targetsBg = targetsBg.filter(target => !target.matches(targetsExtended));
-                targetsBg = targetsBg.filter(target => getComputedStyle(target).backgroundImage !== 'none');
-                targetsBg.forEach((target) => {
-
-                    const url = getComputedStyle(target).backgroundImage.match(/\((.*?)\)/);
-
-                    if (null !== url && url.length >= 2) {
-                        collection.push({
-                            element: target,
-                            resource: url[1].replace(/('|")/g, '')
-                        });
-                    }
-
-                });
-
-            }
-
-            this._settings.attributes.forEach(attr => {
-
-                nodelistToArray(element.querySelectorAll('[' + attr + ']:not(' + targetsExtended + ')')).forEach((target) => {
-                    collection.push({
-                        element: target,
-                        resource: target.getAttribute(attr)
-                    });
-                });
-
-                if (element.matches('[' + attr + ']') && !element.matches(targetsExtended)) {
-                    collection.push({
-                        element: element,
-                        resource: element.getAttribute(attr)
-                    });
-                }
-
-            });
-
-            this.collection = collection;
-
         }
 
         /**
@@ -1199,7 +1194,7 @@
                 uniqueMethodPluginName = generateInstanceID() + i,
                 thisLoadInstance = new Loader(settings);
 
-            thisLoadInstance.collect(this);
+            thisLoadInstance.collection = this;
 
             methodCollection.push({
                 id: uniqueMethodPluginName,
