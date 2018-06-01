@@ -5,6 +5,7 @@
     ]
   ],
   "plugins": [
+    "babel-plugin-transform-private-properties",
     "babel-preset-es2017",
     "transform-regenerator",
     "transform-object-rest-spread",

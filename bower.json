@@ -1,40 +1,15 @@
 {
-  "name": "nite-loader",
-  "description": "a tool that offers an elegant way to detect (or trigger) the loading process of images",
-  "main": [
-    "jquery.nite.loader.js",
-    "jquery.nite.loader.min.js"
-  ],
-  "dependencies": {
-    "jquery": ">=1.9.1"
-  },
-  "devDependencies": {},
-  "moduleType": [
-    "es6"
-  ],
-  "keywords": [
-    "loader",
-    "preloader",
-    "lazy",
-    "lazyloader",
-    "asynchronous",
-    "tool",
-    "simple",
-    "powerful"
-  ],
-  "authors": [
-    "memob0x <dfioroni91@gmail.com>"
-  ],
-  "license": "MIT",
-  "ignore": [
-    "**/.*",
-    "node_modules",
-    "bower_components",
-    "test",
-    "tests",
-    "examples",
-    "alpha",
-    "beta"
-  ],
-  "private": false
+	"name": "nite-loader",
+	"description": "a tool that offers an elegant way to detect (or trigger) the loading process of images",
+	"main": ["jquery.nite.loader.js", "jquery.nite.loader.min.js"],
+	"dependencies": {
+		"jquery": ">=1.9.1"
+	},
+	"devDependencies": {},
+	"moduleType": ["es6"],
+	"keywords": ["loader", "preloader", "lazy", "lazyloader", "asynchronous", "tool", "simple", "powerful"],
+	"authors": ["memob0x <dfioroni91@gmail.com>"],
+	"license": "MIT",
+	"ignore": ["**/.*", "node_modules", "bower_components", "test", "tests", "examples", "alpha", "beta"],
+	"private": false
 }

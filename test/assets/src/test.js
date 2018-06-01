@@ -1,168 +1,140 @@
-"use strict";
+'use strict';
 
-const
+const $ = jQuery,
+	$console = $('#console'),
+	console_log = function(string) {
+		if ($console.is(':empty')) $console.append('<ol />');
 
-    $ = jQuery,
+		const $list = $console.find('ol').append('<li>' + string + '</li>');
 
-    $console = $('#console'),
-
-    console_log = function (string) {
-
-        if ($console.is(':empty'))
-            $console.append('<ol />');
-
-        const $list = $console.find('ol').append('<li>' + string + '</li>');
-
-        $console.scrollTop($list.height());
-
-    };
+		$console.scrollTop($list.height());
+	};
 
 $('.playground').niteLoad({
+	srcAttr: 'data-nite-src',
+	srcsetAttr: 'data-nite-srcset',
 
-    srcAttr: 'data-nite-src',
-    srcsetAttr: 'data-nite-srcset',
+	visible: true,
 
-    visible: true,
+	sequential: true,
 
-    sequential: true,
+	backgrounds: true,
+	extraAttrs: [],
 
-    backgrounds: true,
-    extraAttrs: [],
+	playthrough: 'full',
 
-    playthrough: 'full',
+	early: false,
+	earlyTimeout: 6000,
 
-    early: false,
-    earlyTimeout: 6000,
+	onComplete: function(instance, resources) {
+		$(this).addClass('complete');
+	},
 
-    onComplete: function (instance, resources) {
+	onProgress: function(instance, resource) {
+		$(this)
+			.find('[data-percentage]')
+			.attr('data-percentage', instance.percentage)
+			.closest('.playground__percentage')
+			.addClass('visible');
+	},
 
-        $(this).addClass('complete');
-
-    },
-
-    onProgress: function (instance, resource) {
-
-        $(this).find('[data-percentage]').attr('data-percentage', instance.percentage)
-            .closest('.playground__percentage').addClass('visible');
-
-    },
-
-    onLoad: function (instance, resource) {
-
-        $(this).addClass('has-loads');
-
-    },
-    onError: function (instance, resource) {
-
-        $(this).addClass('has-errors');
-
-    }
-
+	onLoad: function(instance, resource) {
+		$(this).addClass('has-loads');
+	},
+	onError: function(instance, resource) {
+		$(this).addClass('has-errors');
+	}
 });
 
-let instance, instanceSequentialMode = true;
+let instance,
+	instanceSequentialMode = true;
 
 $(document)
+	.on('niteLoad.nite niteError.nite', function(e, element) {
+		console_log('jQuery.fn.niteLoad(): ' + element);
+	})
 
-    .on('niteLoad.nite niteError.nite', function (e, element) {
+	.on('niteError.nite', 'figure img', function(e) {
+		$(this)
+			.closest('figure')
+			.addClass('error');
+	})
 
-        console_log('jQuery.fn.niteLoad(): ' + element);
+	.on('niteLoad.nite niteError.nite', 'figure img, figure video', function(e) {
+		$(this)
+			.closest('figure')
+			.addClass('loaded' + (e.type === 'niteError' ? '-error' : ''));
+	})
 
-    })
+	.on('click', '.nite-program-mode--sequential', function() {
+		if (instance !== null) {
+			return;
+		}
+		$('.nite-program-mode--parallel').show();
+		$(this).hide();
+		instanceSequentialMode = true;
+		console_log('$.NiteLoader(): Sequential Mode');
+	})
+	.on('click', '.nite-program-mode--parallel', function() {
+		if (instance !== null) {
+			return;
+		}
+		$('.nite-program-mode--sequential').show();
+		$(this).hide();
+		instanceSequentialMode = false;
+		console_log('$.NiteLoader(): Parallel Mode');
+	})
 
-    .on('niteError.nite', 'figure img', function (e) {
+	.on('click', '[class*="nite-program-load"]', function() {
+		if (instance) {
+			console_log('$.NiteLoader(): Aborted...');
 
-        $(this).closest('figure').addClass('error');
+			instance.abort();
+			instance = null;
 
-    })
+			$('.nite-program-load--kill').hide();
+			$('.nite-program-load--run').show();
+		} else {
+			$('.nite-program-load--run').hide();
+			$('.nite-program-load--kill').show();
 
-    .on('niteLoad.nite niteError.nite', 'figure img, figure video', function (e) {
+			let randomResources = [];
 
-        $(this).closest('figure').addClass('loaded' + (e.type === 'niteError' ? '-error' : ''));
+			for (let i = 0; i < 10; i++) {
+				let letters = '0123456789ABCDEF',
+					colors = [];
 
-    })
+				for (let ii = 0; ii < 2; ii++) {
+					let color = '';
+					for (let c = 0; c < 6; c++) {
+						color += letters[Math.floor(Math.random() * 16)];
+					}
+					colors[ii] = color;
+				}
 
-    .on('click', '.nite-program-mode--sequential', function () {
-        if( instance !== null ){
-            return;
-        }
-        $('.nite-program-mode--parallel').show();
-        $(this).hide();
-        instanceSequentialMode = true;
-        console_log('$.NiteLoader(): Sequential Mode');
-    })
-    .on('click', '.nite-program-mode--parallel', function () {
-        if( instance !== null ){
-            return;
-        }
-        $('.nite-program-mode--sequential').show();
-        $(this).hide();
-        instanceSequentialMode = false;
-        console_log('$.NiteLoader(): Parallel Mode');
-    })
+				randomResources.push('//placehold.it/720x720/' + colors[0] + '/' + colors[1] + '.jpg');
+			}
 
-    .on('click', '[class*="nite-program-load"]', function () {
+			instance = new NiteLoader({
+				sequential: instanceSequentialMode
+			});
 
-        if (instance) {
+			instance.collection = randomResources;
 
-            console_log('$.NiteLoader(): Aborted...');
+			console_log('$.NiteLoader(): 0% - Starting...');
 
-            instance.abort();
-            instance = null;
+			instance.progress(resource => {
+				console_log('$.NiteLoader(): ' + instance.percentage + '%');
+			});
 
-            $('.nite-program-load--kill').hide();
-            $('.nite-program-load--run').show();
+			instance.done(resources => {
+				console_log('$.NiteLoader(): 100% - Done!!');
+				$('.nite-program-load--run').show();
+				$('.nite-program-load--kill').hide();
 
-        } else {
+				instance = null;
+			});
 
-            $('.nite-program-load--run').hide();
-            $('.nite-program-load--kill').show();
-
-            let random_stuff = [];
-
-            for (let i = 0; i < 10; i++) {
-
-                let letters = '0123456789ABCDEF',
-                    colors = [];
-
-                for (let ii = 0; ii < 2; ii++) {
-                    let color = '';
-                    for (let c = 0; c < 6; c++){
-                        color += letters[Math.floor(Math.random() * 16)];
-                    }
-                    colors[ii] = color;
-                }
-
-                random_stuff.push('//placehold.it/720x720/' + colors[0] + '/' + colors[1] + '.jpg');
-
-            }
-
-            instance = new $.NiteLoader({
-                sequential: instanceSequentialMode
-            });
-
-            instance.collection = random_stuff;
-
-            console_log('$.NiteLoader(): 0% - Starting...');
-
-            instance.progress((resource) => {
-
-                console_log('$.NiteLoader(): '+instance.percentage + '%');
-
-            });
-
-            instance.done((resources) => {
-
-                console_log('$.NiteLoader(): 100% - Done!!');
-                $('.nite-program-load--run').show();
-                $('.nite-program-load--kill').hide();
-
-                instance = null;
-
-            });
-
-            instance.load();
-
-        }
-
-    });
+			instance.load();
+		}
+	});

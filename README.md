@@ -10,15 +10,23 @@ let niteLoadInstance = new NiteLoader({
 ```
 
 ```
-niteLoadInstance.collection = ['', '', ''];
+niteLoadInstance.collection = ['image-1.jpg', 'image-2.webp', 'video.webm', 'audio.mp3'];
 ```
 
 ```
-niteLoadInstance.collection = document;
+niteLoadInstance.collection = document.body;
 ```
 
 ```
-niteLoadInstance.progress((resource) => { });
+niteLoadInstance.collection = document.querySelector('#test');
+```
+
+```
+NiteLoader.findResources(document.querySelector('#has-backgrounds', { backgrounds:true }));
+```
+
+```
+NiteLoader.findResources({ backgrounds:true }));
 ```
 
 ```

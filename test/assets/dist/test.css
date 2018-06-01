@@ -16,14 +16,41 @@
 /* - - - - -
  * base
  * - - - - - */
-html, body, p, ol, ul, li, dl, dt, dd, blockquote, figure, fieldset, legend, textarea, pre, iframe, hr, h1, h2, h3, h4, h5, h6 {
+html,
+body,
+p,
+ol,
+ul,
+li,
+dl,
+dt,
+dd,
+blockquote,
+figure,
+fieldset,
+legend,
+textarea,
+pre,
+iframe,
+hr,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   margin: 0;
   padding: 0;
   font-family: "Open Sans", sans-serif;
   font-size: 13px;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-size: 100%;
   font-weight: normal;
 }
@@ -32,7 +59,10 @@ ul {
   list-style: none;
 }
 
-button, input, select, textarea {
+button,
+input,
+select,
+textarea {
   margin: 0;
 }
 
@@ -48,7 +78,12 @@ html {
   box-sizing: inherit;
 }
 
-img, embed, iframe, object, audio, video {
+img,
+embed,
+iframe,
+object,
+audio,
+video {
   height: auto;
   max-width: 100%;
 }
@@ -62,7 +97,8 @@ table {
   border-spacing: 0;
 }
 
-td, th {
+td,
+th {
   padding: 0;
   text-align: left;
 }
@@ -72,7 +108,7 @@ pre, #console {
   white-space: pre-wrap;
   background: #000;
   color: #fff;
-  font-family: Consolas, "Andale Mono WT", "Andale Mono", "Lucida Console", "Lucida Sans Typewriter", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Liberation Mono", "Nimbus Mono L", Monaco, "Courier New", Courier, monospace;
+  font-family: Consolas, 'Andale Mono WT', 'Andale Mono', 'Lucida Console', 'Lucida Sans Typewriter', 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', 'Liberation Mono', 'Nimbus Mono L', Monaco, 'Courier New', Courier, monospace;
 }
 
 /* - - - - -
@@ -109,7 +145,9 @@ body {
   z-index: 4;
 }
 
-#console ul, #console ol, #console li {
+#console ul,
+#console ol,
+#console li {
   list-style: none;
 }
 
@@ -145,7 +183,7 @@ body {
   box-shadow: 0 0 0 1px #f9f9f9 inset;
   color: #444;
   opacity: 0;
-  transition: opacity .4s ease;
+  transition: opacity 0.4s ease;
 }
 
 .playground__percentage.visible {
@@ -216,14 +254,16 @@ body {
   border: 1px solid #fff;
   padding: 4px;
   opacity: 0;
-  transition: opacity .4s ease;
+  transition: opacity 0.4s ease;
 }
 
-.playground__item img, .playground__item video {
+.playground__item img,
+.playground__item video {
   display: block;
 }
 
-.playground__col--full .playground__item img, .playground__col--full .playground__item video {
+.playground__col--full .playground__item img, .playground__col--full
+.playground__item video {
   width: 100%;
 }
 
