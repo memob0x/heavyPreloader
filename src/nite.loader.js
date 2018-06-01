@@ -805,21 +805,22 @@
         }
 
         /**
-         * @param {Array} collection
-         */
+         * @param {Array|HTMLElement} collection
+         */ // TODO: Nodelist / Array of HTMLElement check maybe?
         set collection(collection) {
+
+            let collectedResources = [];
 
             if( isHTMLElement(collection) || collection === document ){ // TODO: check collection
                         
+                let element = collection;
+
                 const
                     targets = 'img, video, audio',
                     targetsExtended = targets + ', picture, source',
                     targetsFilter = '[' + this._settings.srcAttr + '], [' + this._settings.srcsetAttr + ']';
 
-                let
-                    element = collection,
-                    collection = [],
-                    targetsTags = nodelistToArray(element.querySelectorAll(targets));
+                let targetsTags = nodelistToArray(element.querySelectorAll(targets));
 
                 if (element.matches(targetsExtended)) {
                     targetsTags.push(element);
@@ -840,7 +841,7 @@
                         targetSource = [...targetSource][0];
                     }
 
-                    collection.push({
+                    collectedResources.push({
                         element: target,
                         resource: targetSource.getAttribute(this._settings.srcAttr) || targetSource.getAttribute(this._settings.srcsetAttr)
                     });
@@ -858,7 +859,7 @@
                         const url = getComputedStyle(target).backgroundImage.match(/\((.*?)\)/);
 
                         if (null !== url && url.length >= 2) {
-                            collection.push({
+                            collectedResources.push({
                                 element: target,
                                 resource: url[1].replace(/('|")/g, '')
                             });
@@ -871,14 +872,14 @@
                 this._settings.attributes.forEach(attr => {
 
                     nodelistToArray(element.querySelectorAll('[' + attr + ']:not(' + targetsExtended + ')')).forEach((target) => {
-                        collection.push({
+                        collectedResources.push({
                             element: target,
                             resource: target.getAttribute(attr)
                         });
                     });
 
                     if (element.matches('[' + attr + ']') && !element.matches(targetsExtended)) {
-                        collection.push({
+                        collectedResources.push({
                             element: element,
                             resource: element.getAttribute(attr)
                         });
@@ -888,11 +889,7 @@
 
             }
 
-            if (!Array.isArray(collection)) {
-                collection = [];
-            }
-
-            collection.forEach(item => {
+            collectedResources.forEach(item => {
 
                 let element = {
                     resource: '',
