@@ -1,131 +1,108 @@
 /*! Nite Loader | Daniele Fioroni | dfioroni91@gmail.com */
-(function(window, document, $, undefined) {
+(() => {
 	'use strict';
 
-	const /**
-		 * @returns {string}
-		 */
-		generateInstanceID = () => {
-			return Math.floor(Math.random() * (9999 - 1000)) + 1000;
-		},
-		pluginPrefix = 'nite',
-		pluginMethod = pluginPrefix + 'Load',
-		pluginName = pluginMethod + 'er',
-		pluginInstance = generateInstanceID(),
-		eventNamespaceParserSeparator = '__namespace__',
-		CustomEvent =
-			window.CustomEvent ||
-			(() => {
-				const _polyfill = (event, params) => {
-					params = params || {
-						bubbles: false,
-						cancelable: false,
-						detail: undefined
-					};
-					const evt = document.createEvent('CustomEvent');
-					evt.initCustomEvent(event, params.bubbles, params.cancelable, params.detail);
-					return evt;
-				};
-				_polyfill.prototype = window.Event.prototype;
-				return _polyfill;
-			})(),
-		supportedExtensions = {
-			image: 'jp[e]?g|jpe|jif|jfif|jfi|gif|png|tif[f]?|bmp|dib|webp|ico|cur|svg',
-			audio: 'mp3|ogg|oga|spx|ogg|wav',
-			video: 'mp4|ogv|webm'
-		},
-		supportedTags = {
-			image: 'img|picture|source',
-			audio: 'audio|source',
-			video: 'video|source'
-		},
-		IntersectionObserverSupported = 'IntersectionObserver' in window,
-		pictureElementSupported = 'HTMLPictureElement' in window,
-		/**
-		 * @param {string} heystack
-		 * @param {string} needle
-		 * @returns {boolean}
-		 */
-		stringContains = (heystack, needle) => {
-			return String.prototype.includes ? heystack.includes(needle) : heystack.indexOf(needle, 0) !== -1;
-		},
-		/**
-		 * @param {string} heystack
-		 * @param {string} needle
-		 * @returns {boolean}
-		 */
-		stringStartsWith = (heystack, needle) => {
-			return String.prototype.startsWith
-				? heystack.startsWith(needle)
-				: heystack.substr(0, needle.length) === needle;
-		},
-		/**
-		 * @param {Array} heystack
-		 * @param {Function} filter
-		 * @returns {number}
-		 */
-		arrayFindIndex = (heystack, filter) => {
-			return Array.prototype.findIndex
-				? heystack.findIndex(filter)
-				: (() => {
-						let length = heystack.length,
-							index = -1;
-						while (++index < length) {
-							if (filter(heystack[index], index, heystack)) {
-								return index;
-							}
+	/**
+	 * @returns {string}
+	 */
+	const generateInstanceID = () => {
+		return Math.floor(Math.random() * (9999 - 1000)) + 1000;
+	};
+
+	const pluginPrefix = 'nite';
+	const pluginMethod = pluginPrefix + 'Load';
+	const pluginName = pluginMethod + 'er';
+	const pluginInstance = generateInstanceID();
+	const eventNamespaceParserSeparator = '__namespace__';
+
+	const CustomEvent =
+		window.CustomEvent ||
+		(() => {
+			const _polyfill = (event, params) => {
+				params = params || { bubbles: false, cancelable: false, detail: undefined };
+				const evt = document.createEvent('CustomEvent');
+				evt.initCustomEvent(event, params.bubbles, params.cancelable, params.detail);
+				return evt;
+			};
+			_polyfill.prototype = window.Event.prototype;
+			return _polyfill;
+		})();
+
+	const supportedExtensions = {
+		image: 'jp[e]?g|jpe|jif|jfif|jfi|gif|png|tif[f]?|bmp|dib|webp|ico|cur|svg',
+		audio: 'mp3|ogg|oga|spx|ogg|wav',
+		video: 'mp4|ogv|webm'
+	};
+	const supportedTags = {
+		image: 'img|picture|source',
+		audio: 'audio|source',
+		video: 'video|source'
+	};
+
+	const IntersectionObserverSupported = 'IntersectionObserver' in window;
+	const pictureElementSupported = 'HTMLPictureElement' in window;
+
+	/**
+	 * @param {string} heystack
+	 * @param {string} needle
+	 * @returns {boolean}
+	 */
+	const stringContains = (heystack, needle) => {
+		return String.prototype.includes ? heystack.includes(needle) : heystack.indexOf(needle, 0) !== -1;
+	};
+
+	/**
+	 * @param {string} heystack
+	 * @param {string} needle
+	 * @returns {boolean}
+	 */
+	const stringStartsWith = (heystack, needle) => {
+		return String.prototype.startsWith
+			? heystack.startsWith(needle)
+			: heystack.substr(0, needle.length) === needle;
+	};
+
+	/**
+	 * @param {Array} heystack
+	 * @param {Function} filter
+	 * @returns {number}
+	 */
+	const arrayFindIndex = (heystack, filter) => {
+		return Array.prototype.findIndex
+			? heystack.findIndex(filter)
+			: (() => {
+					let length = heystack.length,
+						index = -1;
+					while (++index < length) {
+						if (filter(heystack[index], index, heystack)) {
+							return index;
 						}
-						return -1;
-				  })();
-		},
-		/**
-		 * @param {HTMLElement} element
-		 * @param {string} events
-		 * @returns {undefined}
-		 */
-		detachEventListener = (element, events) => {
-			if (!element || typeof events !== 'string') {
-				return;
-			}
-
-			if (stringStartsWith(events, '.')) {
-				Object.keys(privateEventsStorage).forEach(key => {
-					const eventNameWithNamespace = key.replace(eventNamespaceParserSeparator, '.');
-					if (
-						stringContains(eventNameWithNamespace, events) &&
-						privateEventsStorage[key].element === element
-					) {
-						detachEventListener(element, eventNameWithNamespace);
 					}
-				});
-			} else {
-				events = events.split('.');
+					return -1;
+			  })();
+	};
 
-				const type = events[0],
-					namespace = events[1];
+	/**
+	 * @param {HTMLElement} element
+	 * @param {string} events
+	 * @returns {undefined}
+	 */
+	const detachEventListener = (element, events) => {
+		if (!element || typeof events !== 'string') {
+			return;
+		}
 
-				if (namespace) {
-					events = events.join(eventNamespaceParserSeparator);
-				}
-
-				if (events in privateEventsStorage) {
-					element.removeEventListener(type, privateEventsStorage[events].handler);
-					delete privateEventsStorage[events];
+		if (stringStartsWith(events, '.')) {
+			for (let key in privateEventsStorage) {
+				const eventNameWithNamespace = key.replace(eventNamespaceParserSeparator, '.');
+				if (
+					stringContains(eventNameWithNamespace, events) &&
+					privateEventsStorage[key].element === element
+				) {
+					detachEventListener(element, eventNameWithNamespace);
 				}
 			}
-		},
-		/**
-		 * @param {HTMLElement} element
-		 * @param {string} events
-		 * @param {Function} handler
-		 * @param {boolean} once
-		 * @returns {undefined}
-		 */
-		attachEventListener = (element, events, handler, once) => {
-			if (!element || typeof events !== 'string' || typeof handler !== 'function') {
-				return;
-			}
-
+		} else {
 			events = events.split('.');
 
 			const type = events[0],
@@ -135,232 +112,258 @@
 				events = events.join(eventNamespaceParserSeparator);
 			}
 
-			privateEventsStorage[events] = {
-				element: element,
-				count: 0,
-				once: false
+			if (events in privateEventsStorage) {
+				element.removeEventListener(type, privateEventsStorage[events].handler);
+				delete privateEventsStorage[events];
+			}
+		}
+	};
+
+	/**
+	 * @param {HTMLElement} element
+	 * @param {string} events
+	 * @param {Function} handler
+	 * @param {boolean} once
+	 * @returns {undefined}
+	 */
+	const attachEventListener = (element, events, handler, once) => {
+		if (!element || typeof events !== 'string' || typeof handler !== 'function') {
+			return;
+		}
+
+		events = events.split('.');
+
+		const type = events[0];
+		const namespace = events[1];
+
+		if (namespace) {
+			events = events.join(eventNamespaceParserSeparator);
+		}
+
+		privateEventsStorage[events] = { element: element, count: 0, once: false };
+
+		if (true === once) {
+			let _handler = handler;
+			handler = function(event) {
+				if (events in privateEventsStorage) {
+					privateEventsStorage[events].count++;
+					if (privateEventsStorage[events].once && privateEventsStorage[events].count > 1) {
+						return;
+					}
+					_handler.call(this, event);
+				}
+				detachEventListener(element, events);
 			};
+		} else {
+			once = false;
+		}
 
-			if (true === once) {
-				let _handler = handler;
-				handler = function(event) {
-					if (events in privateEventsStorage) {
-						privateEventsStorage[events].count++;
-						if (privateEventsStorage[events].once && privateEventsStorage[events].count > 1) {
-							return;
-						}
-						_handler.call(this, event);
-					}
-					detachEventListener(element, events);
-				};
-			} else {
-				once = false;
-			}
-
-			privateEventsStorage[events] = {
-				...privateEventsStorage[events],
-				...{
-					handler: handler,
-					once: once
-				}
-			};
-
-			element.addEventListener(type, privateEventsStorage[events].handler, {
-				once: once
-			});
-		},
-		/**
-		 * @param {string} string
-		 * @returns {string}
-		 */
-		hyphensToCamelCase = string => {
-			return string.replace(/-([a-z])/g, g => g[1].toUpperCase());
-		},
-		/**
-		 * @param {string} string
-		 * @returns {string}
-		 */
-		capitalize = string => {
-			return string.charAt(0).toUpperCase() + string.slice(1);
-		},
-		/**
-		 * @param {NodeList} nodelist
-		 * @returns {Array}
-		 */
-		nodelistToArray = nodelist => {
-			return [...nodelist];
-		},
-		/**
-		 * @param {*} needle
-		 * @param {Array} heystack
-		 * @returns {boolean}
-		 */
-		isInArray = (needle, heystack) => {
-			return heystack.indexOf(needle) > -1;
-		},
-		/**
-		 * @param {HTMLElement} element
-		 * @returns {boolean}
-		 */
-		isVisible = element => {
-			if (IntersectionObserverSupported && 'intersectionRatio' in element) {
-				return element.intersectionRatio > 0;
-			}
-
-			if (window.getComputedStyle(element, 'display') === 'none') {
-				return false;
-			}
-
-			const bodyEl = document.getElementsByTagName('body')[0],
-				winWidth = window.innerWidth || documnt.documentElement.clientWidth || bodyEl.clientWidth,
-				winHeight = window.innerHeight || documnt.documentElement.clientHeight || bodyEl.clientHeight,
-				rect = element.getBoundingClientRect();
-
-			return !(rect.right < 0 || rect.bottom < 0 || rect.left > winWidth || rect.top > winHeight);
-		},
-		/**
-		 * @param {HTMLElement} element
-		 * @returns {boolean}
-		 */
-		isHTMLElement = element => {
-			if (typeof element !== 'object') {
-				return false;
-			}
-			try {
-				return element instanceof HTMLElement;
-			} catch (e) {
-				return (
-					element.nodeType === 1 &&
-					typeof element.style === 'object' &&
-					typeof element.ownerDocument === 'object'
-				);
-			}
-		},
-		/**
-		 * @param {(string|HTMLElement)} source
-		 * @returns {boolean}
-		 */
-		isLoaded = source => {
-			return (
-				(typeof source === 'string' && isInArray(source, privateCache)) ||
-				(isHTMLElement(source) &&
-					('currentSrc' in source && source.currentSrc.length > 0) &&
-					(('complete' in source && source.complete) ||
-						('readyState' in source && source.readyState >= 2)))
-			);
-		},
-		/**
-		 * @param {(string|HTMLElement)} source
-		 * @returns {boolean}
-		 */
-		isBroken = source => {
-			return (
-				isLoaded(source) &&
-				((isHTMLElement(source) &&
-					(('naturalWidth' in source && Math.floor(source.naturalWidth) === 0) ||
-						('videoWidth' in source && source.videoWidth === 0))) ||
-					typeof source === 'string')
-			);
-		},
-		/**
-		 * @param {Object} resource
-		 * @returns {Object}
-		 */
-		decodeResource = resource => {
-			let output = {
-					format: null,
-					extension: null,
-					tag: null,
-					consistent: false // true if tag match the resource type
-				},
-				breakLoop = false;
-
-			resource.resource = resource.resource.split('?')[0];
-			resource.resource = resource.resource.split('#')[0];
-			Object.keys(supportedExtensions).forEach(formatCandidate => {
-				if (breakLoop) {
-					return;
-				}
-
-				const base64Heading = ';base64,';
-
-				if (
-					new RegExp(
-						'(.(' + supportedExtensions[formatCandidate] + ')$)|' + base64Heading,
-						'g'
-					).test(resource.resource)
-				) {
-					if (new RegExp(base64Heading, 'g').test(resource.resource)) {
-						let matches64 = resource.resource.match(
-							new RegExp(
-								'^data:' +
-									formatCandidate +
-									'/(' +
-									supportedExtensions[formatCandidate] +
-									')',
-								'g'
-							)
-						);
-
-						if (null === matches64) {
-							return;
-						}
-
-						matches64 = matches64[0];
-
-						output.format = formatCandidate;
-						output.extension = matches64.replace('data:' + formatCandidate + '/', '');
-						output.tag = supportedTags[formatCandidate];
-
-						breakLoop = true;
-					} else {
-						let matches = resource.resource.match(
-							new RegExp(supportedExtensions[formatCandidate], 'g')
-						);
-
-						if (matches) {
-							output.format = formatCandidate;
-							output.extension = matches[0];
-							output.tag = supportedTags[formatCandidate];
-
-							breakLoop = true;
-						}
-					}
-				}
-			});
-
-			if (isHTMLElement(resource.element)) {
-				let tagName = resource.element.tagName.toLowerCase(),
-					allTags = '';
-
-				Object.values(supportedTags).forEach(tags => {
-					allTags += '|' + tags;
-				});
-
-				allTags = allTags.split('|');
-
-				if (isInArray(tagName, allTags)) {
-					output.tag = tagName;
-					output.consistent = true;
-					if (output.format === null) {
-						Object.keys(supportedTags).forEach(format => {
-							if (stringContains(supportedTags[format], output.tag)) {
-								output.format = format;
-							}
-						});
-					}
-				}
-			}
-
-			if (stringContains(output.tag, '|')) {
-				output.tag = output.tag.split('|')[0];
-			}
-
-			return output;
+		privateEventsStorage[events] = {
+			...privateEventsStorage[events],
+			...{ handler: handler, once: once }
 		};
 
-	let privateEventsStorage = {},
-		privateCache = [];
+		element.addEventListener(type, privateEventsStorage[events].handler, { once: once });
+	};
+
+	/**
+	 * @param {string} string
+	 * @returns {string}
+	 */
+	const hyphensToCamelCase = string => {
+		return string.replace(/-([a-z])/g, g => g[1].toUpperCase());
+	};
+
+	/**
+	 * @param {string} string
+	 * @returns {string}
+	 */
+	const capitalize = string => {
+		return string.charAt(0).toUpperCase() + string.slice(1);
+	};
+
+	/**
+	 * @param {NodeList} nodelist
+	 * @returns {Array}
+	 */
+	const nodelistToArray = nodelist => {
+		return [...nodelist];
+	};
+
+	/**
+	 * @param {String|number} needle
+	 * @param {Array} heystack
+	 * @returns {boolean}
+	 */
+	const isInArray = (needle, heystack) => {
+		return heystack.indexOf(needle) > -1;
+	};
+
+	/**
+	 * @param {HTMLElement} element
+	 * @returns {boolean}
+	 */
+	const isVisible = element => {
+		if (IntersectionObserverSupported && 'intersectionRatio' in element) {
+			return element.intersectionRatio > 0;
+		}
+
+		if (window.getComputedStyle(element, 'display') === 'none') {
+			return false;
+		}
+
+		const bodyEl = document.getElementsByTagName('body')[0];
+		const winWidth = window.innerWidth || documnt.documentElement.clientWidth || bodyEl.clientWidth;
+		const winHeight = window.innerHeight || documnt.documentElement.clientHeight || bodyEl.clientHeight;
+		const rect = element.getBoundingClientRect();
+
+		return !(rect.right < 0 || rect.bottom < 0 || rect.left > winWidth || rect.top > winHeight);
+	};
+
+	/**
+	 * @param {HTMLElement} element
+	 * @returns {boolean}
+	 */
+	const isHTMLElement = element => {
+		if (typeof element !== 'object') {
+			return false;
+		}
+		try {
+			return element instanceof HTMLElement;
+		} catch (e) {
+			return (
+				element.nodeType === 1 &&
+				typeof element.style === 'object' &&
+				typeof element.ownerDocument === 'object'
+			);
+		}
+	};
+
+	/**
+	 * @param {(string|HTMLVideoElement|HTMLAudioElement|HTMLImageElement)} source
+	 * @returns {boolean}
+	 */
+	const isLoaded = source => {
+		return (
+			(typeof source === 'string' && isInArray(source, privateCache)) ||
+			(isHTMLElement(source) &&
+				('currentSrc' in source && source.currentSrc.length > 0) &&
+				(('complete' in source && source.complete) ||
+					('readyState' in source && source.readyState >= 2)))
+		);
+	};
+
+	/**
+	 * @param {(HTMLVideoElement|HTMLAudioElement)} source
+	 * @returns {boolean}
+	 */
+	const isFullyBuffered = media => {
+		return (
+			media.buffered.length &&
+			Math.round(media.buffered.end(0)) / Math.round(media.seekable.end(0)) === 1
+		);
+	};
+
+	/**
+	 * @param {(string|HTMLElement)} source
+	 * @returns {boolean}
+	 */
+	const isBroken = source => {
+		return (
+			isLoaded(source) &&
+			((isHTMLElement(source) &&
+				(('naturalWidth' in source && Math.floor(source.naturalWidth) === 0) ||
+					('videoWidth' in source && source.videoWidth === 0))) ||
+				typeof source === 'string')
+		);
+	};
+
+	/**
+	 * @param {Object} resource
+	 * @returns {Object}
+	 */
+	const decodeResource = resource => {
+		let output = { format: null, extension: null, tag: null, consistent: false };
+
+		resource.resource = resource.resource.split('?')[0];
+		resource.resource = resource.resource.split('#')[0];
+		for (let formatCandidate in supportedExtensions) {
+			const base64Heading = ';base64,';
+
+			if (
+				new RegExp('(.(' + supportedExtensions[formatCandidate] + ')$)|' + base64Heading, 'g').test(
+					resource.resource
+				)
+			) {
+				if (new RegExp(base64Heading, 'g').test(resource.resource)) {
+					let matches64 = resource.resource.match(
+						new RegExp(
+							'^data:' + formatCandidate + '/(' + supportedExtensions[formatCandidate] + ')',
+							'g'
+						)
+					);
+
+					if (null === matches64) {
+						return;
+					}
+
+					matches64 = matches64[0];
+
+					output.format = formatCandidate;
+					output.extension = matches64.replace('data:' + formatCandidate + '/', '');
+					output.tag = supportedTags[formatCandidate];
+
+					break;
+				} else {
+					let matches = resource.resource.match(
+						new RegExp(supportedExtensions[formatCandidate], 'g')
+					);
+
+					if (matches) {
+						output.format = formatCandidate;
+						output.extension = matches[0];
+						output.tag = supportedTags[formatCandidate];
+
+						break;
+					}
+				}
+			}
+		}
+
+		if (isHTMLElement(resource.element)) {
+			let tagName = resource.element.tagName.toLowerCase();
+			let allTags = '';
+
+			Object.values(supportedTags).forEach(tags => {
+				allTags += '|' + tags;
+			});
+
+			allTags = allTags.split('|');
+
+			if (isInArray(tagName, allTags)) {
+				output.tag = tagName;
+				output.consistent = true;
+				if (output.format === null) {
+					for (let format in supportedTags) {
+						if (stringContains(supportedTags[format], output.tag)) {
+							output.format = format;
+							break;
+						}
+					}
+				}
+			}
+		}
+
+		if (stringContains(output.tag, '|')) {
+			output.tag = output.tag.split('|')[0];
+		}
+
+		return output;
+	};
+
+	let privateEventsStorage = {};
+
+	let privateCache = [];
 
 	// TODO: Promise support
 	// TODO: think about useful vars in callback args (this class is not public but its vars are returned in .progress() callback)
@@ -383,25 +386,17 @@
 				...options
 			};
 
-			this.srcAttr = '';
-			this.srcsetAttr = '';
-
-			if (!stringStartsWith(this._settings.srcAttr, 'data-')) {
-				this.srcAttr = this._settings.srcAttr;
-				this._settings.srcAttr = 'data-' + this._settings.srcAttr;
-			} else {
-				this.srcAttr = this._settings.srcAttr.replace('data-', '');
+			if (
+				!stringStartsWith(this._settings.srcAttr, 'data-') ||
+				!stringStartsWith(this._settings.srcsetAttr, 'data-')
+			) {
+				throw new Error(
+					'Wrong arguments format: srcAttr and srcsetAttr parameters must be dataset values.'
+				);
 			}
 
-			if (!stringStartsWith(this._settings.srcsetAttr, 'data-')) {
-				this.srcsetAttr = this._settings.srcsetAttr;
-				this._settings.srcsetAttr = 'data-' + this._settings.srcsetAttr;
-			} else {
-				this.srcsetAttr = this._settings.srcsetAttr.replace('data-', '');
-			}
-
-			this.srcAttr = hyphensToCamelCase(this.srcAttr);
-			this.srcsetAttr = hyphensToCamelCase(this.srcsetAttr);
+			this.srcAttr = hyphensToCamelCase(this._settings.srcAttr.replace('data-', ''));
+			this.srcsetAttr = hyphensToCamelCase(this._settings.srcsetAttr.replace('data-', ''));
 
 			this._id = null;
 			this._idEvent = null;
@@ -538,15 +533,9 @@
 						}
 					}
 				} else if (this._format === 'video' || this._format === 'audio') {
-					const isPlaythroughModeNormal = true === this._settings.playthrough,
-						isPlaythroughModeFull = 'full' === this._settings.playthrough,
-						sources = this._element.querySelectorAll('source'),
-						isFullyBuffered = function(media) {
-							return (
-								media.buffered.length &&
-								Math.round(media.buffered.end(0)) / Math.round(media.seekable.end(0)) === 1
-							);
-						};
+					const isStandardPlaythrough = true === this._settings.playthrough;
+					const isFullPlaythrough = 'full' === this._settings.playthrough;
+					const sources = this._element.querySelectorAll('source');
 
 					let callMediaLoad = false;
 
@@ -602,11 +591,11 @@
 						this._element,
 						'loadedmetadata.' + this._idEvent,
 						() => {
-							if (!isPlaythroughModeNormal && !isPlaythroughModeFull) {
+							if (!isStandardPlaythrough && !isFullPlaythrough) {
 								this._callback(new CustomEvent('load'));
 							}
 
-							if (isPlaythroughModeFull) {
+							if (isFullPlaythrough) {
 								let onProgressReplacementInterval = setInterval(() => {
 									let isError = this._element.readyState > 0 && !this._element.duration;
 
@@ -649,7 +638,7 @@
 						'canplay.' + this._idEvent,
 						() => {
 							if (
-								isPlaythroughModeFull &&
+								isFullPlaythrough &&
 								this._element.currentTime === 0 &&
 								!isFullyBuffered(this._element)
 							) {
@@ -663,7 +652,7 @@
 						this._element,
 						'canplaythrough.' + this._idEvent,
 						() => {
-							if (isPlaythroughModeNormal) {
+							if (isStandardPlaythrough) {
 								this._callback(new CustomEvent('load'));
 							}
 						},
@@ -735,7 +724,7 @@
 	 */
 	class Loader {
 		/**
-		 * @param {Object} [options={srcAttr: 'data-src', srcsetAttr: 'data-srcset', playthrough: false, visible: false, backgrounds: false, extraAttrs: [] }]
+		 * @param {Object} [options={srcAttr: 'data-src', srcsetAttr: 'data-srcset', playthrough: false, visible: false, backgrounds: false }]
 		 */
 		constructor(options) {
 			this._collection = [];
@@ -750,38 +739,22 @@
 					srcsetAttr: 'data-srcset',
 					playthrough: false,
 					visible: false,
-					backgrounds: false,
-					extraAttrs: []
+					backgrounds: false
 				},
 				...options
 			};
 
-			this.srcAttr = '';
-			this.srcsetAttr = '';
-			if (!stringStartsWith(this._settings.srcAttr, 'data-')) {
-				this.srcAttr = this._settings.srcAttr;
-				this._settings.srcAttr = 'data-' + this._settings.srcAttr;
-			} else {
-				this.srcAttr = this._settings.srcAttr.replace('data-', '');
-			}
-			if (!stringStartsWith(this._settings.srcsetAttr, 'data-')) {
-				this.srcsetAttr = this._settings.srcsetAttr;
-				this._settings.srcsetAttr = 'data-' + this._settings.srcsetAttr;
-			} else {
-				this.srcsetAttr = this._settings.srcsetAttr.replace('data-', '');
-			}
-
-			if (typeof this._settings.extraAttrs === 'string') {
-				this._settings.extraAttrs = this._settings.extraAttrs.split(
-					this._settings.extraAttrs.contains(',') ? ',' : ' '
+			if (
+				!stringStartsWith(this._settings.srcAttr, 'data-') ||
+				!stringStartsWith(this._settings.srcsetAttr, 'data-')
+			) {
+				throw new Error(
+					'Wrong arguments format: srcAttr and srcsetAttr parameters must be dataset values.'
 				);
 			}
-			if (!Array.isArray(this._settings.extraAttrs)) {
-				this._settings.extraAttrs = [];
-			}
 
-			this.srcAttr = hyphensToCamelCase(this.srcAttr);
-			this.srcsetAttr = hyphensToCamelCase(this.srcsetAttr);
+			this.srcAttr = hyphensToCamelCase(this._settings.srcAttr.replace('data-', ''));
+			this.srcsetAttr = hyphensToCamelCase(this._settings.srcsetAttr.replace('data-', ''));
 
 			this.percentage = 0;
 
@@ -800,14 +773,13 @@
 		/**
 		 *
 		 * @param {HTMLElement} [element=document.body]
-		 * @param {Object} [options={ srcAttr: 'src', srcsetAttr: 'srcset', backgrounds: false, extraAttrs: [] }]
+		 * @param {Object} [options={ srcAttr: 'src', srcsetAttr: 'srcset', backgrounds: false }]
 		 */
 		static findResources(element, options) {
 			let settings = {
 				srcAttr: 'src',
 				srcsetAttr: 'srcset',
-				backgrounds: false,
-				extraAttrs: []
+				backgrounds: false
 			};
 
 			if (typeof element === 'object' && undefined === options) {
@@ -835,16 +807,9 @@
 				...options
 			};
 
-			const targets = 'img, video, audio',
-				targetsExtended = targets + ', picture, source',
-				targetsFilter = '[' + settings.srcAttr + '], [' + settings.srcsetAttr + ']';
-
-			if (typeof settings.extraAttrs === 'string') {
-				settings.extraAttrs = ettings.extraAttrs.split(ettings.extraAttrs.contains(',') ? ',' : ' ');
-			}
-			if (!Array.isArray(settings.extraAttrs)) {
-				settings.extraAttrs = [];
-			}
+			const targets = 'img, video, audio';
+			const targetsExtended = targets + ', picture, source';
+			const targetsFilter = '[' + settings.srcAttr + '], [' + settings.srcsetAttr + ']';
 
 			let targetsTags = nodelistToArray(element.querySelectorAll(targets));
 
@@ -890,24 +855,6 @@
 					}
 				});
 			}
-
-			settings.extraAttrs.forEach(attr => {
-				nodelistToArray(
-					element.querySelectorAll('[' + attr + ']:not(' + targetsExtended + ')')
-				).forEach(target => {
-					collectedResources.push({
-						element: target,
-						resource: target.getAttribute(attr)
-					});
-				});
-
-				if (element.matches('[' + attr + ']') && !element.matches(targetsExtended)) {
-					collectedResources.push({
-						element: element,
-						resource: element.getAttribute(attr)
-					});
-				}
-			});
 
 			return collectedResources;
 		}
@@ -966,9 +913,9 @@
 					break;
 				}
 
-				let thisLoadId = this._collection[i].id,
-					thisLoadIndex = arrayFindIndex(this._collectionInstances, x => x.id === thisLoadId),
-					thisLoadInstance = new SingleLoader(this._settings);
+				let thisLoadId = this._collection[i].id;
+				let thisLoadIndex = arrayFindIndex(this._collectionInstances, x => x.id === thisLoadId);
+				let thisLoadInstance = new SingleLoader(this._settings);
 
 				if (thisLoadIndex === -1) {
 					this._collectionInstances.push({
@@ -1125,29 +1072,31 @@
 
 	// jQuery interface
 	// - - - - - - - - - - - - - - - - - - - -
-	if (!$) {
-		return undefined;
+	if (!('jQuery' in window)) {
+		return;
 	}
+
+	const $ = jQuery;
 
 	$[capitalize(pluginName)] = Loader;
 
-	const $document = $(document),
-		$window = $(window),
-		// thanks https://gist.github.com/beaucharman/e46b8e4d03ef30480d7f4db5a78498ca
-		throttle = (callback, wait, context = this) => {
-			let timeout = null,
-				callbackArgs = null;
-			const later = () => {
-				callback.apply(context, callbackArgs);
-				timeout = null;
-			};
-			return function() {
-				if (!timeout) {
-					callbackArgs = arguments;
-					timeout = setTimeout(later, wait);
-				}
-			};
+	const $document = $(document);
+	const $window = $(window);
+	// thanks https://gist.github.com/beaucharman/e46b8e4d03ef30480d7f4db5a78498ca
+	const throttle = (callback, wait, context = this) => {
+		let timeout = null;
+		let callbackArgs = null;
+		const later = () => {
+			callback.apply(context, callbackArgs);
+			timeout = null;
 		};
+		return function() {
+			if (!timeout) {
+				callbackArgs = arguments;
+				timeout = setTimeout(later, wait);
+			}
+		};
+	};
 
 	let methodCollection = [];
 
@@ -1164,12 +1113,9 @@
 				srcsetAttr: 'data-srcset',
 
 				visible: false,
-
 				sequential: false,
 
 				backgrounds: false,
-				extraAttrs: [],
-
 				playthrough: false,
 
 				early: false,
@@ -1192,9 +1138,9 @@
 		return this.each(function(i) {
 			// TODO: mutation observer when new children are appended
 
-			const $element = $(this),
-				uniqueMethodPluginName = generateInstanceID() + i,
-				thisLoadInstance = new Loader(settings);
+			const $element = $(this);
+			const uniqueMethodPluginName = generateInstanceID() + i;
+			const thisLoadInstance = new Loader(settings);
 
 			thisLoadInstance.collection = this;
 
@@ -1304,4 +1250,4 @@
 			}
 		});
 	};
-})(window, document, jQuery);
+})();

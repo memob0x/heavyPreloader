@@ -4,8 +4,7 @@ let niteLoadInstance = new NiteLoader({
     srcsetAttr: 'data-srcset',
     playthrough: false,
     visible: false,
-    backgrounds: false,
-    attributes: []
+    backgrounds: false
 });
 ```
 
@@ -73,6 +72,7 @@ $(document).on('niteError.nite', 'figure img', function (e) {
     $(this).closest('figure').addClass('error');
 
 });
+```
 
 ```
 $(document).on('niteLoad.nite niteError.nite', 'figure img, figure video', function (e) {

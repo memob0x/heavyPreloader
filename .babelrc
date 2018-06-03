@@ -1,14 +1,4 @@
 {
-  "presets": [
-    [
-      "es2017"
-    ]
-  ],
-  "plugins": [
-    "babel-plugin-transform-private-properties",
-    "babel-preset-es2017",
-    "transform-regenerator",
-    "transform-object-rest-spread",
-    "babel-plugin-transform-undefined-to-void"
-  ]
+	"presets": [["es2017"]],
+	"plugins": ["babel-plugin-transform-private-properties", "babel-preset-es2017", "transform-regenerator", "transform-object-rest-spread", "babel-plugin-transform-undefined-to-void"]
 }
