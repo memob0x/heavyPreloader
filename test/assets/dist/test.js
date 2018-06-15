@@ -1,8 +1,11 @@
 ($ => {
 	'use strict';
+
 	const $console = $('#console');
 	const console_log = function(string) {
-		if ($console.is(':empty')) $console.append('<ol />');
+		if ($console.is(':empty')) {
+			$console.append('<ol />');
+		}
 
 		const $list = $console.find('ol').append('<li>' + string + '</li>');
 

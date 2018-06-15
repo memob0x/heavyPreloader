@@ -54,12 +54,11 @@ const pumpCallback = args => {
 
 gulp.task('default', callback => {
 	clear();
-	log();
 	pumpCounter = 0;
 	log(watchedFiles);
 	resources.forEach(resource => {
 		if ('js' in resource.files && resource.files.js.length) {
-			resource.files.js.forEach(filename => {
+			resource.files.js.forEach(filename =>
 				pump(
 					[
 						// transpilation
@@ -78,11 +77,11 @@ gulp.task('default', callback => {
 						gulp.dest(resource.paths.dst)
 					],
 					pumpCallback.bind(this, [callback])
-				);
-			});
+				)
+			);
 		}
 		if ('css' in resource.files && resource.files.css.length) {
-			resource.files.css.forEach(filename => {
+			resource.files.css.forEach(filename =>
 				pump(
 					[
 						// transpilation
@@ -102,8 +101,8 @@ gulp.task('default', callback => {
 						gulp.dest(resource.paths.dst)
 					],
 					pumpCallback.bind(this, [callback])
-				);
-			});
+				)
+			);
 		}
 	});
 	gulp.watch(watchedFiles, ['default']);
