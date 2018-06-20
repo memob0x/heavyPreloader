@@ -2,10 +2,8 @@
 
 const gulp = require('gulp');
 const watch = require('gulp-watch');
-const concat = require('gulp-concat');
 const sourcemaps = require('gulp-sourcemaps');
 const pump = require('pump');
-const merge = require('gulp-merge');
 const rename = require('gulp-rename');
 const babel = require('gulp-babel');
 const sass = require('gulp-sass');
@@ -52,6 +50,8 @@ const pumpCallback = args => {
 	}
 };
 
+const sourcemapsConf = { loadMaps: true, largeFile: true };
+
 gulp.task('default', callback => {
 	clear();
 	pumpCounter = 0;
@@ -63,15 +63,13 @@ gulp.task('default', callback => {
 					[
 						// transpilation
 						gulp.src(resource.paths.src + filename),
-						sourcemaps.init({ largeFile: true }),
-						babel().on('error', err => {
-							log(err);
-						}),
+						sourcemaps.init(sourcemapsConf),
+						babel({ compact: true }).on('error', err => log(err)),
 						sourcemaps.write('.'),
 						gulp.dest(resource.paths.dst),
 						// minification
-						gulp.src(resource.paths.src + filename),
-						sourcemaps.init({ largeFile: true }),
+						gulp.src(resource.paths.dst + filename),
+						sourcemaps.init(sourcemapsConf),
 						minify({ ext: { min: '.min.js' } }),
 						sourcemaps.write('.'),
 						gulp.dest(resource.paths.dst)
@@ -86,14 +84,14 @@ gulp.task('default', callback => {
 					[
 						// transpilation
 						gulp.src(resource.paths.src + filename),
-						sourcemaps.init({ loadMaps: true, largeFile: true }),
+						sourcemaps.init(sourcemapsConf),
 						sass({ outputStyle: 'expanded' }),
 						postcss([autoprefixer()]),
 						sourcemaps.write('.'),
 						gulp.dest(resource.paths.dst),
 						// minification
 						gulp.src(resource.paths.src + filename),
-						sourcemaps.init({ loadMaps: true, largeFile: true }),
+						sourcemaps.init(sourcemapsConf),
 						sass({ outputStyle: 'compressed' }),
 						postcss([autoprefixer()]),
 						rename({ suffix: '.min' }),
