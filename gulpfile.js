@@ -12,6 +12,7 @@ const postcss = require('gulp-postcss');
 const autoprefixer = require('autoprefixer');
 const clear = require('clear');
 const minify = require('gulp-minify');
+const run = require('gulp-run');
 
 const resources = [
 	{
@@ -86,14 +87,16 @@ gulp.task('default', callback => {
 						// transpilation
 						gulp.src(resource.paths.src + filename),
 						sourcemaps.init(sourcemapsConf),
-						sass({ outputStyle: 'expanded' }),
+						//sass({ outputStyle: 'expanded' }),
+						run('vendors/sassc/sassc.c -s', { verbosity: 1 }),
 						postcss([autoprefixer()]),
 						sourcemaps.write('.'),
 						gulp.dest(resource.paths.dst),
 						// minification
 						gulp.src(resource.paths.src + filename),
 						sourcemaps.init(sourcemapsConf),
-						sass({ outputStyle: 'compressed' }),
+						//sass({ outputStyle: 'compressed' }),
+						run('vendors/sassc/sassc.c -s', { verbosity: 1 }),
 						postcss([autoprefixer()]),
 						rename({ suffix: '.min' }),
 						sourcemaps.write('.'),
