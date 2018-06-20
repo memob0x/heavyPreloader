@@ -64,12 +64,13 @@ gulp.task('default', callback => {
 						// transpilation
 						gulp.src(resource.paths.src + filename),
 						sourcemaps.init(sourcemapsConf),
-						babel({ compact: true }).on('error', err => log(err)),
+						babel().on('error', err => log(err)),
 						sourcemaps.write('.'),
 						gulp.dest(resource.paths.dst),
 						// minification
-						gulp.src(resource.paths.dst + filename),
+						gulp.src(resource.paths.src + filename),
 						sourcemaps.init(sourcemapsConf),
+						babel().on('error', err => log(err)),
 						minify({ ext: { min: '.min.js' } }),
 						sourcemaps.write('.'),
 						gulp.dest(resource.paths.dst)
