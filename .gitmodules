@@ -1,3 +1,0 @@
-[submodule "sassc"]
-	path = vendors/sassc
-	url = https://github.com/sass/sassc.git
