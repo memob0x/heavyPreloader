@@ -496,7 +496,7 @@
 			// TODO: FIXME: (3) check for placeholders / non-lazy resources
 			// if isLoaded(this._exists && this._consistent ? this._element : this._resource) &&
 			// (
-			//    ( this._lazy && ( data-xyz-src === src || data-xyz-srcset === srcset ) )
+			//    ( this._lazy && ( data-xyz-src === src || data-xyz-srcset === srcset ) ) // TODO: capire come
 			//    ||
 			//    !this._lazy
 			// )
