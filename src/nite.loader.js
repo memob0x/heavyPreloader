@@ -439,12 +439,20 @@
 				this._element = data.element;
 				this._resource = data.resource;
 
+				this._idEvent = this._element[pluginInstance + '_IDEvent'];
+				this._busy = this._idEvent !== undefined;
+				this._idEvent = this._busy
+					? this._idEvent
+					: pluginName + '_unique_' + this._element.tagName + '_' + generateInstanceID();
+
+				// TODO: FIXME: (1) if this.busy, ottieni tutte le variabili seguenti da una cache.
+
 				let info = decodeResource({
 					resource: this._resource,
 					element: this._element
 				});
 				this._tag = info.tag;
-				this._consistent = info.consistent;
+				this._consistent = info.consistent; // wrong tag for resource type...
 				this._format = info.format;
 				this._exists = this._element !== null;
 				this._originalElement = this._element;
@@ -453,6 +461,8 @@
 					this._element = document.createElement(this._tag);
 					this._element.dataset[this.srcAttr] = this._resource;
 				}
+
+				// TODO: FIXME: (2) this._lazy = true|false - se ha data-xyz-srcset o data-xyz-src
 
 				if (this._exists && this._settings.visible && IntersectionObserverSupported) {
 					this._observer = new IntersectionObserver(
@@ -469,12 +479,6 @@
 					);
 					this._observer.observe(this._originalElement);
 				}
-
-				this._idEvent = this._element[pluginInstance + '_IDEvent'];
-				this._busy = this._idEvent !== undefined;
-				this._idEvent = this._busy
-					? this._idEvent
-					: pluginName + '_unique_' + this._element.tagName + '_' + generateInstanceID();
 			}
 		}
 
@@ -489,6 +493,13 @@
 		 * @returns {boolean} se ha preso in carico il caricamento oppure no per vari motivi (è già caricato, non è nella viewport etc)
 		 */
 		load() {
+			// TODO: FIXME: (3) check for placeholders / non-lazy resources
+			// if isLoaded(this._exists && this._consistent ? this._element : this._resource) &&
+			// (
+			//    ( this._lazy && ( data-xyz-src === src || data-xyz-srcset === srcset ) )
+			//    ||
+			//    !this._lazy
+			// )
 			if (isLoaded(this._exists && this._consistent ? this._element : this._resource)) {
 				if (!this._busy) {
 					// TODO: mayabe this should be called in this._callback
@@ -566,7 +577,7 @@
 										this._callback(e);
 									}
 								},
-								!this._busy
+								!this._busy // true -> once, false -> on
 							);
 						});
 					} else if (this._element.matches('[' + this._settings.srcAttr + ']')) {
@@ -577,7 +588,7 @@
 							this._element,
 							'error.' + this._idEvent,
 							this._callback,
-							!this._busy
+							!this._busy // true -> once, false -> on
 						);
 
 						callMediaLoad = true;
@@ -630,7 +641,7 @@
 								] = onProgressReplacementInterval;
 							}
 						},
-						!this._busy
+						!this._busy // true -> once, false -> on
 					);
 
 					attachEventListener(
@@ -645,7 +656,7 @@
 								this._element.currentTime++;
 							}
 						},
-						!this._busy
+						!this._busy // true -> once, false -> on
 					);
 
 					attachEventListener(
@@ -656,7 +667,7 @@
 								this._callback(new CustomEvent('load'));
 							}
 						},
-						!this._busy
+						!this._busy // true -> once, false -> on
 					);
 				} else {
 					return false;
@@ -941,7 +952,7 @@
 						this._busy = false;
 
 						this._loaded++;
-						this.percentage = this._loaded / this._collection.length * 100;
+						this.percentage = (this._loaded / this._collection.length) * 100;
 						this.percentage = parseFloat(this.percentage.toFixed(4));
 
 						const thisResource = {
@@ -1175,13 +1186,7 @@
 				callback.apply(this, [thisLoadInstance, resources]);
 
 				if (settings.visible) {
-					/*if (IntersectionObserverSupported) {
-                        thisLoadInstance.collection.forEach(item => item.element.intersectionObserver.unobserve(item.element));
-
-                    } else {*/
 					$window.off('scroll.' + uniqueMethodPluginName);
-
-					//}
 				}
 
 				// refresh other method calls for same el (omitting this one)
@@ -1196,31 +1201,7 @@
 			thisLoadInstance.load();
 
 			if (settings.visible) {
-				/* if (IntersectionObserverSupported) {
-
-                    thisLoadInstance.collection.forEach(item => {
-
-                        item.element.intersectionObserver = new IntersectionObserver((entries, observer) => {
-                            entries.forEach(entry => {
-                                if( entry.intersectionRatio > 0 ){
-                                    thisLoadInstance.load();
-                                }
-                            });
-                        }, {
-                            root: null,
-                            rootMargin: '0px',
-                            threshold: 0.0
-                        });
-
-                        item.element.intersectionObserver.observe(item.element);
-
-                    });
-
-                } else {*/
-
 				$window.on('scroll.' + uniqueMethodPluginName, throttle(() => thisLoadInstance.load(), 250));
-
-				//}
 			}
 
 			if (true === settings.early) {
@@ -1237,7 +1218,7 @@
 						let timeout = parseInt(settings.earlyTimeout);
 
 						thisMethodCollection.timeout = setTimeout(() => {
-							// TODO: appropriate method to set/update settings?
+							// TODO: $('.selector').niteLoad('option', 'value');
 							thisMethodCollection.instance._settings.visible = false;
 							thisMethodCollection.instance._settings.sequential = true;
 
