@@ -57,9 +57,7 @@
 	 * @returns {boolean}
 	 */
 	const stringStartsWith = (heystack, needle) => {
-		return String.prototype.startsWith
-			? heystack.startsWith(needle)
-			: heystack.substr(0, needle.length) === needle;
+		return String.prototype.startsWith ? heystack.startsWith(needle) : heystack.substr(0, needle.length) === needle;
 	};
 
 	/**
@@ -95,10 +93,7 @@
 		if (stringStartsWith(events, '.')) {
 			for (let key in privateEventsStorage) {
 				const eventNameWithNamespace = key.replace(eventNamespaceParserSeparator, '.');
-				if (
-					stringContains(eventNameWithNamespace, events) &&
-					privateEventsStorage[key].element === element
-				) {
+				if (stringContains(eventNameWithNamespace, events) && privateEventsStorage[key].element === element) {
 					detachEventListener(element, eventNameWithNamespace);
 				}
 			}
@@ -126,6 +121,7 @@
 	 * @param {boolean} once
 	 * @returns {undefined}
 	 */
+	// TODO: Class EventListener .on .one .off .trigger jQuery-like...
 	const attachEventListener = (element, events, handler, once) => {
 		if (!element || typeof events !== 'string' || typeof handler !== 'function') {
 			return;
@@ -231,11 +227,7 @@
 		try {
 			return element instanceof HTMLElement;
 		} catch (e) {
-			return (
-				element.nodeType === 1 &&
-				typeof element.style === 'object' &&
-				typeof element.ownerDocument === 'object'
-			);
+			return element.nodeType === 1 && typeof element.style === 'object' && typeof element.ownerDocument === 'object';
 		}
 	};
 
@@ -248,8 +240,7 @@
 			(typeof source === 'string' && isInArray(source, privateCache)) ||
 			(isHTMLElement(source) &&
 				('currentSrc' in source && source.currentSrc.length > 0) &&
-				(('complete' in source && source.complete) ||
-					('readyState' in source && source.readyState >= 2)))
+				(('complete' in source && source.complete) || ('readyState' in source && source.readyState >= 2)))
 		);
 	};
 
@@ -258,10 +249,7 @@
 	 * @returns {boolean}
 	 */
 	const isFullyBuffered = media => {
-		return (
-			media.buffered.length &&
-			Math.round(media.buffered.end(0)) / Math.round(media.seekable.end(0)) === 1
-		);
+		return media.buffered.length && Math.round(media.buffered.end(0)) / Math.round(media.seekable.end(0)) === 1;
 	};
 
 	/**
@@ -271,9 +259,7 @@
 	const isBroken = source => {
 		return (
 			isLoaded(source) &&
-			((isHTMLElement(source) &&
-				(('naturalWidth' in source && Math.floor(source.naturalWidth) === 0) ||
-					('videoWidth' in source && source.videoWidth === 0))) ||
+			((isHTMLElement(source) && (('naturalWidth' in source && Math.floor(source.naturalWidth) === 0) || ('videoWidth' in source && source.videoWidth === 0))) ||
 				typeof source === 'string')
 		);
 	};
@@ -290,18 +276,9 @@
 		for (let formatCandidate in supportedExtensions) {
 			const base64Heading = ';base64,';
 
-			if (
-				new RegExp('(.(' + supportedExtensions[formatCandidate] + ')$)|' + base64Heading, 'g').test(
-					resource.resource
-				)
-			) {
+			if (new RegExp('(.(' + supportedExtensions[formatCandidate] + ')$)|' + base64Heading, 'g').test(resource.resource)) {
 				if (new RegExp(base64Heading, 'g').test(resource.resource)) {
-					let matches64 = resource.resource.match(
-						new RegExp(
-							'^data:' + formatCandidate + '/(' + supportedExtensions[formatCandidate] + ')',
-							'g'
-						)
-					);
+					let matches64 = resource.resource.match(new RegExp('^data:' + formatCandidate + '/(' + supportedExtensions[formatCandidate] + ')', 'g'));
 
 					if (null === matches64) {
 						return;
@@ -315,9 +292,7 @@
 
 					break;
 				} else {
-					let matches = resource.resource.match(
-						new RegExp(supportedExtensions[formatCandidate], 'g')
-					);
+					let matches = resource.resource.match(new RegExp(supportedExtensions[formatCandidate], 'g'));
 
 					if (matches) {
 						output.format = formatCandidate;
@@ -386,13 +361,8 @@
 				...options
 			};
 
-			if (
-				!stringStartsWith(this._settings.srcAttr, 'data-') ||
-				!stringStartsWith(this._settings.srcsetAttr, 'data-')
-			) {
-				throw new Error(
-					'Wrong arguments format: srcAttr and srcsetAttr parameters must be dataset values.'
-				);
+			if (!stringStartsWith(this._settings.srcAttr, 'data-') || !stringStartsWith(this._settings.srcsetAttr, 'data-')) {
+				throw new Error('Wrong arguments format: srcAttr and srcsetAttr parameters must be dataset values.');
 			}
 
 			this.srcAttr = hyphensToCamelCase(this._settings.srcAttr.replace('data-', ''));
@@ -439,13 +409,10 @@
 				this._element = data.element;
 				this._resource = data.resource;
 
-				this._idEvent = this._element[pluginInstance + '_IDEvent'];
 				this._busy = this._idEvent !== undefined;
-				this._idEvent = this._busy
-					? this._idEvent
-					: pluginName + '_unique_' + this._element.tagName + '_' + generateInstanceID();
+				this._idEvent = this._busy ? this._element[pluginInstance + '_IDEvent'] : pluginName + '_unique_' + this._element.tagName + '_' + generateInstanceID();
 
-				// TODO: FIXME: (1) if this.busy, ottieni tutte le variabili seguenti da una cache.
+				// TODO: FIXME: if this.busy, ottieni tutte le variabili seguenti da una cache.
 
 				let info = decodeResource({
 					resource: this._resource,
@@ -462,14 +429,12 @@
 					this._element.dataset[this.srcAttr] = this._resource;
 				}
 
-				// TODO: FIXME: (2) this._lazy = true|false - se ha data-xyz-srcset o data-xyz-src
+				//TODO: FIXME: this._lazy = this._busy ? this._lazy : !!(this._element.dataset[this.srcAttr] || this._element.dataset[this.srcsetAttr]);
 
 				if (this._exists && this._settings.visible && IntersectionObserverSupported) {
 					this._observer = new IntersectionObserver(
 						(entries, observer) => {
-							entries.forEach(
-								entry => (entry.target.intersectionRatio = entry.intersectionRatio)
-							);
+							entries.forEach(entry => (entry.target.intersectionRatio = entry.intersectionRatio));
 						},
 						{
 							root: null,
@@ -500,19 +465,15 @@
 			//    ||
 			//    !this._lazy
 			// )
+
+			//TODO: remove elseif else when returning?
 			if (isLoaded(this._exists && this._consistent ? this._element : this._resource)) {
 				if (!this._busy) {
 					// TODO: mayabe this should be called in this._callback
 					detachEventListener(this._element, '.' + this._idEvent);
 				}
 
-				this._callback(
-					new CustomEvent(
-						!isBroken(this._exists && this._consistent ? this._element : this._resource)
-							? 'load'
-							: 'error'
-					)
-				);
+				this._callback(new CustomEvent(!isBroken(this._exists && this._consistent ? this._element : this._resource) ? 'load' : 'error'));
 
 				return false;
 			} else if (this._exists && this._settings.visible && !isVisible(this._originalElement)) {
@@ -567,13 +528,7 @@
 
 									source[pluginInstance + '_' + sourcesErrorId] = true;
 
-									if (
-										sources.length ===
-										nodelistToArray(sources).filter(
-											thisSource =>
-												true === thisSource[pluginInstance + '_' + sourcesErrorId]
-										).length
-									) {
+									if (sources.length === nodelistToArray(sources).filter(thisSource => true === thisSource[pluginInstance + '_' + sourcesErrorId]).length) {
 										this._callback(e);
 									}
 								},
@@ -613,12 +568,7 @@
 									if (isError || isFullyBuffered(this._element)) {
 										this._element.currentTime = 0;
 
-										if (
-											!isError &&
-											!this._busy &&
-											this._element.paused &&
-											this._element.matches('[autoplay]')
-										) {
+										if (!isError && !this._busy && this._element.paused && this._element.matches('[autoplay]')) {
 											this._element.play();
 										}
 
@@ -636,9 +586,7 @@
 									}
 								}, 500);
 
-								this._element[
-									pluginName + '_' + this._idEvent
-								] = onProgressReplacementInterval;
+								this._element[pluginName + '_' + this._idEvent] = onProgressReplacementInterval;
 							}
 						},
 						!this._busy // true -> once, false -> on
@@ -648,11 +596,7 @@
 						this._element,
 						'canplay.' + this._idEvent,
 						() => {
-							if (
-								isFullPlaythrough &&
-								this._element.currentTime === 0 &&
-								!isFullyBuffered(this._element)
-							) {
+							if (isFullPlaythrough && this._element.currentTime === 0 && !isFullyBuffered(this._element)) {
 								this._element.currentTime++;
 							}
 						},
@@ -755,13 +699,8 @@
 				...options
 			};
 
-			if (
-				!stringStartsWith(this._settings.srcAttr, 'data-') ||
-				!stringStartsWith(this._settings.srcsetAttr, 'data-')
-			) {
-				throw new Error(
-					'Wrong arguments format: srcAttr and srcsetAttr parameters must be dataset values.'
-				);
+			if (!stringStartsWith(this._settings.srcAttr, 'data-') || !stringStartsWith(this._settings.srcsetAttr, 'data-')) {
+				throw new Error('Wrong arguments format: srcAttr and srcsetAttr parameters must be dataset values.');
 			}
 
 			this.srcAttr = hyphensToCamelCase(this._settings.srcAttr.replace('data-', ''));
@@ -844,9 +783,7 @@
 
 				collectedResources.push({
 					element: target,
-					resource:
-						targetSource.getAttribute(settings.srcAttr) ||
-						targetSource.getAttribute(settings.srcsetAttr)
+					resource: targetSource.getAttribute(settings.srcAttr) || targetSource.getAttribute(settings.srcsetAttr)
 				});
 			});
 
@@ -985,11 +922,7 @@
 				} else if (
 					sequentialMode &&
 					this._busy &&
-					(!this._settings.visible ||
-						!thisLoadInstance._exists ||
-						(this._settings.visible &&
-							thisLoadInstance._exists &&
-							isVisible(thisLoadInstance._originalElement)))
+					(!this._settings.visible || !thisLoadInstance._exists || (this._settings.visible && thisLoadInstance._exists && isVisible(thisLoadInstance._originalElement)))
 				) {
 					this._collectionPending.push({
 						id: thisLoadId,
@@ -1163,10 +1096,7 @@
 			});
 
 			thisLoadInstance.progress(resource => {
-				$(resource.element).trigger(pluginPrefix + capitalize(resource.status) + '.' + pluginPrefix, [
-					resource.element,
-					resource.resource
-				]);
+				$(resource.element).trigger(pluginPrefix + capitalize(resource.status) + '.' + pluginPrefix, [resource.element, resource.resource]);
 				$element.trigger(pluginPrefix + 'Progress.' + pluginPrefix, [this, resource]);
 
 				const thisArguments = [thisLoadInstance, resource];
