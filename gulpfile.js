@@ -35,20 +35,19 @@ const production = !arg.development;
 
 const gulp = require('gulp');
 const watch = require('gulp-watch');
-const sourcemaps = require('gulp-sourcemaps');
+const gulpif = require('gulp-if');
 const pump = require('pump');
 const rename = require('gulp-rename');
+const del = require('del');
+const rollup = require('gulp-better-rollup');
+const sourcemaps = require('gulp-sourcemaps');
 const babel = require('gulp-babel');
 const sass = require('gulp-sass');
-const log = require('fancy-log');
 const postcss = require('gulp-postcss');
-const autoprefixer = require('autoprefixer');
-const clear = require('clear');
 const minify = require('gulp-minify');
-const rollup = require('gulp-better-rollup');
-//const rollupBabel = require('rollup-plugin-babel');
-const gulpif = require('gulp-if');
-const del = require('del');
+const autoprefixer = require('autoprefixer');
+const log = require('fancy-log');
+const clear = require('clear');
 
 const resources = [
 	{
@@ -111,14 +110,15 @@ gulp.task('build', callback => {
 				gulp.src(resource.paths.src + filename),
 				gulpif(production, sourcemaps.init(sourcemapsConf)),
 				gulpif(resource.files.js.rollup, rollup({}, 'umd')),
-				gulpif(production, babel().on('error', err => log(err))),
+				gulpif(production, babel()),
 				gulpif(production, sourcemaps.write('.')),
 				gulp.dest(resource.paths.dist),
 
 				// minification (production only)
 				gulpif(production, gulp.src(resource.paths.src + filename)),
 				gulpif(production, sourcemaps.init(sourcemapsConf)),
-				gulpif(production, babel().on('error', err => log(err))),
+				gulpif(production && resource.files.js.rollup, rollup({}, 'umd')),
+				gulpif(production, babel()),
 				gulpif(production, minify({ ext: { min: '.min.js' } })),
 				gulpif(production, sourcemaps.write('.')),
 				gulpif(production, gulp.dest(resource.paths.dist))

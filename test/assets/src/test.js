@@ -1,6 +1,4 @@
 ($ => {
-	'use strict';
-
 	const $console = $('#console');
 	const console_log = function(string) {
 		if ($console.is(':empty')) {
