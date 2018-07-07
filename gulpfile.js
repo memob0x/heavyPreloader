@@ -56,7 +56,7 @@ const resources = [
 			dist: './dist/'
 		},
 		files: {
-			js: { rollup: true, list: ['nite.loader.js'] }
+			js: { module: 'NiteLoader', list: ['nite.loader.js'] }
 		}
 	},
 	{
@@ -65,7 +65,7 @@ const resources = [
 			dist: './test/assets/dist/'
 		},
 		files: {
-			js: { rollup: false, list: ['test.js'] },
+			js: { list: ['test.js'] },
 			css: { list: ['test.scss'] }
 		}
 	}
@@ -103,13 +103,19 @@ gulp.task('build', callback => {
 	resources.forEach(resource => {
 		// js files
 		if ('js' in resource.files && resource.files.js.list.length) {
+			const isModule = 'module' in resource.files.js && !!resource.files.js.module;
+			const moduleConf = {
+				name: resource.files.js.module,
+				format: 'umd'
+			};
+
 			// prettier-ignore
 			resource.files.js.list.forEach(filename => pump([
 
 				// rollup modules + transpilation to ES5 (production only)
 				gulp.src(resource.paths.src + filename),
 				gulpif(production, sourcemaps.init(sourcemapsConf)),
-				gulpif(resource.files.js.rollup, rollup({}, 'umd')),
+				gulpif(isModule, rollup({}, moduleConf)),
 				gulpif(production, babel()),
 				gulpif(production, sourcemaps.write('.')),
 				gulp.dest(resource.paths.dist),
@@ -117,7 +123,7 @@ gulp.task('build', callback => {
 				// minification (production only)
 				gulpif(production, gulp.src(resource.paths.src + filename)),
 				gulpif(production, sourcemaps.init(sourcemapsConf)),
-				gulpif(production && resource.files.js.rollup, rollup({}, 'umd')),
+				gulpif(production && isModule, rollup({}, moduleConf)),
 				gulpif(production, babel()),
 				gulpif(production, minify({ ext: { min: '.min.js' } })),
 				gulpif(production, sourcemaps.write('.')),

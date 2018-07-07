@@ -115,7 +115,7 @@
 					randomResources.push('//placehold.it/720x720/' + colors[0] + '/' + colors[1] + '.jpg');
 				}
 
-				instance = new niteLoader({
+				instance = new NiteLoader({
 					sequential: instanceSequentialMode
 				});
 
