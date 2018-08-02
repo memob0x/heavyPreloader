@@ -1,162 +1,171 @@
 <!DOCTYPE html>
 <html>
-    <head>
 
-        <script src="assets/vendors/jquery/dist/jquery.min.js"></script>
-        <script src="../../nitejs/dist/jquery.nite.js"></script>
-        <script src="../dist/nite.loader.js"></script>
+<head>
 
-        <link rel="stylesheet" type="text/css" href="assets/dist/test.min.css" />
+    <script src="assets/vendors/jquery/dist/jquery.min.js"></script>
+    <script src="../dist/nite.loader.js"></script>
 
-        <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,600,700" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="assets/dist/test.css" />
 
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,600,700" rel="stylesheet">
 
-        <title>Nite Loader Playground</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
 
-    </head>
-    <body>
+    <title>Nite Loader Playground</title>
 
-        <div id="root">
+</head>
 
-            <nav></nav>
+<body>
 
-            <div id="console"></div>
+    <div id="root">
 
-            <main class="playground">
+        <nav></nav>
 
-                <span class="playground__percentage"> <i data-percentage></i></span>
+        <div id="console"></div>
 
-                <section class="playground__area">
+        <main class="playground">
 
-                    <div class="playground__area__inner">
+            <span class="playground__percentage">
+                <i data-percentage></i>
+            </span>
 
-                        <div class="playground__area__row">
+            <section class="playground__area">
 
-                            <div class="playground__col">
-                                <figure class="playground__item">
-                                    <img data-nite-src="http://placehold.it/720x720/c2b6f9.jpg" />
-                                </figure>
-                            </div>
+                <div class="playground__area__inner">
 
-                            <div class="playground__col">
-                                <figure class="playground__item">
-                                    <img data-nite-src="http://placehold.it/720x720/fed4bc.jpg" />
-                                </figure>
-                            </div>
+                    <div class="playground__area__row">
 
-                            <div class="playground__col">
-                                <figure class="playground__item">
-                                    <img data-nite-src="http://placehold.it/720x720/bbefda.webp" />
-                                </figure>
-                            </div>
+                        <div class="playground__col">
+                            <figure class="playground__item">
+                                <img src="http://placehold.it/1x1/ff0000.jpg" data-nite-src="http://placehold.it/720x720/c2b6f9.jpg" />
+                            </figure>
+                        </div>
 
-                            <div class="playground__col">
-                                <figure class="playground__item">
-                                    <img data-nite-src="http://placehold.it/720x720/e2fcea.jpg" />
-                                </figure>
-                            </div>
+                        <div class="playground__col">
+                            <figure class="playground__item">
+                                <img data-nite-src="http://placehold.it/720x720/fed4bc.jpg" />
+                            </figure>
+                        </div>
 
+                        <div class="playground__col">
+                            <figure class="playground__item">
+                                <img data-nite-src="http://placehold.it/720x720/bbefda.webp" />
+                            </figure>
+                        </div>
+
+                        <div class="playground__col">
+                            <figure class="playground__item">
+                                <img data-nite-src="http://placehold.it/720x720/e2fcea.jpg" />
+                            </figure>
                         </div>
 
                     </div>
 
-                </section>
-
-                <section class="playground__area">
-
-                    <div class="playground__area__inner">
-
-                        <div class="playground__area__row">
-
-                            <div class="playground__col">
-                                <figure class="playground__item">
-                                    <img data-nite-src="http://placehold.it/720x720/d5dcfc.jpg" />
-                                </figure>
-                            </div>
-
-                            <div class="playground__col">
-                                <figure class="playground__item">
-                                    <img data-nite-src="#" />
-                                </figure>
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                </section>
-
-            </main>
-
-            <section class="playground">
-
-                <span class="playground__percentage"> <i data-percentage></i></span>
-
-                <section class="playground__area">
-
-                    <div class="playground__area__inner">
-
-                        <div class="playground__area__row">
-
-                            <div class="playground__col">
-                                <figure class="playground__item">
-                                    <img data-nite-src="http://placehold.it/720x720/d9cbf9.jpg" />
-                                </figure>
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                </section>
-
-                <section class="playground__area">
-
-                    <div class="playground__area__inner">
-
-                        <div class="playground__area__row">
-
-                            <div class="playground__col--full">
-
-                                <figure class="playground__item">
-
-                                    <video autoplay muted loop class="target">
-                                        <source data-nite-src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
-                                        <source data-nite-src="https://www.w3schools.com/html/mov_bbb.ogg" type="video/ogg">
-                                    </video>
-
-                                </figure>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                </section>
+                </div>
 
             </section>
 
-            <section class="playground">
+            <section class="playground__area">
 
-                <section class="playground__area">
+                <div class="playground__area__inner">
 
-                    <div class="playground__area__inner">
+                    <div class="playground__area__row">
 
-                        <button class="nite-program-load--run">Generate Programmatically</button>
-                        <button class="nite-program-load--kill" style="display:none;">Abort</button>
+                        <div class="playground__col">
+                            <figure class="playground__item">
+                                <img data-nite-src="http://placehold.it/720x720/d5dcfc.jpg" />
+                            </figure>
+                        </div>
+
+                        <div class="playground__col">
+                            <figure class="playground__item">
+                                <img data-nite-src="#" />
+                            </figure>
+                        </div>
 
                     </div>
 
-                </section>
+                </div>
 
             </section>
 
-        </div>
+        </main>
 
-        <script src="assets/dist/test.min.js"></script>
+        <section class="playground">
 
-    </body>
+            <span class="playground__percentage">
+                <i data-percentage></i>
+            </span>
+
+            <section class="playground__area">
+
+                <div class="playground__area__inner">
+
+                    <div class="playground__area__row">
+
+                        <div class="playground__col">
+                            <figure class="playground__item">
+                                <img data-nite-src="http://placehold.it/720x720/d9cbf9.jpg" />
+                            </figure>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <section class="playground__area">
+
+                <div class="playground__area__inner">
+
+                    <div class="playground__area__row">
+
+                        <div class="playground__col--full">
+
+                            <figure class="playground__item">
+
+                                <video autoplay muted loop class="target">
+                                    <source data-nite-src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+                                    <source data-nite-src="https://www.w3schools.com/html/mov_bbb.ogg" type="video/ogg">
+                                </video>
+
+                            </figure>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </section>
+
+        <section class="playground">
+
+            <section class="playground__area">
+
+                <div class="playground__area__inner">
+
+                    <button class="nite-program-load--run">Generate Programmatically</button>
+                    <button class="nite-program-load--kill" style="display:none;">Abort</button>
+                    <button class="nite-program-mode--sequential" style="display:none;">Switch to Sequential Mode</button>
+                    <button class="nite-program-mode--parallel">Switch to Parallel Mode</button>
+                    <span>(...have la look at "Network" tab in dev tools!)</span>
+
+                </div>
+
+            </section>
+
+        </section>
+
+    </div>
+
+    <script src="assets/dist/test.js"></script>
+
+</body>
+
 </html>

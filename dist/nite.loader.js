@@ -2,591 +2,848 @@
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-/*! JQuery Nite Loader | Daniele Fioroni | dfioroni91@gmail.com */
-(function (window, document, $, undefined) {
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+(function (global, factory) {
+    (typeof exports === 'undefined' ? 'undefined' : _typeof(exports)) === 'object' && typeof module !== 'undefined' ? module.exports = factory() : typeof define === 'function' && define.amd ? define('NiteLoader', factory) : global.NiteLoader = factory();
+})(this, function () {
     'use strict';
 
-    var namespace_prefix = 'nite',
-        namespace_method = namespace_prefix + 'Load',
-        namespace = namespace_method + 'er';
+    /**
+     * @returns {string}
+     */
 
-    // thanks to https://github.com/paulmillr/console-polyfill
-    // - - - - - - - - - - - - - - - - - - - -
-    (function (global) {
-        if (!global.console) global.console = {};
-        var con = global.console,
-            prop = void 0,
-            method = void 0,
-            dummy = function dummy() {},
-            properties = ['memory'],
-            methods = ('assert,clear,count,debug,dir,dirxml,error,exception,group,' + 'groupCollapsed,groupEnd,info,log,markTimeline,profile,profiles,profileEnd,' + 'show,table,time,timeEnd,timeline,timelineEnd,timeStamp,trace,warn').split(',');
-        while (prop = properties.pop()) {
-            if (!con[prop]) con[prop] = {};
-        }while (method = methods.pop()) {
-            if (!con[method]) con[method] = dummy;
+    var generateInstanceID = function generateInstanceID() {
+        return Math.floor(Math.random() * (9999 - 1000)) + 1000;
+    };
+
+    /**
+     * @param {string} heystack
+     * @param {string} needle
+     * @returns {boolean}
+     */
+    var stringContains = function stringContains(heystack, needle) {
+        return String.prototype.includes ? heystack.includes(needle) : heystack.indexOf(needle, 0) !== -1;
+    };
+
+    /**
+     * @param {string} heystack
+     * @param {string} needle
+     * @returns {boolean}
+     */
+    var stringStartsWith = function stringStartsWith(heystack, needle) {
+        return String.prototype.startsWith ? heystack.startsWith(needle) : heystack.substr(0, needle.length) === needle;
+    };
+
+    /**
+     * @param {Array} heystack
+     * @param {Function} filter
+     * @returns {number}
+     */
+    var arrayFindIndex = function arrayFindIndex(heystack, filter) {
+        return Array.prototype.findIndex ? heystack.findIndex(filter) : function () {
+            var length = heystack.length,
+                index = -1;
+            while (++index < length) {
+                if (filter(heystack[index], index, heystack)) {
+                    return index;
+                }
+            }
+            return -1;
+        }();
+    };
+
+    /**
+     * @param {string} string
+     * @returns {string}
+     */
+    var hyphensToCamelCase = function hyphensToCamelCase(string) {
+        return string.replace(/-([a-z])/g, function (g) {
+            return g[1].toUpperCase();
+        });
+    };
+
+    /**
+     * @param {string} string
+     * @returns {string}
+     */
+    var capitalize = function capitalize(string) {
+        return string.charAt(0).toUpperCase() + string.slice(1);
+    };
+
+    /**
+     * @param {NodeList} nodelist
+     * @returns {Array}
+     */
+    var nodelistToArray = function nodelistToArray(nodelist) {
+        return [].concat(_toConsumableArray(nodelist));
+    };
+
+    /**
+     * @param {String|number} needle
+     * @param {Array} heystack
+     * @returns {boolean}
+     */
+    var isInArray = function isInArray(needle, heystack) {
+        return heystack.indexOf(needle) > -1;
+    };
+
+    // thanks https://gist.github.com/beaucharman/e46b8e4d03ef30480d7f4db5a78498ca
+    var throttle = function throttle(callback, wait) {
+        var context = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : undefined;
+
+        var timeout = null;
+        var callbackArgs = null;
+        var later = function later() {
+            callback.apply(context, callbackArgs);
+            timeout = null;
+        };
+        return function () {
+            if (!timeout) {
+                callbackArgs = arguments;
+                timeout = setTimeout(later, wait);
+            }
+        };
+    };
+
+    var privateCache = [];
+
+    var intersectionObserverSupported = 'IntersectionObserver' in window;
+    var pictureElementSupported = 'HTMLPictureElement' in window;
+    var jQueryIncluded = 'jQuery' in window;
+
+    /**
+     * @param {HTMLElement} element
+     * @returns {boolean}
+     */
+    var isVisible = function isVisible(element) {
+        if (intersectionObserverSupported && 'intersectionRatio' in element) {
+            return element.intersectionRatio > 0;
         }
-    })(window);
-    // - - - - - - - - - - - - - - - - - - - -
 
+        if (window.getComputedStyle(element, 'display') === 'none') {
+            return false;
+        }
 
-    // - - - - - - - - - - - - - - - - - - - -
-    if (!$) {
-        console.error('jQuery is needed for ' + namespace + ' to work!');
-        return void 0;
-    }
-    // - - - - - - - - - - - - - - - - - - - -
+        var bodyEl = document.getElementsByTagName('body')[0];
+        var winWidth = window.innerWidth || documnt.documentElement.clientWidth || bodyEl.clientWidth;
+        var winHeight = window.innerHeight || documnt.documentElement.clientHeight || bodyEl.clientHeight;
+        var rect = element.getBoundingClientRect();
 
+        return !(rect.right < 0 || rect.bottom < 0 || rect.left > winWidth || rect.top > winHeight);
+    };
 
-    // https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent/CustomEvent#Polyfill
-    // - - - - - - - - - - - - - - - - - - - -
-    (function () {
+    /**
+     * @param {HTMLElement} element
+     * @returns {boolean}
+     */
+    var isHTMLElement = function isHTMLElement(element) {
+        if ((typeof element === 'undefined' ? 'undefined' : _typeof(element)) !== 'object') {
+            return false;
+        }
+        try {
+            return element instanceof HTMLElement;
+        } catch (e) {
+            return element.nodeType === 1 && _typeof(element.style) === 'object' && _typeof(element.ownerDocument) === 'object';
+        }
+    };
 
-        if (typeof window.CustomEvent === "function") return false; //If not IE
+    /**
+     * @param {(string|HTMLVideoElement|HTMLAudioElement|HTMLImageElement)} source
+     * @returns {boolean}
+     */
+    var isLoaded = function isLoaded(source) {
+        return typeof source === 'string' && isInArray(source, privateCache) || isHTMLElement(source) && 'currentSrc' in source && source.currentSrc.length > 0 && ('complete' in source && source.complete || 'readyState' in source && source.readyState >= 2);
+    };
 
-        function CustomEvent(event, params) {
-            params = params || { bubbles: false, cancelable: false, detail: void 0 };
+    /**
+     * @param {(HTMLVideoElement|HTMLAudioElement)} source
+     * @returns {boolean}
+     */
+    var isFullyBuffered = function isFullyBuffered(media) {
+        return media.buffered.length && Math.round(media.buffered.end(0)) / Math.round(media.seekable.end(0)) === 1;
+    };
+
+    /**
+     * @param {(string|HTMLElement)} source
+     * @returns {boolean}
+     */
+    var isBroken = function isBroken(source) {
+        return isLoaded(source) && (isHTMLElement(source) && ('naturalWidth' in source && Math.floor(source.naturalWidth) === 0 || 'videoWidth' in source && source.videoWidth === 0) || typeof source === 'string');
+    };
+
+    var pluginPrefix = 'nite';
+    var pluginMethod = pluginPrefix + 'Load';
+    var pluginName = pluginMethod + 'er';
+    var pluginInstance = generateInstanceID();
+    var eventNamespaceParserSeparator = '__namespace__';
+
+    var supportedExtensions = {
+        image: 'jp[e]?g|jpe|jif|jfif|jfi|gif|png|tif[f]?|bmp|dib|webp|ico|cur|svg',
+        audio: 'mp3|ogg|oga|spx|ogg|wav',
+        video: 'mp4|ogv|webm'
+    };
+
+    var supportedTags = {
+        image: 'img|picture|source',
+        audio: 'audio|source',
+        video: 'video|source'
+    };
+
+    var privateEventsStorage = {};
+
+    var CustomEvent = window.CustomEvent || function () {
+        var _polyfill = function _polyfill(event, params) {
+            params = params || { bubbles: false, cancelable: false, detail: undefined };
             var evt = document.createEvent('CustomEvent');
             evt.initCustomEvent(event, params.bubbles, params.cancelable, params.detail);
             return evt;
+        };
+        _polyfill.prototype = window.Event.prototype;
+        return _polyfill;
+    }();
+
+    /**
+     * @param {HTMLElement} element
+     * @param {string} events
+     * @returns {undefined}
+     */
+    var detachEventListener = function detachEventListener(element, events) {
+        if (!element || typeof events !== 'string') {
+            return;
         }
 
-        CustomEvent.prototype = window.Event.prototype;
+        if (stringStartsWith(events, '.')) {
+            for (var _key in privateEventsStorage) {
+                var eventNameWithNamespace = _key.replace(eventNamespaceParserSeparator, '.');
+                if (stringContains(eventNameWithNamespace, events) && privateEventsStorage[_key].element === element) {
+                    detachEventListener(element, eventNameWithNamespace);
+                }
+            }
+        } else {
+            events = events.split('.');
 
-        window.CustomEvent = CustomEvent;
-    })();
-    // - - - - - - - - - - - - - - - - - - - -
+            var type = events[0],
+                namespace = events[1];
 
+            if (namespace) {
+                events = events.join(eventNamespaceParserSeparator);
+            }
 
-    // thanks to https://github.com/jsPolyfill/Array.prototype.findIndex
-    // todo check efficiency and reliability in MS Internet Explorer
-    // - - - - - - - - - - - - - - - - - - - -
-    Array.prototype.findIndex = Array.prototype.findIndex || function (callback) {
-        if (this === null) {
-            throw new TypeError('Array.prototype.findIndex called on null or undefined');
-        } else if (typeof callback !== 'function') {
-            throw new TypeError('callback must be a function');
-        }
-        var list = Object(this),
-
-        // Makes sures is always has an positive integer as length.
-        length = list.length >>> 0,
-            thisArg = arguments[1];
-        for (var i = 0; i < length; i++) {
-            if (callback.call(thisArg, list[i], i, list)) {
-                return i;
+            if (events in privateEventsStorage) {
+                element.removeEventListener(type, privateEventsStorage[events].handler);
+                delete privateEventsStorage[events];
             }
         }
-        return -1;
     };
-    // - - - - - - - - - - - - - - - - - - - -
 
-
-    // thanks to https://gist.github.com/eliperelman/1031656
-    // todo check efficiency and reliability in MS Internet Explorer
-    // - - - - - - - - - - - - - - - - - - - -
-    [].filter || (Array.prototype.filter = function (a, b, c, d, e) {
-        c = this;d = [];for (e in c) {
-            ~~e + '' == e && e >= 0 && a.call(b, c[e], +e, c) && d.push(c[e]);
-        }return d;
-    });
-    // - - - - - - - - - - - - - - - - - - - -
-
-
-    var cache = [];
-
-    var capitalize = function capitalize(string) {
-        return string.charAt(0).toUpperCase() + string.slice(1);
-    },
-        $document = $(document),
-        $window = $(window),
-        unique_id = function unique_id() {
-
-        return $.nite && 'uniqueId' in $.nite ? $.nite.uniqueId() : Math.floor(Math.random() * (9999 - 1000)) + 1000;
-    },
-        is_visible = function is_visible(element) {
-
-        var $el = $(element);
-
-        var in_viewport = false;
-
-        if ($.nite && 'inViewport' in $.nite) in_viewport = $.nite.inViewport(element).ratio;else {
-
-            var rect = element.getBoundingClientRect();
-
-            in_viewport = !(rect.right < 0 || rect.bottom < 0 || rect.left > $window.width() || rect.top > $window.height());
+    /**
+     * @param {HTMLElement} element
+     * @param {string} events
+     * @param {Function} handler
+     * @param {boolean} once
+     * @returns {undefined}
+     */
+    // TODO: Class EventListener .on .one .off .trigger jQuery-like...
+    var attachEventListener = function attachEventListener(element, events, handler, once) {
+        if (!element || typeof events !== 'string' || typeof handler !== 'function') {
+            return;
         }
 
-        return in_viewport && $el.is(':visible') && $el.css('visibility') !== 'hidden';
-    },
-        is_html_object = function is_html_object(object) {
+        events = events.split('.');
 
-        if ((typeof object === 'undefined' ? 'undefined' : _typeof(object)) !== 'object') return false;
+        var type = events[0];
+        var namespace = events[1];
 
-        try {
-            return object instanceof HTMLElement;
-        } catch (e) {
-            return object.nodeType === 1 && _typeof(object.style) === 'object' && _typeof(object.ownerDocument) === 'object';
+        if (namespace) {
+            events = events.join(eventNamespaceParserSeparator);
         }
-    },
-        is_loaded = function is_loaded(element) {
 
-        return typeof element === 'string' && $.inArray(element, cache) > -1 || is_html_object(element) && 'currentSrc' in element && element.currentSrc.length && ('complete' in element && element.complete || 'readyState' in element && element.readyState >= 2);
-    },
-        is_broken = function is_broken(element) {
+        privateEventsStorage[events] = { element: element, count: 0, once: false };
 
-        return is_loaded(element) && ((typeof element === 'undefined' ? 'undefined' : _typeof(element)) === 'object' && ('naturalWidth' in element && Math.floor(element.naturalWidth) === 0 || 'videoWidth' in element && element.videoWidth === 0) || typeof element === 'string' // todo check if is url maybe?
-        );
-    },
-        is_format = function is_format(item, expected_format) {
+        if (true === once) {
+            var _handler = handler;
+            handler = function handler(event) {
+                if (events in privateEventsStorage) {
+                    privateEventsStorage[events].count++;
+                    if (privateEventsStorage[events].once && privateEventsStorage[events].count > 1) {
+                        return;
+                    }
+                    _handler.call(this, event);
+                }
+                detachEventListener(element, events);
+            };
+        } else {
+            once = false;
+        }
 
-        var format_extensions = {
-            image: 'jp[e]?g||jpe|jif|jfif|jfi|gif|png|tif[f]?|bmp|dib|webp|ico|cur|svg',
-            audio: 'mp3|ogg|oga|spx|ogg|wav',
-            video: 'mp4|ogv|webm'
-        },
-            format_names = Object.keys(format_extensions),
-            base64_heading = '\;base64\,';
+        privateEventsStorage[events] = _extends({}, privateEventsStorage[events], { handler: handler, once: once });
 
-        var output = { format: null, extension: null };
+        element.addEventListener(type, privateEventsStorage[events].handler, { once: once });
+    };
 
-        if (typeof item === 'string') {
+    /**
+     * @param {Object} resource
+     * @returns {Object}
+     */
+    var decodeResource = function decodeResource(resource) {
+        var output = { format: null, extension: null, tag: null, consistent: false };
 
-            item = item.split('?')[0]; // get rid of query strings
-            item = item.split('#')[0]; // get rid of hashes
+        resource.resource = resource.resource.split('?')[0];
+        resource.resource = resource.resource.split('#')[0];
+        for (var formatCandidate in supportedExtensions) {
+            var base64Heading = ';base64,';
 
-            if (item === '') return false;
+            if (new RegExp('(.(' + supportedExtensions[formatCandidate] + ')$)|' + base64Heading, 'g').test(resource.resource)) {
+                if (new RegExp(base64Heading, 'g').test(resource.resource)) {
+                    var matches64 = resource.resource.match(new RegExp('^data:' + formatCandidate + '/(' + supportedExtensions[formatCandidate] + ')', 'g'));
 
-            var format_queue = void 0 !== expected_format ? [expected_format] : format_names;
+                    if (null === matches64) {
+                        return;
+                    }
 
-            for (var x in format_queue) {
+                    matches64 = matches64[0];
 
-                if (format_queue.hasOwnProperty(x)) {
+                    output.format = formatCandidate;
+                    output.extension = matches64.replace('data:' + formatCandidate + '/', '');
+                    output.tag = supportedTags[formatCandidate];
 
-                    if (new RegExp('(\.(' + format_extensions[format_queue[x]] + ')$)|' + base64_heading, 'g').test(item)) {
+                    break;
+                } else {
+                    var matches = resource.resource.match(new RegExp(supportedExtensions[formatCandidate], 'g'));
 
-                        if (new RegExp(base64_heading, 'g').test(item)) {
+                    if (matches) {
+                        output.format = formatCandidate;
+                        output.extension = matches[0];
+                        output.tag = supportedTags[formatCandidate];
 
-                            var matches64 = item.match(new RegExp('^data:' + format_queue[x] + '\/(' + format_extensions[format_queue[x]] + ')', 'g'));
+                        break;
+                    }
+                }
+            }
+        }
 
-                            if (!matches64 || null === matches64) continue;
+        if (isHTMLElement(resource.element)) {
+            var tagName = resource.element.tagName.toLowerCase();
+            var allTags = '';
 
-                            matches64 = matches64[0];
+            Object.values(supportedTags).forEach(function (tags) {
+                allTags += '|' + tags;
+            });
 
-                            output.format = format_queue[x];
-                            output.extension = matches64.replace('data:' + format_queue[x] + '/', '');
+            allTags = allTags.split('|');
 
+            if (isInArray(tagName, allTags)) {
+                output.tag = tagName;
+                output.consistent = true;
+                if (output.format === null) {
+                    for (var format in supportedTags) {
+                        if (stringContains(supportedTags[format], output.tag)) {
+                            output.format = format;
                             break;
-                        } else {
-
-                            var matches = item.match(new RegExp(format_extensions[format_queue[x]], 'g'));
-
-                            if (matches) {
-
-                                output.format = format_queue[x];
-                                output.extension = matches[0];
-
-                                break;
-                            }
                         }
                     }
                 }
             }
         }
 
-        if (is_html_object(item)) {
-
-            var tag_name = item.tagName.toLowerCase();
-
-            if ($.inArray(tag_name, format_names) > -1) output.format = item.tagName.toLowerCase();
-
-            if (tag_name === 'img') output.format = 'image';
+        if (stringContains(output.tag, '|')) {
+            output.tag = output.tag.split('|')[0];
         }
 
         return output;
     };
 
-    var ResourceLoader = function () {
-        function ResourceLoader(options) {
+    // TODO: Promise support
+    // TODO: think about useful vars in callback args (this class is not public but its vars are returned in .progress() callback)
+    /** TODO: description of the MyClass constructor function.
+     * @class
+     * @classdesc TODO: description of the SingleLoader class.
+     */
+
+    var SingleLoader = function () {
+        /**
+         * @param {Object} [options={ srcAttr: 'data-src', srcsetAttr: 'data-srcset', playthrough: false, visible: false }]
+         */
+        function SingleLoader(options) {
             var _this = this;
 
-            _classCallCheck(this, ResourceLoader);
+            _classCallCheck(this, SingleLoader);
 
-            // todo make _vars really private
-            // todo make useful vars since this class is not public but is returned in .progress() callback
-            this._settings = $.extend(true, {
+            this._settings = _extends({
                 srcAttr: 'data-src',
                 srcsetAttr: 'data-srcset',
                 playthrough: false,
                 visible: false
             }, options);
 
+            if (!stringStartsWith(this._settings.srcAttr, 'data-') || !stringStartsWith(this._settings.srcsetAttr, 'data-')) {
+                throw new Error('Wrong arguments format: srcAttr and srcsetAttr parameters must be dataset values.');
+            }
+
+            this.srcAttr = hyphensToCamelCase(this._settings.srcAttr.replace('data-', ''));
+            this.srcsetAttr = hyphensToCamelCase(this._settings.srcsetAttr.replace('data-', ''));
+
             this._id = null;
-            this._id_event = null;
-
-            this._element = null;
-            this._$element = $();
-
-            this._resource = null;
+            this._idEvent = null;
             this._busy = false;
 
+            this._element = null;
+            this._resource = null;
             this._format = null;
+            this._observer = null;
 
-            this._done = $.noop;
-            this._success = $.noop;
-            this._error = $.noop;
+            this._done = function () {};
+            this._success = function () {};
+            this._error = function () {};
 
             this._callback = function (e) {
-
-                _this._$element.removeData(namespace);
-
                 _this._busy = false;
+                if (null !== _this._observer) {
+                    _this._observer.unobserve(_this._element);
+                }
 
                 var src = _this._element.currentSrc || _this._element.src;
 
-                if ($.inArray(src, cache) === -1) cache.push(src);
+                if (!isInArray(src, privateCache)) {
+                    privateCache.push(src);
+                }
 
-                var this_arguments = [_this._element, e.type, src, _this._id];
+                var thisArguments = [_this._element, e.type, src, _this._id];
 
-                _this[e.type !== 'error' ? '_success' : '_error'].apply(_this, this_arguments);
-                _this._done.apply(_this, this_arguments);
+                _this[e.type !== 'error' ? '_success' : '_error'].apply(_this, thisArguments);
+                _this._done.apply(_this, thisArguments);
             };
         }
 
-        _createClass(ResourceLoader, [{
-            key: 'process',
+        /**
+         * @param {Object} data
+         */
+
+
+        _createClass(SingleLoader, [{
+            key: 'load',
 
 
             /**
-             *
              * @returns {boolean} se ha preso in carico il caricamento oppure no per vari motivi (è già caricato, non è nella viewport etc)
              */
-            value: function process() {
+            value: function load() {
                 var _this2 = this;
 
-                var src = this._settings.srcAttr,
-                    src_clean = this._settings.srcAttr.replace('data-', '');
+                // TODO: FIXME: (3) check for placeholders / non-lazy resources
+                // if isLoaded(this._exists && this._consistent ? this._element : this._resource) &&
+                // (
+                //    ( this._lazy && ( data-xyz-src === src || data-xyz-srcset === srcset ) ) // TODO: capire come
+                //    ||
+                //    !this._lazy
+                // )
 
-                if (is_loaded(this._exists ? this._element : this._resource)) {
+                //TODO: remove elseif else when returning?
+                if (isLoaded(this._exists && this._consistent ? this._element : this._resource)) {
+                    if (!this._busy) {
+                        // TODO: mayabe this should be called in this._callback
+                        detachEventListener(this._element, '.' + this._idEvent);
+                    }
 
-                    if (!this._busy) this._$element.off('.' + this._id_event); // todo this should be called when in callback
-
-                    this._callback(new CustomEvent(!is_broken(this._exists ? this._element : this._resource) ? 'load' : 'error'));
+                    this._callback(new CustomEvent(!isBroken(this._exists && this._consistent ? this._element : this._resource) ? 'load' : 'error'));
 
                     return false;
-                } else if (this._exists && this._settings.visible && !is_visible(this._element)) {
-
+                } else if (this._exists && this._settings.visible && !isVisible(this._originalElement)) {
                     return false;
                 } else {
-
                     if (this._format === 'image') {
+                        attachEventListener(this._element, 'load.' + this._idEvent, this._callback, !this._busy);
+                        attachEventListener(this._element, 'error.' + this._idEvent, this._callback, !this._busy);
 
-                        this._$element[this._busy ? 'on' : 'one']('load.' + this._id_event + ' error.' + this._id_event, this._callback);
+                        var picture = this._element.closest('picture');
 
-                        var $picture = this._$element.closest('picture'),
-                            srcset = this._settings.srcsetAttr,
-                            srcset_clean = this._settings.srcsetAttr.replace('data-', '');
+                        if (picture && pictureElementSupported) {
+                            delete this._element.dataset[this.srcsetAttr];
+                            delete this._element.dataset[this.srcAttr];
 
-                        if ($picture.length && 'HTMLPictureElement' in window) {
-
-                            this._$element.removeData(srcset_clean).removeAttr(srcset).removeData(src_clean).removeAttr(src);
-
-                            $picture.find('source[' + srcset + ']').attr('srcset', $picture.data(srcset_clean)).removeData(srcset_clean).removeAttr(srcset);
-                        } else {
-
-                            if (this._$element.is('[' + srcset + ']')) this._$element.attr('srcset', this._$element.data(srcset_clean)).removeData(srcset_clean).removeAttr(srcset);
-
-                            if (this._$element.is('[' + src + ']')) this._$element.attr('src', this._$element.data(src_clean)).removeData(src_clean).removeAttr(src);
-                        }
-                    } else if (this._format === 'video' || this._format === 'audio') {
-
-                        var is_playthrough_mode__normal = true === this._settings.playthrough,
-                            is_playthrough_mode__full = 'full' === this._settings.playthrough,
-                            $sources = this._$element.find('source'),
-                            is_fully_buffered = function is_fully_buffered(media) {
-
-                            return media.buffered.length && Math.round(media.buffered.end(0)) / Math.round(media.seekable.end(0)) === 1;
-                        };
-
-                        var call_media_load = false;
-
-                        if ($sources.length) {
-
-                            var self = this; // todo arrow func ?
-
-                            $sources.each(function () {
-
-                                var $t = $(this);
-
-                                if ($t.is('[' + src + ']')) {
-
-                                    $t.attr('src', $t.data(src_clean)).removeData(src_clean).removeAttr(src);
-
-                                    call_media_load = true;
-                                }
-                            })[this._busy ? 'on' : 'one']('error.' + this._id_event, function (e) {
-
-                                var sources_error_id = namespace + '_error';
-
-                                $(this).data(sources_error_id, true);
-
-                                if ($sources.length === $sources.filter(function () {
-                                    return true === $(this).data(sources_error_id);
-                                }).length) self._callback(e);
+                            picture.querySelectorAll('source[' + this._settings.srcsetAttr + ']').forEach(function (el) {
+                                el.setAttribute('srcset', el.dataset[_this2.srcAttr]);
+                                delete el.dataset[_this2.srcAttr];
                             });
                         } else {
+                            if (this._element.matches('[' + this._settings.srcsetAttr + ']')) {
+                                this._element.setAttribute('srcset', this._element.dataset[this.srcsetAttr]);
+                                delete this._element.dataset[this.srcsetAttr];
+                            }
 
-                            if (this._$element.is('[' + src + ']')) {
-
-                                this._$element.attr('src', this._$element.data(src_clean)).removeData(src_clean).removeAttr(src)[this._busy ? 'on' : 'one']('error.' + this._id_event, this._callback);
-
-                                call_media_load = true;
+                            if (this._element.matches('[' + this._settings.srcAttr + ']')) {
+                                this._element.setAttribute('src', this._element.dataset[this.srcAttr]);
+                                delete this._element.dataset[this.srcAttr];
                             }
                         }
+                    } else if (this._format === 'video' || this._format === 'audio') {
+                        var isStandardPlaythrough = true === this._settings.playthrough;
+                        var isFullPlaythrough = 'full' === this._settings.playthrough;
+                        var sources = this._element.querySelectorAll('source');
 
-                        if (call_media_load) this._element.load();
+                        var callMediaLoad = false;
 
-                        this._$element[this._busy ? 'on' : 'one']('loadedmetadata.' + this._id_event, function () {
+                        if (sources) {
+                            sources.forEach(function (source) {
+                                if (source.matches('[' + _this2._settings.srcAttr + ']')) {
+                                    source.setAttribute('src', source.dataset[_this2.srcAttr]);
+                                    delete source.dataset[_this2.srcsetAttr];
 
-                            if (!is_playthrough_mode__normal && !is_playthrough_mode__full) _this2._callback(new CustomEvent('load'));
+                                    callMediaLoad = true;
+                                }
 
-                            if (is_playthrough_mode__full) {
+                                attachEventListener(source, 'error.' + _this2._idEvent, function (e) {
+                                    var sourcesErrorId = pluginName + '_error';
 
-                                var on_progress_replacement_interval = setInterval(function () {
+                                    source[pluginInstance + '_' + sourcesErrorId] = true;
 
-                                    var is_error = _this2._element.readyState > 0 && !_this2._element.duration;
+                                    if (sources.length === nodelistToArray(sources).filter(function (thisSource) {
+                                        return true === thisSource[pluginInstance + '_' + sourcesErrorId];
+                                    }).length) {
+                                        _this2._callback(e);
+                                    }
+                                }, !_this2._busy // true -> once, false -> on
+                                );
+                            });
+                        } else if (this._element.matches('[' + this._settings.srcAttr + ']')) {
+                            this._element.setAttribute('src', this._element.dataset[this.srcAttr]);
+                            delete this._element.dataset[this.srcAttr];
 
-                                    if (is_error || is_fully_buffered(_this2._element)) {
+                            attachEventListener(this._element, 'error.' + this._idEvent, this._callback, !this._busy // true -> once, false -> on
+                            );
 
+                            callMediaLoad = true;
+                        }
+
+                        if (callMediaLoad) {
+                            this._element.load();
+                        }
+
+                        attachEventListener(this._element, 'loadedmetadata.' + this._idEvent, function () {
+                            if (!isStandardPlaythrough && !isFullPlaythrough) {
+                                _this2._callback(new CustomEvent('load'));
+                            }
+
+                            if (isFullPlaythrough) {
+                                var onProgressReplacementInterval = setInterval(function () {
+                                    var isError = _this2._element.readyState > 0 && !_this2._element.duration;
+
+                                    if (isError || isFullyBuffered(_this2._element)) {
                                         _this2._element.currentTime = 0;
 
-                                        if (!is_error && !_this2._busy && _this2._element.paused && _this2._$element.is('[autoplay]')) _this2._element.play();
+                                        if (!isError && !_this2._busy && _this2._element.paused && _this2._element.matches('[autoplay]')) {
+                                            _this2._element.play();
+                                        }
 
-                                        clearInterval(on_progress_replacement_interval);
+                                        clearInterval(onProgressReplacementInterval);
 
-                                        _this2._callback(new CustomEvent(!is_error ? 'load' : 'error'));
+                                        _this2._callback(new CustomEvent(!isError ? 'load' : 'error'));
                                     } else {
+                                        if (!_this2._element.paused) {
+                                            _this2._element.pause();
+                                        }
 
-                                        if (!_this2._element.paused) _this2._element.pause();
-
-                                        if (!_this2._busy) _this2._element.currentTime += 2;
+                                        if (!_this2._busy) {
+                                            _this2._element.currentTime += 2;
+                                        }
                                     }
                                 }, 500);
 
-                                _this2._$element.data(_this2._id_event, on_progress_replacement_interval);
+                                _this2._element[pluginName + '_' + _this2._idEvent] = onProgressReplacementInterval;
                             }
-                        })[this._busy ? 'on' : 'one']('canplay.' + this._id_event, function () {
+                        }, !this._busy // true -> once, false -> on
+                        );
 
-                            if (is_playthrough_mode__full && _this2._element.currentTime === 0 && !is_fully_buffered(_this2._element)) _this2._element.currentTime++;
-                        })[this._busy ? 'on' : 'one']('canplaythrough.' + this._id_event, function () {
+                        attachEventListener(this._element, 'canplay.' + this._idEvent, function () {
+                            if (isFullPlaythrough && _this2._element.currentTime === 0 && !isFullyBuffered(_this2._element)) {
+                                _this2._element.currentTime++;
+                            }
+                        }, !this._busy // true -> once, false -> on
+                        );
 
-                            if (is_playthrough_mode__normal) _this2._callback(new CustomEvent('load'));
-                        });
+                        attachEventListener(this._element, 'canplaythrough.' + this._idEvent, function () {
+                            if (isStandardPlaythrough) {
+                                _this2._callback(new CustomEvent('load'));
+                            }
+                        }, !this._busy // true -> once, false -> on
+                        );
                     } else {
-
                         return false;
                     }
 
-                    if (!this._busy) this._$element.data(namespace, this._id_event);
+                    if (!this._busy) {
+                        this._element[pluginInstance + '_IDEvent'] = this._idEvent;
+                    }
                 }
 
                 this._resource = this._element.currentSrc || this._element.src;
 
                 return !this._busy;
             }
+
+            /**
+             * @param {Function} callback
+             * @returns {undefined}
+             */
+
         }, {
             key: 'done',
             value: function done(callback) {
-
-                if (!$.isFunction(callback)) return;
+                if (typeof callback !== 'function') {
+                    return;
+                }
 
                 this._done = function (element, status, resource, id) {
                     callback.apply(this, [element, status, resource, id]);
                 };
             }
+
+            /**
+             * @returns {undefined}
+             */
+
         }, {
             key: 'abort',
             value: function abort() {
+                detachEventListener(this._element, '.' + this._idEvent);
 
-                this._$element.off('.' + this._id_event);
+                if (isLoaded(this._exists ? this._element : this._resource)) {
+                    return;
+                }
 
-                if (is_loaded(this._exists ? this._element : this._resource)) return;
+                var src = this._element.getAttribute('srcset'),
+                    srcset = this._element.getAttribute('src');
 
-                var src = this._$element.attr('srcset'),
-                    srcset = this._$element.attr('src');
+                if (undefined !== src) {
+                    this._element.dataset[this.srcAttr] = src;
+                    this._element.setAttribute(this._settings.srcAttr, src);
+                    this._element.removeAttribute('src');
+                    this._element.removeAttribute('srcset');
+                }
 
-                if (void 0 !== src) this._$element.data(this._settings.srcAttr, src).attr(this._settings.srcAttr, src).removeAttr('src').removeAttr('srcset');
-
-                if (void 0 !== srcset) this._$element.data(this._settings.srcsetAttr, srcset).attr(this._settings.srcsetAttr, srcset).removeAttr('src').removeAttr('srcset');
+                if (undefined !== srcset) {
+                    this._element.dataset[this.srcsetAttr] = srcset;
+                    this._element.setAttribute(this._settings.srcsetAttr, srcset);
+                    this._element.removeAttribute('src');
+                    this._element.removeAttribute('srcset');
+                }
             }
         }, {
             key: 'resource',
             set: function set(data) {
-
-                var element_resource = is_html_object(data.resource),
-                    string_resource = typeof data.resource === 'string';
-
-                if (!element_resource && !string_resource) return;
-
-                this._id = data.id;
-                this._format = is_format(data.resource).format;
-
-                this._exists = element_resource; // todo maybe search for an element with this src
-
-                if (string_resource) {
-
-                    var is_img = this._format === 'image';
-
-                    this._element = document.createElement(is_img ? 'img' : this._format);
-
-                    if (is_img) this._settings.srcsetAttr = 'data-srcset';
-                    this._settings.srcAttr = 'data-src';
-
+                if ((typeof data === 'undefined' ? 'undefined' : _typeof(data)) === 'object' && 'id' in data && 'element' in data && 'resource' in data) {
+                    this._id = data.id;
+                    this._element = data.element;
                     this._resource = data.resource;
+
+                    this._busy = this._idEvent !== undefined;
+
+                    // TODO: FIXME: if this.busy, ottieni tutte le variabili seguenti da una cache.
+
+                    var info = decodeResource({
+                        resource: this._resource,
+                        element: this._element
+                    });
+                    this._tag = info.tag;
+                    this._consistent = info.consistent; // wrong tag for resource type...
+                    this._format = info.format;
+                    this._exists = this._element !== null;
+                    this._originalElement = this._element;
+
+                    if (!this._exists || !this._consistent) {
+                        this._element = document.createElement(this._tag);
+                        this._element.dataset[this.srcAttr] = this._resource;
+                    }
+
+                    this._idEvent = this._busy ? this._element[pluginInstance + '_IDEvent'] : pluginName + '_unique_' + this._element.tagName + '_' + generateInstanceID();
+
+                    //TODO: FIXME: this._lazy = this._busy ? this._lazy : !!(this._element.dataset[this.srcAttr] || this._element.dataset[this.srcsetAttr]);
+
+                    if (this._exists && this._settings.visible && intersectionObserverSupported) {
+                        this._observer = new IntersectionObserver(function (entries, observer) {
+                            entries.forEach(function (entry) {
+                                return entry.target.intersectionRatio = entry.intersectionRatio;
+                            });
+                        }, {
+                            root: null,
+                            rootMargin: '0px',
+                            threshold: 0.1
+                        });
+                        this._observer.observe(this._originalElement);
+                    }
                 }
+            }
 
-                if (element_resource) this._element = data.resource;
-
-                this._$element = $(this._element);
-
-                if (string_resource) {
-
-                    this._$element.data(this._settings.srcAttr.replace('data-', ''), this._resource).data(this._settings.srcsetAttr.replace('data-', ''), this._resource).attr(this._settings.srcAttr, this._resource).attr(this._settings.srcsetAttr, this._resource);
-                }
-
-                this._id_event = this._$element.data(namespace);
-                this._busy = this._id_event !== void 0;
-                this._id_event = this._busy ? this._id_event : namespace + '_unique_' + this._element.tagName + '_' + unique_id();
+            /**
+             * @returns {string}
+             */
+            ,
+            get: function get() {
+                return this._resource;
             }
         }]);
 
-        return ResourceLoader;
+        return SingleLoader;
     }();
 
-    var ResourcesLoader = function () {
-        function ResourcesLoader(collection, options) {
-            var _this3 = this;
+    // TODO: Promise support
+    // TODO: private vars
+    // TODO: refactory succes/done/progress code...
+    /** TODO: description of the MyClass constructor function.
+     * @class
+     * @classdesc TODO: description of the Loader class.
+     */
 
-            _classCallCheck(this, ResourcesLoader);
 
-            // todo make _vars really private
+    var Loader = function () {
+        /**
+         * @param {Object} [options={srcAttr: 'data-src', srcsetAttr: 'data-srcset', playthrough: false, visible: false, backgrounds: false }]
+         */
+        function Loader(options) {
+            _classCallCheck(this, Loader);
+
             this._collection = [];
-            this._collection_loaded = [];
-            this._collection_instances = [];
-            this._collection_pending = [];
-            this._resources_loaded = [];
+            this._collectionLoaded = [];
+            this._collectionInstances = [];
+            this._collectionPending = [];
+            this._resourcesLoaded = [];
 
-            if ($.isArray(collection) && (typeof collection[0] === 'string' || is_html_object(collection[0]))) for (var resource in collection) {
-                if (collection.hasOwnProperty(resource)) this._collection.push({ id: unique_id(), resource: collection[resource] });
-            }if (typeof collection === 'string' || is_html_object(collection)) this._collection.push({ id: unique_id(), resource: collection });
-
-            this._settings = $.extend(true, {
+            this._settings = _extends({
                 srcAttr: 'data-src',
                 srcsetAttr: 'data-srcset',
                 playthrough: false,
-                visible: false
+                visible: false,
+                backgrounds: false
             }, options);
+
+            if (!stringStartsWith(this._settings.srcAttr, 'data-') || !stringStartsWith(this._settings.srcsetAttr, 'data-')) {
+                throw new Error('Wrong arguments format: srcAttr and srcsetAttr parameters must be dataset values.');
+            }
+
+            this.srcAttr = hyphensToCamelCase(this._settings.srcAttr.replace('data-', ''));
+            this.srcsetAttr = hyphensToCamelCase(this._settings.srcsetAttr.replace('data-', ''));
 
             this.percentage = 0;
 
-            this._done = $.noop;
-            this._progress = $.noop;
-            this._success = $.noop;
-            this._error = $.noop;
+            this._done = function () {};
+            this._progress = function () {};
+            this._success = function () {};
+            this._error = function () {};
+            this._loop = this.load;
 
             this._abort = false;
             this._loaded = 0;
             this._complete = false;
             this._busy = false;
-
-            (this._loop = function () {
-                // self invoking this._loop
-                setTimeout(function () {
-                    // force asynchrony (gives time to chain methods synchronously)
-                    _this3.loop();
-                }, 25);
-            })();
         }
 
-        _createClass(ResourcesLoader, [{
-            key: 'loop',
-            value: function loop() {
-                var _this4 = this;
+        /**
+         *
+         * @param {HTMLElement} [element=document.body]
+         * @param {Object} [options={ srcAttr: 'src', srcsetAttr: 'srcset', backgrounds: false }]
+         */
 
-                this._collection_pending = []; // resets pending elements (sequential opt helper array) every time we loop
 
-                var sequential_mode = true === this._settings.sequential;
+        _createClass(Loader, [{
+            key: 'load',
+
+
+            /**
+             * @returns {undefined}
+             */
+            value: function load() {
+                var _this3 = this;
+
+                if (!this._collection.length) {
+                    this._done.call(this, this._resourcesLoaded);
+                }
+
+                // resets pending elements (sequential opt helper array) every time we loop
+                this._collectionPending = [];
+
+                var sequentialMode = true === this._settings.sequential;
 
                 var _loop = function _loop(i) {
+                    if (_this3._abort) {
+                        return 'break';
+                    }
 
-                    if (_this4._abort) return 'break';
+                    var thisLoadId = _this3._collection[i].id;
+                    var thisLoadIndex = arrayFindIndex(_this3._collectionInstances, function (x) {
+                        return x.id === thisLoadId;
+                    });
+                    var thisLoadInstance = new SingleLoader(_this3._settings);
 
-                    var this_load_id = _this4._collection[i].id,
-                        this_load_index = _this4._collection_instances.findIndex(function (x) {
-                        return x.id === this_load_id;
-                    }),
-                        this_load_instance = new ResourceLoader(_this4._settings);
-
-                    if (this_load_index === -1) {
-                        _this4._collection_instances.push({ id: this_load_id, instance: this_load_instance });
-                        this_load_index = _this4._collection_instances.findIndex(function (x) {
-                            return x.id === this_load_id;
+                    if (thisLoadIndex === -1) {
+                        _this3._collectionInstances.push({
+                            id: thisLoadId,
+                            instance: thisLoadInstance
                         });
-                    } else _this4._collection_instances[this_load_index].instance = this_load_instance;
+                        thisLoadIndex = arrayFindIndex(_this3._collectionInstances, function (x) {
+                            return x.id === thisLoadId;
+                        });
+                    } else {
+                        _this3._collectionInstances[thisLoadIndex].instance = thisLoadInstance;
+                    }
 
-                    this_load_instance.resource = _this4._collection[i];
+                    thisLoadInstance.resource = _this3._collection[i];
 
-                    this_load_instance.done(function (element, status, resource, id) {
-
-                        if (_this4._complete || _this4._abort) return;
-
-                        var a_progress = $.inArray(id, _this4._collection_loaded) === -1;
-
-                        if (a_progress) {
-
-                            _this4._collection_loaded.push(id);
-                            _this4._busy = false;
-
-                            _this4._loaded++;
-                            _this4.percentage = _this4._loaded / _this4._collection.length * 100;
-                            _this4.percentage = parseFloat(_this4.percentage.toFixed(4));
-
-                            var this_resource = { resource: resource, status: status };
-                            _this4._resources_loaded.push(this_resource);
-
-                            _this4._progress.call(_this4, this_resource);
-                            _this4[status !== 'error' ? '_success' : '_error'].call(_this4, this_resource);
-
-                            $(element).trigger(namespace_prefix + capitalize(status) + '.' + namespace_prefix, [element, resource]);
+                    thisLoadInstance.done(function (element, status, resource, id) {
+                        if (_this3._complete || _this3._abort) {
+                            return;
                         }
 
-                        if (_this4._loaded === _this4._collection.length) {
+                        var aProgress = !isInArray(id, _this3._collectionLoaded);
 
-                            _this4._done.call(_this4, _this4._resources_loaded);
+                        if (aProgress) {
+                            _this3._collectionLoaded.push(id);
+                            _this3._busy = false;
 
-                            _this4._complete = true;
-                        } else if (a_progress && sequential_mode) {
+                            _this3._loaded++;
+                            _this3.percentage = _this3._loaded / _this3._collection.length * 100;
+                            _this3.percentage = parseFloat(_this3.percentage.toFixed(4));
 
-                            if (_this4._collection_pending.length) {
+                            var thisResource = {
+                                resource: resource,
+                                status: status,
+                                element: element
+                            };
+                            _this3._resourcesLoaded.push(thisResource);
+                            _this3._progress.call(_this3, thisResource);
+                            _this3[status !== 'error' ? '_success' : '_error'].call(_this3, thisResource);
+                            // TODO: dispatch event on element maybe?
+                            // element.dispatchEvent(new CustomEvent(pluginPrefix + capitalize(status) + '.' + pluginPrefix));
+                        }
 
-                                _this4._collection_pending = _this4._collection_pending.filter(function (x) {
-                                    return x.id !== id;
-                                });
-                                _this4._collection_pending = _this4._collection_pending.filter(function (x) {
-                                    return x.id !== id;
-                                });
+                        if (_this3._loaded === _this3._collection.length) {
+                            _this3._done.call(_this3, _this3._resourcesLoaded);
 
-                                if (_this4._collection_pending.length) _this4._busy = _this4._collection_pending[0].instance.process();
+                            _this3._complete = true;
+                        } else if (aProgress && sequentialMode && _this3._collectionPending.length) {
+                            _this3._collectionPending = _this3._collectionPending.filter(function (x) {
+                                return x.id !== id;
+                            });
+
+                            if (_this3._collectionPending.length) {
+                                _this3._busy = _this3._collectionPending[0].instance.load();
                             }
                         }
                     });
 
-                    if (!sequential_mode || sequential_mode && !_this4._busy) _this4._busy = this_load_instance.process();else if (sequential_mode && _this4._busy) {
-
-                        if (!_this4._settings.visible || _this4._settings.visible && is_visible(this_load_instance._element)) _this4._collection_pending.push({ id: this_load_id, instance: this_load_instance });
+                    if (!sequentialMode || sequentialMode && !_this3._busy) {
+                        _this3._busy = thisLoadInstance.load();
+                    } else if (sequentialMode && _this3._busy && (!_this3._settings.visible || !thisLoadInstance._exists || _this3._settings.visible && thisLoadInstance._exists && isVisible(thisLoadInstance._originalElement))) {
+                        _this3._collectionPending.push({
+                            id: thisLoadId,
+                            instance: thisLoadInstance
+                        });
                     }
                 };
 
@@ -596,330 +853,357 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     if (_ret === 'break') break;
                 }
             }
+
+            /**
+             * @param {Function} callback
+             * @returns {undefined}
+             */
+
         }, {
             key: 'done',
             value: function done(callback) {
-                // todo refactory
+                if (typeof callback !== 'function') {
+                    return;
+                }
 
-                if (!$.isFunction(callback)) return;
-
-                var _func = function _func(resources) {
+                this._done = function (resources) {
                     callback.call(this, resources);
                 };
-
-                if (this._collection.length) {
-
-                    this._done = _func;
-
-                    this._loop();
-                } else _func();
             }
+
+            /**
+             * @param {Function} callback
+             * @returns {undefined}
+             */
+
         }, {
             key: 'progress',
             value: function progress(callback) {
-                // todo refactory
+                if (typeof callback !== 'function') {
+                    return;
+                }
 
-                if (!$.isFunction(callback)) return;
-
-                var _func = function _func(resource) {
+                this._progress = function (resource) {
                     callback.call(this, resource);
                 };
-
-                if (this._collection.length) {
-
-                    this._progress = _func;
-
-                    this._loop();
-                }
             }
+
+            /**
+             * @param {Function} callback
+             * @returns {undefined}
+             */
+
         }, {
             key: 'success',
             value: function success(callback) {
-                // todo refactory
+                if (typeof callback !== 'function') {
+                    return;
+                }
 
-                if (!$.isFunction(callback)) return;
-
-                var _func = function _func(resource) {
+                this._success = function (resource) {
                     callback.call(this, resource);
                 };
-
-                if (this._collection.length) {
-
-                    this._success = _func;
-
-                    this._loop();
-                }
             }
+
+            /**
+             * @param {Function} callback
+             * @returns {undefined}
+             */
+
         }, {
             key: 'error',
             value: function error(callback) {
-                // todo refactory
+                if (typeof callback !== 'function') {
+                    return;
+                }
 
-                if (!$.isFunction(callback)) return;
-
-                var _func = function _func(resource) {
+                this._error = function (resource) {
                     callback.call(this, resource);
                 };
-
-                if (this._collection.length) {
-
-                    this._error = _func;
-
-                    this._loop();
-                }
             }
+
+            /**
+             * @returns {undefined}
+             */
+
         }, {
             key: 'abort',
             value: function abort() {
+                this._collectionInstances.forEach(function (thisInstance) {
+                    thisInstance.instance.abort();
+                });
 
-                for (var key in this._collection_instances) {
-                    this._collection_instances[key].instance.abort();
-                }if (this._collection.length) this._abort = true;
+                this._abort = true;
             }
-        }]);
+        }, {
+            key: 'collection',
 
-        return ResourcesLoader;
-    }();
 
-    var CollectionPopulator = function () {
-        function CollectionPopulator($element, options) {
-            _classCallCheck(this, CollectionPopulator);
+            /**
+             * @param {(Array.<String>|HTMLElement)} collection
+             */
+            set: function set(collection) {
+                var _this4 = this;
 
-            this._$element = $element;
-            this._element = $element[0];
+                var collectedResources = collection;
 
-            this._settings = $.extend(true, {
-                srcAttr: 'data-src',
-                srcsetAttr: 'data-srcset',
-                backgrounds: false,
-                attributes: []
-            }, options);
-        }
+                try {
+                    collectedResources = Loader.findResources(collection, this._settings);
+                } catch (err) {}
 
-        _createClass(CollectionPopulator, [{
-            key: 'collect',
-            value: function collect(output) {
-
-                var collection = [];
-
-                var is_plain_data_collection = output === 'plain',
-                    src = this._settings.srcAttr,
-                    srcset = this._settings.srcsetAttr,
-                    targets = 'img, video, audio',
-                    targets_extended = targets + ', picture, source';
-
-                var $targets = this._$element.find(targets);
-                if (this._$element.is(targets)) $targets = $targets.add(this._$element);
-                $targets = $targets.filter(function () {
-                    var $t = $(this),
-                        filter = '[' + src + '], [' + srcset + ']';
-                    return $t.is(filter) || $t.children(targets_extended).filter(filter).length;
-                });
-                $targets.each(function () {
-
-                    var collection_item = {
-                        element: this,
-                        resource: $(this).attr(src) || $(this).attr(srcset)
+                collectedResources.forEach(function (item) {
+                    var element = {
+                        resource: '',
+                        element: null,
+                        id: generateInstanceID()
                     };
 
-                    if (is_plain_data_collection) collection_item = collection_item.element;
-
-                    collection.push(collection_item);
-                });
-
-                if (true === this._settings.backgrounds) this._$element.find('*').addBack().not(targets_extended).filter(function () {
-                    return $(this).css('background-image') !== 'none';
-                }).each(function () {
-
-                    var url = $(this).css('background-image').match(/\((.*?)\)/);
-
-                    if (null === url || url.length < 2) return true;
-
-                    var collection_item = {
-                        element: this,
-                        resource: url[1].replace(/('|")/g, '')
-                    };
-
-                    if (is_plain_data_collection) collection_item = collection_item.resource;
-
-                    collection.push(collection_item);
-                });
-
-                if (this._settings.attributes.length) {
-                    var _loop2 = function (attr) {
-                        if (this._settings.attributes.hasOwnProperty(attr)) {
-
-                            this._$element.find('[' + attr + ']:not(' + targets_extended + ')').each(function () {
-
-                                let collection_item = {
-                                    element: this,
-                                    resource: $(this).attr(attr)
-                                };
-
-                                if (is_plain_data_collection) collection_item = collection_item.resource;
-
-                                collection.push(collection_item);
-                            });
-
-                            if (this._$element.is('[' + attr + ']') && !this._$element.is(targets_extended)) {
-
-                                let collection_item = {
-                                    element: this._element,
-                                    resource: this._$element.attr(attr)
-                                };
-
-                                if (is_plain_data_collection) collection_item = collection_item.resource;
-
-                                collection.push(collection_item);
-                            }
-                        }
-                    };
-
-                    for (const attr in this._settings.attributes) {
-                        _loop2(attr);
+                    if (typeof item === 'string') {
+                        element.resource = item;
+                    } else if ((typeof item === 'undefined' ? 'undefined' : _typeof(item)) === 'object' && 'resource' in item) {
+                        element = _extends({}, element, item);
+                    } else {
+                        return;
                     }
-                }return collection;
-            }
-        }]);
 
-        return CollectionPopulator;
-    }();
-
-    $[namespace_method] = ResourcesLoader;
-
-    var method_collection = [];
-
-    $.fn[namespace_method] = function (options) {
-
-        var original_user_options = options;
-
-        if ((typeof options === 'undefined' ? 'undefined' : _typeof(options)) !== 'object') options = {};
-
-        var settings = $.extend(true, {
-
-            srcAttr: 'data-src',
-            srcsetAttr: 'data-srcset',
-
-            visible: false,
-
-            sequential: false,
-
-            backgrounds: false,
-            extraAttrs: [],
-
-            playthrough: false,
-
-            early: false,
-            earlyTimeout: 0,
-
-            onProgress: $.noop,
-            onLoad: $.noop,
-            onError: $.noop,
-
-            onComplete: $.noop
-
-        }, options);
-
-        var callback = settings.onComplete;
-        if ($.isFunction(original_user_options)) callback = original_user_options;
-
-        if (!$.isArray(settings.attributes)) settings.attributes = [];
-        if (typeof settings.attributes === 'string') settings.attributes = settings.attributes.split(' ');
-
-        return this.each(function () {
-
-            var element = this,
-                $element = $(element),
-                collection = new CollectionPopulator($element, settings).collect('plain'),
-                unique_method_namespace = namespace + '_' + unique_id(),
-                this_load_instance = new ResourcesLoader(collection, settings);
-
-            method_collection.push({
-                id: unique_method_namespace,
-                instance: this_load_instance,
-                element: element,
-                timeout: null
-            });
-
-            this_load_instance.progress(function (resource) {
-
-                $element.trigger(namespace_prefix + 'Progress.' + namespace_prefix, [element, resource]);
-
-                var this_arguments = [this_load_instance, resource];
-
-                if ($.isFunction(settings.onProgress)) settings.onProgress.apply(element, this_arguments);
-
-                var event_name = capitalize(resource.status);
-                if ($.isFunction(settings['on' + event_name])) settings['on' + event_name].apply(element, this_arguments);
-            });
-
-            this_load_instance.done(function (resources) {
-
-                $element.trigger(namespace_prefix + 'Complete.' + namespace_prefix, [element, resources]);
-                callback.apply(element, [this_load_instance, resources]);
-
-                if (settings.visible) $($.nite && 'scroll' in $.nite ? $document : $window).off('scroll.' + unique_method_namespace);
-
-                // refresh other method calls for same el (omitting this one)
-                method_collection = method_collection.filter(function (x) {
-                    return x.id !== unique_method_namespace;
+                    _this4._collection.push(element);
                 });
-                method_collection.forEach(function (this_method_collection) {
-                    if ($element.is(this_method_collection.element)) this_method_collection.instance.loop();
-                });
-            });
-
-            if (settings.visible) {
-
-                if ($.nite && 'scroll' in $.nite) $.nite.scroll(unique_method_namespace, function () {
-                    this_load_instance.loop();
-                }, { fps: 25 });else {
-
-                    var throttle_scroll_event = function throttle_scroll_event(fn, wait) {
-                        var time = Date.now();
-                        return function () {
-                            if (time + wait - Date.now() < 0) {
-                                fn();
-                                time = Date.now();
-                            }
-                        };
-                    };
-
-                    $window.on('scroll.' + unique_method_namespace, throttle_scroll_event(function () {
-                        this_load_instance.loop();
-                    }, 1000));
-                }
             }
 
-            if (true === settings.early) {
-                var _loop3 = function (key) {
-
-                    var this_method_collection = method_collection[key];
-
-                    if (method_collection[key].id === unique_method_namespace) {
-
-                        clearTimeout(this_method_collection.timeout);
-
-                        this_method_collection.timeout = setTimeout(function () {
-
-                            // todo appropriate method for setting settings?
-                            this_method_collection.instance._settings.visible = false;
-                            this_method_collection.instance._settings.sequential = true;
-
-                            this_method_collection.instance.loop();
-                        }, $.isNumeric(settings.earlyTimeout) ? parseInt(settings.earlyTimeout) : 0);
-
-                        return 'break';
-                    }
+            /**
+             * @returns {Array} collection
+             */
+            ,
+            get: function get() {
+                return this._collection;
+            }
+        }], [{
+            key: 'findResources',
+            value: function findResources(element, options) {
+                var settings = {
+                    srcAttr: 'src',
+                    srcsetAttr: 'srcset',
+                    backgrounds: false
                 };
 
-                for (let key in method_collection) {
-                    var _ret3 = _loop3(key);
-
-                    if (_ret3 === 'break') break;
+                if ((typeof element === 'undefined' ? 'undefined' : _typeof(element)) === 'object' && undefined === options) {
+                    for (var _key2 in settings) {
+                        if (_key2 in element) {
+                            options = element;
+                            element = undefined;
+                            break;
+                        }
+                    }
                 }
+
+                if (undefined === element || element === document) {
+                    element = document.body;
+                }
+
+                if (!isHTMLElement(element)) {
+                    throw new Error('TypeError: ' + element + ' is not of type HTMLElement.');
+                }
+
+                var collectedResources = [];
+
+                settings = _extends({}, settings, options);
+
+                var targets = 'img, video, audio';
+                var targetsExtended = targets + ', picture, source';
+                var targetsFilter = '[' + settings.srcAttr + '], [' + settings.srcsetAttr + ']';
+
+                var targetsTags = nodelistToArray(element.querySelectorAll(targets));
+
+                if (element.matches(targetsExtended)) {
+                    targetsTags.push(element);
+                }
+
+                targetsTags = targetsTags.filter(function (target) {
+                    var children = nodelistToArray(target.children);
+                    children = children.filter(function (x) {
+                        return x.matches(targetsExtended);
+                    });
+                    children = children.filter(function (x) {
+                        return x.matches(targetsFilter);
+                    });
+                    return target.matches(targetsFilter) || children.length;
+                });
+                targetsTags.forEach(function (target) {
+                    var targetSource = target;
+
+                    if (!targetSource.matches(targetsFilter)) {
+                        targetSource = targetSource.querySelectorAll(targetsFilter);
+                        targetSource = [].concat(_toConsumableArray(targetSource))[0];
+                    }
+
+                    collectedResources.push({
+                        element: target,
+                        resource: targetSource.getAttribute(settings.srcAttr) || targetSource.getAttribute(settings.srcsetAttr)
+                    });
+                });
+
+                if (true === settings.backgrounds) {
+                    var targetsBg = nodelistToArray(element.querySelectorAll('*'));
+                    targetsBg.push(element);
+                    targetsBg = targetsBg.filter(function (target) {
+                        return !target.matches(targetsExtended);
+                    });
+                    targetsBg = targetsBg.filter(function (target) {
+                        return getComputedStyle(target).backgroundImage !== 'none';
+                    });
+                    targetsBg.forEach(function (target) {
+                        var url = getComputedStyle(target).backgroundImage.match(/\((.*?)\)/);
+
+                        if (null !== url && url.length >= 2) {
+                            collectedResources.push({
+                                element: target,
+                                resource: url[1].replace(/('|")/g, '')
+                            });
+                        }
+                    });
+                }
+
+                return collectedResources;
             }
-        });
-    };
-})(window, document, jQuery);
+        }]);
+
+        return Loader;
+    }();
+
+    // TODO: think about a better and more elegant module-oriented way
+
+
+    if (jQueryIncluded) {
+        var $ = jQuery;
+
+        var $window = $(window);
+
+        $[capitalize(pluginName)] = Loader;
+
+        var methodCollection = [];
+
+        $.fn[pluginMethod] = function (options) {
+            var originalUserOptions = options;
+
+            if ((typeof options === 'undefined' ? 'undefined' : _typeof(options)) !== 'object') {
+                options = {};
+            }
+
+            var settings = _extends({
+                srcAttr: 'data-src',
+                srcsetAttr: 'data-srcset',
+
+                visible: false,
+                sequential: false,
+
+                backgrounds: false,
+                playthrough: false,
+
+                early: false,
+                earlyTimeout: 0,
+
+                onProgress: function onProgress() {},
+                onLoad: function onLoad() {},
+                onError: function onError() {},
+
+                onComplete: function onComplete() {}
+            }, options);
+
+            var callback = settings.onComplete;
+            if ($.isFunction(originalUserOptions)) {
+                callback = originalUserOptions;
+            }
+
+            return this.each(function (i) {
+                var _this5 = this;
+
+                // TODO: mutation observer when new children are appended
+
+                var $element = $(this);
+                var uniqueMethodPluginName = generateInstanceID() + i;
+                var thisLoadInstance = new Loader(settings);
+
+                thisLoadInstance.collection = this;
+
+                methodCollection.push({
+                    id: uniqueMethodPluginName,
+                    instance: thisLoadInstance,
+                    element: this,
+                    timeout: null
+                });
+
+                thisLoadInstance.progress(function (resource) {
+                    $(resource.element).trigger(pluginPrefix + capitalize(resource.status) + '.' + pluginPrefix, [resource.element, resource.resource]);
+                    $element.trigger(pluginPrefix + 'Progress.' + pluginPrefix, [_this5, resource]);
+
+                    var thisArguments = [thisLoadInstance, resource];
+
+                    if (typeof settings.onProgress === 'function') {
+                        settings.onProgress.apply(_this5, thisArguments);
+                    }
+
+                    var eventName = capitalize(resource.status);
+                    if (typeof settings['on' + eventName] === 'function') {
+                        settings['on' + eventName].apply(_this5, thisArguments);
+                    }
+                });
+
+                thisLoadInstance.done(function (resources) {
+                    $element.trigger(pluginPrefix + 'Complete.' + pluginPrefix, [_this5, resources]);
+                    callback.apply(_this5, [thisLoadInstance, resources]);
+
+                    if (settings.visible) {
+                        $window.off('scroll.' + uniqueMethodPluginName);
+                    }
+
+                    // refresh other method calls for same el (omitting this one)
+                    methodCollection = methodCollection.filter(function (x) {
+                        return x.id !== uniqueMethodPluginName;
+                    });
+                    methodCollection.forEach(function (thisMethodCollection) {
+                        if ($element.is(thisMethodCollection.element)) {
+                            thisMethodCollection.instance.load();
+                        }
+                    });
+                });
+
+                thisLoadInstance.load();
+
+                if (settings.visible) {
+                    $window.on('scroll.' + uniqueMethodPluginName, throttle(function () {
+                        return thisLoadInstance.load();
+                    }, 250));
+                }
+
+                if (true === settings.early) {
+                    var breakLoop = false;
+
+                    methodCollection.forEach(function (thisMethodCollection) {
+                        if (breakLoop) {
+                            return;
+                        }
+
+                        if (methodCollection[key].id === uniqueMethodPluginName) {
+                            clearTimeout(thisMethodCollection.timeout);
+
+                            var timeout = parseInt(settings.earlyTimeout);
+
+                            thisMethodCollection.timeout = setTimeout(function () {
+                                // TODO: $('.selector').niteLoad('option', 'value');
+                                thisMethodCollection.instance._settings.visible = false;
+                                thisMethodCollection.instance._settings.sequential = true;
+
+                                thisMethodCollection.instance.load();
+                            }, !isNaN(timeout) && isFinite(timeout) ? timeout : 0);
+
+                            breakLoop = true;
+                        }
+                    });
+                }
+            });
+        };
+    }
+
+    return Loader;
+});
 //# sourceMappingURL=nite.loader.js.map
