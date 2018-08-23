@@ -1,5 +1,7 @@
+WIP...
+
 ```
-let niteLoadInstance = new NiteLoader({
+let loadInstance = new Loader({
     srcAttr: 'data-src',
     srcsetAttr: 'data-srcset',
     playthrough: false,
@@ -9,75 +11,43 @@ let niteLoadInstance = new NiteLoader({
 ```
 
 ```
-niteLoadInstance.collection = ['image-1.jpg', 'image-2.webp', 'video.webm', 'audio.mp3'];
+loadInstance.collection = ['image-1.jpg', 'image-2.webp', 'video.webm', 'audio.mp3'];
 ```
 
 ```
-niteLoadInstance.collection = document.body;
+loadInstance.collection = document.body;
 ```
 
 ```
-niteLoadInstance.collection = document.querySelector('#test');
+loadInstance.collection = document.querySelector('#test');
 ```
 
 ```
-NiteLoader.findResources(document.querySelector('#has-backgrounds', { backgrounds:true }));
+Loader.findResources(document.querySelector('#has-backgrounds', { backgrounds:true }));
 ```
 
 ```
-NiteLoader.findResources({ backgrounds:true }));
+Loader.findResources({ backgrounds:true }));
 ```
 
 ```
-niteLoadInstance.done((resources) => { });
+loadInstance.done((resources) => { });
 ```
 
 ```
-niteLoadInstance.load();
+loadInstance.load();
 ```
 
 ```
-console.log(niteLoadInstance.percentage);
+console.log(loadInstance.percentage);
 ```
 
 ```
-$('.playground').niteLoad({
-    srcAttr: 'data-src',
-    srcsetAttr: 'data-srcset',
-    visible: false,
-    sequential: false,
-    backgrounds: false,
-    extraAttrs: [],
-    playthrough: false,
-    early: false,
-    earlyTimeout: 0,
-    onProgress: () => { },
-    onLoad: () => { },
-    onError: () => { },
-    onComplete: () => { },
-});
+global event
+document.addEventListener('resourceLoad', e => e.detail.element.classList.add('loaded-image'));
 ```
 
 ```
-$(document).on('niteLoad.nite niteError.nite', function (e, element) {
-
-    console_log('jQuery.fn.niteLoad(): ' + element);
-
-});
-```
-
-```
-$(document).on('niteError.nite', 'figure img', function (e) {
-
-    $(this).closest('figure').addClass('error');
-
-});
-```
-
-```
-$(document).on('niteLoad.nite niteError.nite', 'figure img, figure video', function (e) {
-
-    $(this).closest('figure').addClass('loaded' + (e.type === 'niteError' ? '-error' : ''));
-
-});
+targeted event
+[...document.querySelectorAll('figure img')].forEach(element => element.addEventListener('resourceError', e => e.detail.element.classList.add('missing-image')));
 ```
