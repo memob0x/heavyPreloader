@@ -2,36 +2,38 @@
 // gulp
 // gulp --development
 // gulp --development --nowatch
+// gulp --debugger
 
 'use strict';
 
 const arg = (argList => {
-	let arg = {},
-		a,
-		opt,
-		thisOpt,
-		curOpt;
-	for (a = 0; a < argList.length; a++) {
-		thisOpt = argList[a].trim();
-		opt = thisOpt.replace(/^\-+/, '');
+    let arg = {},
+        a,
+        opt,
+        thisOpt,
+        curOpt;
+    for (a = 0; a < argList.length; a++) {
+        thisOpt = argList[a].trim();
+        opt = thisOpt.replace(/^\-+/, '');
 
-		if (opt === thisOpt) {
-			if (curOpt) {
-				arg[curOpt] = opt;
-			}
+        if (opt === thisOpt) {
+            if (curOpt) {
+                arg[curOpt] = opt;
+            }
 
-			curOpt = null;
-		} else {
-			curOpt = opt;
+            curOpt = null;
+        } else {
+            curOpt = opt;
 
-			arg[curOpt] = true;
-		}
-	}
+            arg[curOpt] = true;
+        }
+    }
 
-	return arg;
+    return arg;
 })(process.argv);
 
 const production = !arg.development;
+const debug = arg.debugger;
 
 const gulp = require('gulp');
 const watch = require('gulp-watch');
@@ -50,124 +52,127 @@ const log = require('fancy-log');
 const clear = require('clear');
 
 const resources = [
-	{
-		paths: {
-			src: './src/',
-			dist: './dist/'
-		},
-		files: {
-			js: { module: 'NiteLoader', list: ['nite.loader.js'] }
-		}
-	},
-	{
-		paths: {
-			src: './test/assets/src/',
-			dist: './test/assets/dist/'
-		},
-		files: {
-			js: { list: ['test.js'] },
-			css: { list: ['test.scss'] }
-		}
-	}
+    {
+        paths: {
+            src: './src/',
+            dist: './dist/'
+        },
+        files: {
+            js: { module: 'Loader', list: ['loader.js'] }
+        }
+    },
+    {
+        paths: {
+            src: './test/assets/src/',
+            dist: './test/assets/dist/'
+        },
+        files: {
+            js: { list: ['test.js'] },
+            css: { list: ['test.scss'] }
+        }
+    }
 ];
 
 const sourcemapsConf = { loadMaps: true, largeFile: true };
 
 let watchedFiles = [];
 resources.forEach(resource => {
-	for (let type in resource.files) {
-		watchedFiles = watchedFiles.concat(resource.paths.src + resource.files[type].list);
-	}
+    for (let type in resource.files) {
+        watchedFiles = watchedFiles.concat(resource.paths.src + resource.files[type].list);
+    }
 });
 
 let pumpCounter = 0;
 const pumpCallback = args => {
-	pumpCounter++;
+    pumpCounter++;
 
-	if (pumpCounter === watchedFiles.length) {
-		args[0]();
-	}
+    if (pumpCounter === watchedFiles.length) {
+        args[0]();
+    }
 };
 
 gulp.task('clean', done => {
-	resources.forEach(resource => {
-		del.sync(resource.paths.dist);
-	});
+    resources.forEach(resource => {
+        del.sync(resource.paths.dist);
+    });
 
-	done();
+    done();
 });
 
 gulp.task('build', callback => {
-	pumpCounter = 0;
+    pumpCounter = 0;
 
-	resources.forEach(resource => {
-		// js files
-		if ('js' in resource.files && resource.files.js.list.length) {
-			const isModule = 'module' in resource.files.js && !!resource.files.js.module;
-			const moduleConf = {
-				name: resource.files.js.module,
-				format: 'umd'
-			};
+    resources.forEach(resource => {
+        // js files
+        if ('js' in resource.files && resource.files.js.list.length) {
+            const isModule = 'module' in resource.files.js && !!resource.files.js.module;
+            const moduleConf = {
+                name: resource.files.js.module,
+                format: 'umd'
+            };
 
-			// prettier-ignore
-			resource.files.js.list.forEach(filename => pump([
+            // prettier-ignore
+            resource.files.js.list.forEach(filename => pump([
 
 				// rollup modules + transpilation to ES5 (production only)
 				gulp.src(resource.paths.src + filename),
 				gulpif(production, sourcemaps.init(sourcemapsConf)),
-				gulpif(isModule, rollup({}, moduleConf)),
-				gulpif(production, babel()),
+                gulpif(isModule, rollup({}, moduleConf).on('error', err => log(err))),
+				gulpif(production, babel().on('error', err => log(err))),
 				gulpif(production, sourcemaps.write('.')),
 				gulp.dest(resource.paths.dist),
 
 				// minification (production only)
 				gulpif(production, gulp.src(resource.paths.src + filename)),
 				gulpif(production, sourcemaps.init(sourcemapsConf)),
-				gulpif(production && isModule, rollup({}, moduleConf)),
-				gulpif(production, babel()),
+                gulpif(production && isModule, rollup({}, moduleConf).on('error', err => log(err))),
+                gulpif(production, babel().on('error', err => log(err))),
 				gulpif(production, minify({ ext: { min: '.min.js' } })),
 				gulpif(production, sourcemaps.write('.')),
 				gulpif(production, gulp.dest(resource.paths.dist))
 
 			], pumpCallback.bind(this, [callback])));
-		}
+        }
 
-		// css files
-		if ('css' in resource.files && resource.files.css.list.length) {
-			// prettier-ignore
-			resource.files.css.list.forEach(filename => pump([
+        // css files
+        if ('css' in resource.files && resource.files.css.list.length) {
+            // prettier-ignore
+            resource.files.css.list.forEach(filename => pump([
 
 				// transpilation to standard CSS
 				gulp.src(resource.paths.src + filename),
 				gulpif(production,sourcemaps.init(sourcemapsConf)),
-				sass({ outputStyle: 'expanded' }),
-				postcss([autoprefixer()]),
+				sass({ outputStyle: 'expanded', onError : err => log(err) }),
+				postcss([autoprefixer()]).on('error', err => log(err)),
 				gulpif(production, sourcemaps.write('.')),
 				gulp.dest(resource.paths.dist),
 
 				// minification (production only)
 				gulpif(production, gulp.src(resource.paths.src + filename)),
 				gulpif(production, sourcemaps.init(sourcemapsConf)),
-				gulpif(production, sass({ outputStyle: 'compressed' })),
-				gulpif(production, postcss([autoprefixer()])),
+                gulpif(production, sass({ outputStyle: 'compressed', onError: err => log(err) })),
+                gulpif(production, postcss([autoprefixer()])).on('error', err => log(err)),
 				gulpif(production, rename({ suffix: '.min' })),
 				gulpif(production, sourcemaps.write('.')),
 				gulpif(production, gulp.dest(resource.paths.dist)),
 
 			], pumpCallback.bind(this, [callback])));
-		}
-	});
+        }
+    });
 
-	if (!production && !arg.nowatch) {
-		gulp.watch(watchedFiles, ['default']);
-	}
+    if (!production && !arg.nowatch) {
+        gulp.watch(watchedFiles, ['default']);
+    }
 });
 
 gulp.task('default', ['clean', 'build'], () => {
-	clear();
-	log('');
-	log('NiteLoader Build: ' + (production ? 'Production' : 'Development'));
-	log('--------------------------------------');
-	log(watchedFiles);
-	log('--------------------------------------');
+    if (debug) {
+        return;
+    }
+    clear();
+    log('');
+    log('loader.js Build: ' + (production ? 'Production' : 'Development'));
+    log('--------------------------------------');
+    log(watchedFiles);
+    log('--------------------------------------');
 });

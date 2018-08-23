@@ -1,141 +1,147 @@
-($ => {
-	const $console = $('#console');
-	const console_log = function(string) {
-		if ($console.is(':empty')) {
-			$console.append('<ol />');
-		}
+const consoleDiv = document.querySelector('#console');
+const consoleLog = string => {
+    if (!consoleDiv.hasChildNodes()) {
+        const ol = document.createElement('ol');
+        consoleDiv.append(ol);
+    }
 
-		const $list = $console.find('ol').append('<li>' + string + '</li>');
+    const list = consoleDiv.querySelector('ol');
+    const li = document.createElement('li');
+    li.innerHTML = string;
+    list.append(li);
 
-		$console.scrollTop($list.height());
-	};
+    consoleDiv.scrollTop = list.offsetHeight;
+};
 
-	$('.playground').niteLoad({
-		srcAttr: 'data-nite-src',
-		srcsetAttr: 'data-nite-srcset',
+// TODO: without jQuery
+/*$('.playground').loadResources({
+    srcAttr: 'data-src',
+    srcsetAttr: 'data-srcset',
 
-		visible: true,
+    visible: true,
 
-		sequential: true,
+    sequential: true,
 
-		backgrounds: true,
-		extraAttrs: [],
+    backgrounds: true,
+    extraAttrs: [],
 
-		playthrough: 'full',
+    playthrough: 'full',
 
-		early: false,
-		earlyTimeout: 6000,
+    early: false,
+    earlyTimeout: 6000,
 
-		onComplete: function(instance, resources) {
-			$(this).addClass('complete');
-		},
+    onComplete: function(instance, resources) {
+        $(this).addClass('complete');
+    },
 
-		onProgress: function(instance, resource) {
-			$(this)
-				.find('[data-percentage]')
-				.attr('data-percentage', instance.percentage)
-				.closest('.playground__percentage')
-				.addClass('visible');
-		},
+    onProgress: function(instance, resource) {
+        $(this)
+            .find('[data-percentage]')
+            .attr('data-percentage', instance.percentage)
+            .closest('.playground__percentage')
+            .addClass('visible');
+    },
 
-		onLoad: function(instance, resource) {
-			$(this).addClass('has-loads');
-		},
-		onError: function(instance, resource) {
-			$(this).addClass('has-errors');
-		}
-	});
+    onLoad: function(instance, resource) {
+        $(this).addClass('has-loads');
+    },
+    onError: function(instance, resource) {
+        $(this).addClass('has-errors');
+    }
+});*/
 
-	let instance;
-	let instanceSequentialMode = true;
+document.addEventListener('resourceLoad', e => {
+    consoleLog('Loader(): ' + e.detail.element);
+});
 
-	$(document)
-		.on('niteLoad.nite niteError.nite', function(e, element) {
-			console_log('jQuery.fn.niteLoad(): ' + element);
-		})
+document.addEventListener('resourceError', e => {
+    consoleLog('Loader(): ' + e.detail.element);
+});
 
-		.on('niteError.nite', 'figure img', function(e) {
-			$(this)
-				.closest('figure')
-				.addClass('error');
-		})
+[...document.querySelectorAll('figure img, figure video')].forEach(el => {
+    el.addEventListener('resourceLoad', e => e.detail.element.closest('figure').classList.add('loaded'));
+    el.addEventListener('resourceError', e => e.detail.element.closest('figure').classList.add('loaded-error'));
+});
 
-		.on('niteLoad.nite niteError.nite', 'figure img, figure video', function(e) {
-			$(this)
-				.closest('figure')
-				.addClass('loaded' + (e.type === 'niteError' ? '-error' : ''));
-		})
+let instance;
+let instanceSequentialMode = true;
 
-		.on('click', '.nite-program-mode--sequential', function() {
-			if (instance !== null) {
-				return;
-			}
-			$('.nite-program-mode--parallel').show();
-			$(this).hide();
-			instanceSequentialMode = true;
-			console_log('$.NiteLoader(): Sequential Mode');
-		})
-		.on('click', '.nite-program-mode--parallel', function() {
-			if (instance !== null) {
-				return;
-			}
-			$('.nite-program-mode--sequential').show();
-			$(this).hide();
-			instanceSequentialMode = false;
-			console_log('$.NiteLoader(): Parallel Mode');
-		})
+document.querySelector('.program-mode--sequential').addEventListener('click', () => {
+    if (instance !== null) {
+        return;
+    }
 
-		.on('click', '[class*="nite-program-load"]', function() {
-			if (instance) {
-				console_log('$.NiteLoader(): Aborted...');
+    document.querySelector('.program-mode--parallel').style.display = 'block';
+    document.querySelector('.program-mode--sequential').style.display = 'none';
 
-				instance.abort();
-				instance = null;
+    instanceSequentialMode = true;
+    consoleLog('Loader(): Sequential Mode');
+});
 
-				$('.nite-program-load--kill').hide();
-				$('.nite-program-load--run').show();
-			} else {
-				$('.nite-program-load--run').hide();
-				$('.nite-program-load--kill').show();
+document.querySelector('.program-mode--parallel').addEventListener('click', () => {
+    if (instance !== null) {
+        return;
+    }
 
-				let randomResources = [];
+    document.querySelector('.program-mode--sequential').style.display = 'block';
+    document.querySelector('.program-mode--parallel').style.display = 'none';
 
-				for (let i = 0; i < 10; i++) {
-					let letters = '0123456789ABCDEF',
-						colors = [];
+    instanceSequentialMode = false;
+    consoleLog('Loader(): Parallel Mode');
+});
 
-					for (let ii = 0; ii < 2; ii++) {
-						let color = '';
-						for (let c = 0; c < 6; c++) {
-							color += letters[Math.floor(Math.random() * 16)];
-						}
-						colors[ii] = color;
-					}
+[...document.querySelectorAll('[class*="program-load"]')].forEach(el =>
+    el.addEventListener('click', () => {
+        if (instance) {
+            consoleLog('Loader(): Aborted...');
 
-					randomResources.push('//placehold.it/720x720/' + colors[0] + '/' + colors[1] + '.jpg');
-				}
+            instance.abort();
+            instance = null;
 
-				instance = new NiteLoader({
-					sequential: instanceSequentialMode
-				});
+            document.querySelector('.program-load--run').style.display = 'block';
+            document.querySelector('.program-load--kill').style.display = 'none';
+        } else {
+            document.querySelector('.program-load--run').style.display = 'none';
+            document.querySelector('.program-load--kill').style.display = 'block';
 
-				instance.collection = randomResources;
+            let randomResources = [];
 
-				console_log('$.NiteLoader(): 0% - Starting...');
+            for (let i = 0; i < 10; i++) {
+                let letters = '0123456789ABCDEF',
+                    colors = [];
 
-				instance.progress(resource => {
-					console_log('$.NiteLoader(): ' + instance.percentage + '%');
-				});
+                for (let ii = 0; ii < 2; ii++) {
+                    let color = '';
+                    for (let c = 0; c < 6; c++) {
+                        color += letters[Math.floor(Math.random() * 16)];
+                    }
+                    colors[ii] = color;
+                }
 
-				instance.done(resources => {
-					console_log('$.NiteLoader(): 100% - Done!!');
-					$('.nite-program-load--run').show();
-					$('.nite-program-load--kill').hide();
+                randomResources.push('//placehold.it/720x720/' + colors[0] + '/' + colors[1] + '.jpg');
+            }
 
-					instance = null;
-				});
+            instance = new Loader({
+                sequential: instanceSequentialMode
+            });
 
-				instance.load();
-			}
-		});
-})(jQuery);
+            instance.collection = randomResources;
+
+            consoleLog('Loader(): 0% - Starting...');
+
+            instance.progress(resource => {
+                consoleLog('Loader(): ' + instance.percentage + '%');
+            });
+
+            instance.done(resources => {
+                consoleLog('Loader(): 100% - Done!!');
+                document.querySelector('.program-load--run').style.display = 'block';
+                document.querySelector('.program-load--kill').style.display = 'none';
+
+                instance = null;
+            });
+
+            instance.load();
+        }
+    })
+);

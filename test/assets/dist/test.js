@@ -1,126 +1,156 @@
 'use strict';
 
-(function ($) {
-	var $console = $('#console');
-	var console_log = function console_log(string) {
-		if ($console.is(':empty')) {
-			$console.append('<ol />');
-		}
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
-		var $list = $console.find('ol').append('<li>' + string + '</li>');
+var consoleDiv = document.querySelector('#console');
+var consoleLog = function consoleLog(string) {
+    if (!consoleDiv.hasChildNodes()) {
+        var ol = document.createElement('ol');
+        consoleDiv.append(ol);
+    }
 
-		$console.scrollTop($list.height());
-	};
+    var list = consoleDiv.querySelector('ol');
+    var li = document.createElement('li');
+    li.innerHTML = string;
+    list.append(li);
 
-	$('.playground').niteLoad({
-		srcAttr: 'data-nite-src',
-		srcsetAttr: 'data-nite-srcset',
+    consoleDiv.scrollTop = list.offsetHeight;
+};
 
-		visible: true,
+// TODO: without jQuery
+/*$('.playground').loadResources({
+    srcAttr: 'data-src',
+    srcsetAttr: 'data-srcset',
 
-		sequential: true,
+    visible: true,
 
-		backgrounds: true,
-		extraAttrs: [],
+    sequential: true,
 
-		playthrough: 'full',
+    backgrounds: true,
+    extraAttrs: [],
 
-		early: false,
-		earlyTimeout: 6000,
+    playthrough: 'full',
 
-		onComplete: function onComplete(instance, resources) {
-			$(this).addClass('complete');
-		},
+    early: false,
+    earlyTimeout: 6000,
 
-		onProgress: function onProgress(instance, resource) {
-			$(this).find('[data-percentage]').attr('data-percentage', instance.percentage).closest('.playground__percentage').addClass('visible');
-		},
+    onComplete: function(instance, resources) {
+        $(this).addClass('complete');
+    },
 
-		onLoad: function onLoad(instance, resource) {
-			$(this).addClass('has-loads');
-		},
-		onError: function onError(instance, resource) {
-			$(this).addClass('has-errors');
-		}
-	});
+    onProgress: function(instance, resource) {
+        $(this)
+            .find('[data-percentage]')
+            .attr('data-percentage', instance.percentage)
+            .closest('.playground__percentage')
+            .addClass('visible');
+    },
 
-	var instance = void 0;
-	var instanceSequentialMode = true;
+    onLoad: function(instance, resource) {
+        $(this).addClass('has-loads');
+    },
+    onError: function(instance, resource) {
+        $(this).addClass('has-errors');
+    }
+});*/
 
-	$(document).on('niteLoad.nite niteError.nite', function (e, element) {
-		console_log('jQuery.fn.niteLoad(): ' + element);
-	}).on('niteError.nite', 'figure img', function (e) {
-		$(this).closest('figure').addClass('error');
-	}).on('niteLoad.nite niteError.nite', 'figure img, figure video', function (e) {
-		$(this).closest('figure').addClass('loaded' + (e.type === 'niteError' ? '-error' : ''));
-	}).on('click', '.nite-program-mode--sequential', function () {
-		if (instance !== null) {
-			return;
-		}
-		$('.nite-program-mode--parallel').show();
-		$(this).hide();
-		instanceSequentialMode = true;
-		console_log('$.NiteLoader(): Sequential Mode');
-	}).on('click', '.nite-program-mode--parallel', function () {
-		if (instance !== null) {
-			return;
-		}
-		$('.nite-program-mode--sequential').show();
-		$(this).hide();
-		instanceSequentialMode = false;
-		console_log('$.NiteLoader(): Parallel Mode');
-	}).on('click', '[class*="nite-program-load"]', function () {
-		if (instance) {
-			console_log('$.NiteLoader(): Aborted...');
+document.addEventListener('resourceLoad', function (e) {
+    consoleLog('Loader(): ' + e.detail.element);
+});
 
-			instance.abort();
-			instance = null;
+document.addEventListener('resourceError', function (e) {
+    consoleLog('Loader(): ' + e.detail.element);
+});
 
-			$('.nite-program-load--kill').hide();
-			$('.nite-program-load--run').show();
-		} else {
-			$('.nite-program-load--run').hide();
-			$('.nite-program-load--kill').show();
+[].concat(_toConsumableArray(document.querySelectorAll('figure img, figure video'))).forEach(function (el) {
+    el.addEventListener('resourceLoad', function (e) {
+        return e.detail.element.closest('figure').classList.add('loaded');
+    });
+    el.addEventListener('resourceError', function (e) {
+        return e.detail.element.closest('figure').classList.add('loaded-error');
+    });
+});
 
-			var randomResources = [];
+var instance = void 0;
+var instanceSequentialMode = true;
 
-			for (var i = 0; i < 10; i++) {
-				var letters = '0123456789ABCDEF',
-				    colors = [];
+document.querySelector('.program-mode--sequential').addEventListener('click', function () {
+    if (instance !== null) {
+        return;
+    }
 
-				for (var ii = 0; ii < 2; ii++) {
-					var color = '';
-					for (var c = 0; c < 6; c++) {
-						color += letters[Math.floor(Math.random() * 16)];
-					}
-					colors[ii] = color;
-				}
+    document.querySelector('.program-mode--parallel').style.display = 'block';
+    document.querySelector('.program-mode--sequential').style.display = 'none';
 
-				randomResources.push('//placehold.it/720x720/' + colors[0] + '/' + colors[1] + '.jpg');
-			}
+    instanceSequentialMode = true;
+    consoleLog('Loader(): Sequential Mode');
+});
 
-			instance = new NiteLoader({
-				sequential: instanceSequentialMode
-			});
+document.querySelector('.program-mode--parallel').addEventListener('click', function () {
+    if (instance !== null) {
+        return;
+    }
 
-			instance.collection = randomResources;
+    document.querySelector('.program-mode--sequential').style.display = 'block';
+    document.querySelector('.program-mode--parallel').style.display = 'none';
 
-			console_log('$.NiteLoader(): 0% - Starting...');
+    instanceSequentialMode = false;
+    consoleLog('Loader(): Parallel Mode');
+});
 
-			instance.progress(function (resource) {
-				console_log('$.NiteLoader(): ' + instance.percentage + '%');
-			});
+[].concat(_toConsumableArray(document.querySelectorAll('[class*="program-load"]'))).forEach(function (el) {
+    return el.addEventListener('click', function () {
+        if (instance) {
+            consoleLog('Loader(): Aborted...');
 
-			instance.done(function (resources) {
-				console_log('$.NiteLoader(): 100% - Done!!');
-				$('.nite-program-load--run').show();
-				$('.nite-program-load--kill').hide();
+            instance.abort();
+            instance = null;
 
-				instance = null;
-			});
+            document.querySelector('.program-load--run').style.display = 'block';
+            document.querySelector('.program-load--kill').style.display = 'none';
+        } else {
+            document.querySelector('.program-load--run').style.display = 'none';
+            document.querySelector('.program-load--kill').style.display = 'block';
 
-			instance.load();
-		}
-	});
-})(jQuery);
+            var randomResources = [];
+
+            for (var i = 0; i < 10; i++) {
+                var letters = '0123456789ABCDEF',
+                    colors = [];
+
+                for (var ii = 0; ii < 2; ii++) {
+                    var color = '';
+                    for (var c = 0; c < 6; c++) {
+                        color += letters[Math.floor(Math.random() * 16)];
+                    }
+                    colors[ii] = color;
+                }
+
+                randomResources.push('//placehold.it/720x720/' + colors[0] + '/' + colors[1] + '.jpg');
+            }
+
+            instance = new Loader({
+                sequential: instanceSequentialMode
+            });
+
+            instance.collection = randomResources;
+
+            consoleLog('Loader(): 0% - Starting...');
+
+            instance.progress(function (resource) {
+                consoleLog('Loader(): ' + instance.percentage + '%');
+            });
+
+            instance.done(function (resources) {
+                consoleLog('Loader(): 100% - Done!!');
+                document.querySelector('.program-load--run').style.display = 'block';
+                document.querySelector('.program-load--kill').style.display = 'none';
+
+                instance = null;
+            });
+
+            instance.load();
+        }
+    });
+});
 //# sourceMappingURL=test.js.map
