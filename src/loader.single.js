@@ -119,6 +119,8 @@ export class SingleLoader {
         this._format = null;
         this._observer = null;
 
+        this._observing = false;
+
         this._done = () => {};
         this._success = () => {};
         this._error = () => {};
@@ -177,7 +179,13 @@ export class SingleLoader {
             if (this._exists && this._settings.visible && intersectionObserverSupported) {
                 this._observer = new IntersectionObserver(
                     (entries, observer) => {
-                        entries.forEach(entry => (entry.target.intersectionRatio = entry.intersectionRatio));
+                        entries.forEach(entry => {
+                            entry.target.intersectionRatio = entry.intersectionRatio;
+
+                            if (this._observing) {
+                                this.process();
+                            }
+                        });
                     },
                     {
                         root: null,
@@ -190,6 +198,13 @@ export class SingleLoader {
         }
     }
 
+    observe() {
+        this._observing = true;
+    }
+    unobserve() {
+        this._observing = false;
+    }
+
     /**
      * @returns {string}
      */
@@ -200,7 +215,7 @@ export class SingleLoader {
     /**
      * @returns {boolean} se ha preso in carico il caricamento oppure no per vari motivi (è già caricato, non è nella viewport etc)
      */
-    load() {
+    process() {
         // TODO: FIXME: (3) check for placeholders / non-lazy resources
         // if isLoaded(this._exists && this._consistent ? this._element : this._resource) &&
         // (
@@ -329,7 +344,7 @@ export class SingleLoader {
                                 }
                             }, 500);
 
-                            this._element[ 'resourceLoader_' + this._idEvent] = onProgressReplacementInterval;
+                            this._element['resourceLoader_' + this._idEvent] = onProgressReplacementInterval;
                         }
                     },
                     !this._busy // true -> once, false -> on

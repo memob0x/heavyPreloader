@@ -12,25 +12,28 @@ const consoleLog = string => {
 
     consoleDiv.scrollTop = list.offsetHeight;
 };
+[...document.querySelectorAll('.playground')].forEach(element => {
+    const loadInstance = new Loader({
+        srcAttr: 'data-src',
+        srcsetAttr: 'data-srcset',
+        playthrough: false,
+        visible: true,
+        backgrounds: true,
 
-// TODO: without jQuery
-/*$('.playground').loadResources({
-    srcAttr: 'data-src',
-    srcsetAttr: 'data-srcset',
+        playthrough: 'full',
 
-    visible: true,
+        early: false,
+        earlyTimeout: 6000
+    });
 
-    sequential: true,
+    loadInstance.collection = element;
 
-    backgrounds: true,
-    extraAttrs: [],
+    loadInstance.observe();
 
-    playthrough: 'full',
+    loadInstance.load();
+});
 
-    early: false,
-    earlyTimeout: 6000,
-
-    onComplete: function(instance, resources) {
+/*  onComplete: function(instance, resources) {
         $(this).addClass('complete');
     },
 
@@ -47,15 +50,14 @@ const consoleLog = string => {
     },
     onError: function(instance, resource) {
         $(this).addClass('has-errors');
-    }
-});*/
+    } */
 
 document.addEventListener('resourceLoad', e => {
-    consoleLog('Loader(): ' + e.detail.element);
+    consoleLog('Loader() load: ' + e.detail.resource);
 });
 
 document.addEventListener('resourceError', e => {
-    consoleLog('Loader(): ' + e.detail.element);
+    consoleLog('Loader() error: ' + e.detail.resource);
 });
 
 [...document.querySelectorAll('figure img, figure video')].forEach(el => {

@@ -3,6 +3,7 @@ import { generateInstanceID, stringStartsWith, arrayFindIndex, hyphensToCamelCas
 import { isVisible, isHTMLElement } from './loader.element';
 
 import { SingleLoader } from './loader.single';
+import { intersectionObserverSupported } from './loader.client';
 
 // TODO: Promise support
 // TODO: private vars
@@ -21,6 +22,8 @@ export default class Loader {
         this._collectionInstances = [];
         this._collectionPending = [];
         this._resourcesLoaded = [];
+
+        this._observing = false;
 
         this._settings = {
             ...{
@@ -141,6 +144,13 @@ export default class Loader {
         return collectedResources;
     }
 
+    observe() {
+        if (intersectionObserverSupported) {
+        } else {
+            // scroll event?
+        }
+    }
+
     /**
      * @param {(Array.<String>|HTMLElement)} collection
      */
@@ -177,6 +187,13 @@ export default class Loader {
         return this._collection;
     }
 
+    observe() {
+        this._observing = true;
+    }
+    unobserve() {
+        this._observing = false;
+    }
+
     /**
      * @returns {undefined}
      */
@@ -198,6 +215,10 @@ export default class Loader {
             let thisLoadId = this._collection[i].id;
             let thisLoadIndex = arrayFindIndex(this._collectionInstances, x => x.id === thisLoadId);
             let thisLoadInstance = new SingleLoader(this._settings);
+
+            if (this._observing) {
+                thisLoadInstance.observe();
+            }
 
             if (thisLoadIndex === -1) {
                 this._collectionInstances.push({
@@ -247,13 +268,13 @@ export default class Loader {
                     this._collectionPending = this._collectionPending.filter(x => x.id !== id);
 
                     if (this._collectionPending.length) {
-                        this._busy = this._collectionPending[0].instance.load();
+                        this._busy = this._collectionPending[0].instance.process();
                     }
                 }
             });
 
             if (!sequentialMode || (sequentialMode && !this._busy)) {
-                this._busy = thisLoadInstance.load();
+                this._busy = thisLoadInstance.process();
             } else if (
                 sequentialMode &&
                 this._busy &&

@@ -377,6 +377,8 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             this._format = null;
             this._observer = null;
 
+            this._observing = false;
+
             this._done = function () {};
             this._success = function () {};
             this._error = function () {};
@@ -406,13 +408,28 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 
 
         _createClass(SingleLoader, [{
-            key: 'load',
+            key: 'observe',
+            value: function observe() {
+                this._observing = true;
+            }
+        }, {
+            key: 'unobserve',
+            value: function unobserve() {
+                this._observing = false;
+            }
+
+            /**
+             * @returns {string}
+             */
+
+        }, {
+            key: 'process',
 
 
             /**
              * @returns {boolean} se ha preso in carico il caricamento oppure no per vari motivi (è già caricato, non è nella viewport etc)
              */
-            value: function load() {
+            value: function process() {
                 var _this2 = this;
 
                 // TODO: FIXME: (3) check for placeholders / non-lazy resources
@@ -616,6 +633,8 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         }, {
             key: 'resource',
             set: function set(data) {
+                var _this3 = this;
+
                 if ((typeof data === 'undefined' ? 'undefined' : _typeof(data)) === 'object' && 'id' in data && 'element' in data && 'resource' in data) {
                     this._id = data.id;
                     this._element = data.element;
@@ -647,7 +666,11 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                     if (this._exists && this._settings.visible && intersectionObserverSupported) {
                         this._observer = new IntersectionObserver(function (entries, observer) {
                             entries.forEach(function (entry) {
-                                return entry.target.intersectionRatio = entry.intersectionRatio;
+                                entry.target.intersectionRatio = entry.intersectionRatio;
+
+                                if (_this3._observing) {
+                                    _this3.process();
+                                }
                             });
                         }, {
                             root: null,
@@ -657,12 +680,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                         this._observer.observe(this._originalElement);
                     }
                 }
-            }
-
-            /**
-             * @returns {string}
-             */
-            ,
+            },
             get: function get() {
                 return this._resource;
             }
@@ -692,6 +710,8 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             this._collectionInstances = [];
             this._collectionPending = [];
             this._resourcesLoaded = [];
+
+            this._observing = false;
 
             this._settings = _extends({
                 srcAttr: 'data-src',
@@ -730,14 +750,32 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 
 
         _createClass(Loader, [{
-            key: 'load',
+            key: 'observe',
+            value: function observe() {}
 
+            /**
+             * @param {(Array.<String>|HTMLElement)} collection
+             */
+
+        }, {
+            key: 'observe',
+            value: function observe() {
+                this._observing = true;
+            }
+        }, {
+            key: 'unobserve',
+            value: function unobserve() {
+                this._observing = false;
+            }
 
             /**
              * @returns {undefined}
              */
+
+        }, {
+            key: 'load',
             value: function load() {
-                var _this3 = this;
+                var _this4 = this;
 
                 if (!this._collection.length) {
                     this._done.call(this, this._resourcesLoaded);
@@ -749,77 +787,81 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 var sequentialMode = true === this._settings.sequential;
 
                 var _loop = function _loop(i) {
-                    if (_this3._abort) {
+                    if (_this4._abort) {
                         return 'break';
                     }
 
-                    var thisLoadId = _this3._collection[i].id;
-                    var thisLoadIndex = arrayFindIndex(_this3._collectionInstances, function (x) {
+                    var thisLoadId = _this4._collection[i].id;
+                    var thisLoadIndex = arrayFindIndex(_this4._collectionInstances, function (x) {
                         return x.id === thisLoadId;
                     });
-                    var thisLoadInstance = new SingleLoader(_this3._settings);
+                    var thisLoadInstance = new SingleLoader(_this4._settings);
+
+                    if (_this4._observing) {
+                        thisLoadInstance.observe();
+                    }
 
                     if (thisLoadIndex === -1) {
-                        _this3._collectionInstances.push({
+                        _this4._collectionInstances.push({
                             id: thisLoadId,
                             instance: thisLoadInstance
                         });
-                        thisLoadIndex = arrayFindIndex(_this3._collectionInstances, function (x) {
+                        thisLoadIndex = arrayFindIndex(_this4._collectionInstances, function (x) {
                             return x.id === thisLoadId;
                         });
                     } else {
-                        _this3._collectionInstances[thisLoadIndex].instance = thisLoadInstance;
+                        _this4._collectionInstances[thisLoadIndex].instance = thisLoadInstance;
                     }
 
-                    thisLoadInstance.resource = _this3._collection[i];
+                    thisLoadInstance.resource = _this4._collection[i];
 
                     thisLoadInstance.done(function (element, status, resource, id) {
-                        if (_this3._complete || _this3._abort) {
+                        if (_this4._complete || _this4._abort) {
                             return;
                         }
 
-                        var aProgress = !isInArray(id, _this3._collectionLoaded);
+                        var aProgress = !isInArray(id, _this4._collectionLoaded);
 
                         if (aProgress) {
-                            _this3._collectionLoaded.push(id);
-                            _this3._busy = false;
+                            _this4._collectionLoaded.push(id);
+                            _this4._busy = false;
 
-                            _this3._loaded++;
-                            _this3.percentage = _this3._loaded / _this3._collection.length * 100;
-                            _this3.percentage = parseFloat(_this3.percentage.toFixed(4));
+                            _this4._loaded++;
+                            _this4.percentage = _this4._loaded / _this4._collection.length * 100;
+                            _this4.percentage = parseFloat(_this4.percentage.toFixed(4));
 
                             var thisResource = {
                                 resource: resource,
                                 status: status,
                                 element: element
                             };
-                            _this3._resourcesLoaded.push(thisResource);
-                            _this3._progress.call(_this3, thisResource);
-                            _this3[status !== 'error' ? '_success' : '_error'].call(_this3, thisResource);
+                            _this4._resourcesLoaded.push(thisResource);
+                            _this4._progress.call(_this4, thisResource);
+                            _this4[status !== 'error' ? '_success' : '_error'].call(_this4, thisResource);
 
                             element.dispatchEvent(new CustomEvent('resource' + capitalize(status), { detail: thisResource }));
                             document.dispatchEvent(new CustomEvent('resource' + capitalize(status), { detail: thisResource }));
                         }
 
-                        if (_this3._loaded === _this3._collection.length) {
-                            _this3._done.call(_this3, _this3._resourcesLoaded);
+                        if (_this4._loaded === _this4._collection.length) {
+                            _this4._done.call(_this4, _this4._resourcesLoaded);
 
-                            _this3._complete = true;
-                        } else if (aProgress && sequentialMode && _this3._collectionPending.length) {
-                            _this3._collectionPending = _this3._collectionPending.filter(function (x) {
+                            _this4._complete = true;
+                        } else if (aProgress && sequentialMode && _this4._collectionPending.length) {
+                            _this4._collectionPending = _this4._collectionPending.filter(function (x) {
                                 return x.id !== id;
                             });
 
-                            if (_this3._collectionPending.length) {
-                                _this3._busy = _this3._collectionPending[0].instance.load();
+                            if (_this4._collectionPending.length) {
+                                _this4._busy = _this4._collectionPending[0].instance.process();
                             }
                         }
                     });
 
-                    if (!sequentialMode || sequentialMode && !_this3._busy) {
-                        _this3._busy = thisLoadInstance.load();
-                    } else if (sequentialMode && _this3._busy && (!_this3._settings.visible || !thisLoadInstance._exists || _this3._settings.visible && thisLoadInstance._exists && isVisible(thisLoadInstance._originalElement))) {
-                        _this3._collectionPending.push({
+                    if (!sequentialMode || sequentialMode && !_this4._busy) {
+                        _this4._busy = thisLoadInstance.process();
+                    } else if (sequentialMode && _this4._busy && (!_this4._settings.visible || !thisLoadInstance._exists || _this4._settings.visible && thisLoadInstance._exists && isVisible(thisLoadInstance._originalElement))) {
+                        _this4._collectionPending.push({
                             id: thisLoadId,
                             instance: thisLoadInstance
                         });
@@ -916,13 +958,8 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             }
         }, {
             key: 'collection',
-
-
-            /**
-             * @param {(Array.<String>|HTMLElement)} collection
-             */
             set: function set(collection) {
-                var _this4 = this;
+                var _this5 = this;
 
                 var collectedResources = collection;
 
@@ -945,7 +982,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                         return;
                     }
 
-                    _this4._collection.push(element);
+                    _this5._collection.push(element);
                 });
             }
 

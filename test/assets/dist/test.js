@@ -1,5 +1,7 @@
 'use strict';
 
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
 var consoleDiv = document.querySelector('#console');
@@ -16,25 +18,26 @@ var consoleLog = function consoleLog(string) {
 
     consoleDiv.scrollTop = list.offsetHeight;
 };
+[].concat(_toConsumableArray(document.querySelectorAll('.playground'))).forEach(function (element) {
+    var _ref;
 
-// TODO: without jQuery
-/*$('.playground').loadResources({
-    srcAttr: 'data-src',
-    srcsetAttr: 'data-srcset',
+    var loadInstance = new Loader((_ref = {
+        srcAttr: 'data-src',
+        srcsetAttr: 'data-srcset',
+        playthrough: false,
+        visible: true,
+        backgrounds: true
 
-    visible: true,
+    }, _defineProperty(_ref, 'playthrough', 'full'), _defineProperty(_ref, 'early', false), _defineProperty(_ref, 'earlyTimeout', 6000), _ref));
 
-    sequential: true,
+    loadInstance.collection = element;
 
-    backgrounds: true,
-    extraAttrs: [],
+    loadInstance.observe();
 
-    playthrough: 'full',
+    loadInstance.load();
+});
 
-    early: false,
-    earlyTimeout: 6000,
-
-    onComplete: function(instance, resources) {
+/*  onComplete: function(instance, resources) {
         $(this).addClass('complete');
     },
 
@@ -51,15 +54,14 @@ var consoleLog = function consoleLog(string) {
     },
     onError: function(instance, resource) {
         $(this).addClass('has-errors');
-    }
-});*/
+    } */
 
 document.addEventListener('resourceLoad', function (e) {
-    consoleLog('Loader(): ' + e.detail.element);
+    consoleLog('Loader() load: ' + e.detail.resource);
 });
 
 document.addEventListener('resourceError', function (e) {
-    consoleLog('Loader(): ' + e.detail.element);
+    consoleLog('Loader() error: ' + e.detail.resource);
 });
 
 [].concat(_toConsumableArray(document.querySelectorAll('figure img, figure video'))).forEach(function (el) {
