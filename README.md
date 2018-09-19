@@ -1,4 +1,7 @@
+
 WIP...
+
+💤 A preloader/lazy-load library for images, videos, and audio elements with full control on events callbacks, loading percentage, sequential/parallel mode, resources auto-discovery (including backgrounds), and much more.
 
 ```
 let loadInstance = new Loader({
