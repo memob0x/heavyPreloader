@@ -36,8 +36,8 @@ gulp.task('library:clean', done => {
     done();
 });
 
-// minify js
-gulp.task('library:js', callback => {
+// rollup
+gulp.task('library:rollup', callback => {
     const source = './src/loader.js';
 
     processedFiles.js.push(source);
@@ -60,6 +60,19 @@ gulp.task('library:js', callback => {
         ],
         callback
     );
+});
+
+// commonjs, used for tests
+gulp.task('library:commonjs', callback => {
+    let pumpLine = [];
+
+    glob.sync('src/*.js').forEach(source => {
+        processedFiles.js.push(source);
+
+        pumpLine.push([gulp.src(source), babel().on('error', err => log(err)), gulp.dest('./dist/')]);
+    });
+
+    pump(pumpLine.reduce((a, b) => a.concat(b)), callback);
 });
 
 // demo pages micro tasks
@@ -161,7 +174,7 @@ gulp.task('demos:html:es5', callback => buildHTML(false, callback));
 // clean all
 gulp.task('clean', ['library:clean', 'demos:clean']);
 // setup library distribution (legacy ES5)
-gulp.task('library', ['clean', 'library:js']);
+gulp.task('library', ['clean', 'library:rollup']);
 gulp.task('library:watch', ['library'], () => gulp.watch(processedFiles.js, ['library']));
 // setup demo pages
 gulp.task('demos', ['clean', 'demos:scss', 'demos:html']);

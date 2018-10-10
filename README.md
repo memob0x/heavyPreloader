@@ -43,7 +43,7 @@ loader.collection;
 loader.collection = document.body;
 ```
 
-#### From URLs
+#### From URL(s)
 
 ```
 loader.collection = ['image-1.jpg', 'image-2.webp', 'video.webm', 'audio.mp3'];
