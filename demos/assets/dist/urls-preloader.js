@@ -39,7 +39,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
 (function (global, factory) {
-    (typeof exports === 'undefined' ? 'undefined' : _typeof(exports)) === 'object' && typeof module !== 'undefined' ? module.exports = factory() : typeof define === 'function' && define.amd ? define('Loader', factory) : global.Loader = factory();
+    (typeof exports === 'undefined' ? 'undefined' : _typeof(exports)) === 'object' && typeof module !== 'undefined' ? factory() : typeof define === 'function' && define.amd ? define('lazyloader', factory) : factory();
 })(this, function () {
     'use strict';
 
@@ -634,6 +634,62 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         return Loader;
     }();
 
-    return Loader;
+    var logEl = document.querySelector('#console');
+    var log = function log(string) {
+        if (!logEl.hasChildNodes()) {
+            var ol = document.createElement('ol');
+            logEl.append(ol);
+        }
+
+        var list = logEl.querySelector('ol');
+        var li = document.createElement('li');
+        li.innerHTML = string;
+        list.append(li);
+
+        logEl.scrollTop = list.offsetHeight;
+    };
+
+    var testLoader = new Loader({
+        sequential: true
+    });
+
+    document.querySelector('button.load').addEventListener('click', function (e) {
+        testLoader.collection = function () {
+            var imgs = [];
+
+            for (var i = 0; i < 10; i++) {
+                var letters = '0123456789ABCDEF',
+                    colors = [];
+
+                for (var ii = 0; ii < 2; ii++) {
+                    var color = '';
+                    for (var c = 0; c < 6; c++) {
+                        color += letters[Math.floor(Math.random() * 16)];
+                    }
+                    colors[ii] = color;
+                }
+
+                imgs.push('//placehold.it/720x720/' + colors[0] + '/' + colors[1] + '.jpg');
+            }
+
+            return imgs;
+        }();
+
+        var testLoad = testLoader.load();
+
+        testLoad.then(function (e) {
+            return log('All done, test array has completely loaded!', e);
+        });
+        testLoad.progress(function (e) {
+            return log('Total programmatic load percentage: ' + testLoader.percentage + '% ' + e.url);
+        });
+        testLoad.catch(function (e) {
+            return console.log('error', e);
+        });
+    });
+
+    document.querySelector('button.abort').addEventListener('click', function (e) {
+        return testLoader.abort();
+    });
 });
-//# sourceMappingURL=loader.js.map
+//# sourceMappingURL=urls-preloader.js.map

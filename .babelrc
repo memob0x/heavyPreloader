@@ -1,4 +1,14 @@
 {
-	"presets": ["es2015-allow-top-level-this"],
-	"plugins": ["transform-object-rest-spread"]
+    "presets": ["es2015-allow-top-level-this"],
+    "plugins": [
+        "transform-object-rest-spread",
+        [
+            "transform-builtin-classes",
+            {
+                "globals": ["Promise"]
+            }
+        ],
+        "transform-es2015-classes"
+    ],
+    "comments": false
 }

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>{{title}}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    {{#if modules}}
+    <script defer type="module" src="../src/loader.js"></script>
+    <script defer type="module" src="./assets/src/main.js"></script>
+    {{/if}}
+
+    <link rel="stylesheet" type="text/css" href="./assets/dist/{{filename}}.css" />
+</head>
+
+<body>
+
+    <div id="root">
+
+        <nav></nav>
+
+        {{> content}}
+
+        <div id="console"></div>
+
+    </div>
+
+    {{#if modules}}
+    <script defer type="module" src="./assets/src/pages/{{filename}}.js"></script>
+    {{/if}}
+    {{#unless modules}}
+    <script defer src="./assets/dist/{{filename}}.js"></script>
+    {{/unless}}
+</body>
+
+</html>

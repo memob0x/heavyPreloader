@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+    <link rel="stylesheet" type="text/css" href="./assets/dist/lazyloader.css" />
+</head>
+
+<body>
+
+    <div id="root">
+
+        <nav></nav>
+
+        <main class="playground">
+        
+            <span class="playground__percentage">
+                <i data-percentage></i>
+            </span>
+        
+            <section class="playground__area">
+                <div class="playground__area__inner">
+                    <div class="playground__area__row">
+        
+                        <div class="playground__col">
+                            <figure class="playground__item">
+                                <img src="http://placehold.it/1x1/ff0000.jpg" data-src="http://placehold.it/720x720/c2b6f9.jpg" />
+                            </figure>
+                        </div>
+        
+                        <div class="playground__col">
+                            <figure class="playground__item">
+                                <img data-src="http://placehold.it/720x720/fed4bc.jpg" />
+                            </figure>
+                        </div>
+        
+                        <div class="playground__col">
+                            <figure class="playground__item">
+                                <img data-src="http://placehold.it/720x720/bbefda.webp" />
+                            </figure>
+                        </div>
+        
+                        <div class="playground__col">
+                            <figure class="playground__item">
+                                <img data-src="http://placehold.it/720x720/e2fcea.jpg" />
+                            </figure>
+                        </div>
+        
+                    </div>
+                </div>
+            </section>
+        
+            <section class="playground__area">
+                <div class="playground__area__inner">
+                    <div class="playground__area__row">
+        
+                        <div class="playground__col">
+                            <figure class="playground__item">
+                                <img data-src="http://placehold.it/720x720/d5dcfc.jpg" />
+                            </figure>
+                        </div>
+        
+                        <div class="playground__col">
+                            <figure class="playground__item">
+                                <img data-src="#" />
+                            </figure>
+                        </div>
+        
+                    </div>
+                </div>
+            </section>
+        
+        </main>
+        
+        <section class="playground">
+        
+            <span class="playground__percentage">
+                <i data-percentage></i>
+            </span>
+        
+            <section class="playground__area">
+                <div class="playground__area__inner">
+                    <div class="playground__area__row">
+        
+                        <div class="playground__col">
+                            <figure class="playground__item">
+                                <img data-src="http://placehold.it/720x720/d9cbf9.jpg" />
+                            </figure>
+                        </div>
+        
+                    </div>
+                </div>
+            </section>
+        
+            <section class="playground__area">
+                <div class="playground__area__inner">
+                    <div class="playground__area__row">
+        
+                        <div class="playground__col--full">
+                            <figure class="playground__item">
+                                <video autoplay muted loop class="target">
+                                    <source data-src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+                                    <source data-src="https://www.w3schools.com/html/mov_bbb.ogg" type="video/ogg">
+                                </video>
+                            </figure>
+                        </div>
+        
+                    </div>
+                </div>
+            </section>
+        
+        </section>
+        
+        <section class="playground">
+        
+            <span class="playground__percentage">
+                <i data-percentage></i>
+            </span>
+        
+            <section class="playground__area">
+                <div class="playground__area__inner">
+                    <div class="playground__area__row">
+                        <div class="playground__col">
+                            <figure class="playground__item">
+                                <img data-src="//placehold.it/1920x1080.jpg" data-srcset="//placehold.it/720x1080.jpg 100w, //placehold.it/1440x900.jpg 500w, //placehold.it/2560x1920.jpg 1000w"
+                                    data-sizes="(min-width: 900px) 1000px,
+                                                        (max-width: 900px) and (min-width: 400px) 50em,
+                                                        ( not (orientation: portrait) ) 300px,
+                                                        ( (orientation: landscape) or (min-width: 1000px) ) 50vw, 
+                                                        100vw">
+                            </figure>
+                        </div>
+                        <div class="playground__col">
+                            <figure class="playground__item">
+                                <picture>
+                                    <source data-media="(min-width: 650px)" data-srcset="//placehold.it/1280x1280.jpg">
+                                    <source data-media="(min-width: 465px)" data-srcset="//placehold.it/720x720.jpg">
+                                    <img data-src="//placehold.it/12x12.jpg">
+                                </picture>
+                            </figure>
+                        </div>
+        
+                    </div>
+                </div>
+            </section>
+        
+            <section class="playground__area">
+                <div class="playground__area__inner">
+                    <div class="playground__area__row">
+        
+                        <div class="playground__col--full">
+                            <figure class="playground__item">
+                                <iframe width="100%" height="100%" data-src="//www.google.com/"></iframe>
+                            </figure>
+                        </div>
+        
+                    </div>
+                </div>
+            </section>
+        
+        </section>
+        <div id="console"></div>
+
+    </div>
+
+    <script defer src="./assets/dist/lazyloader.js"></script>
+</body>
+
+</html>

@@ -2,18 +2,12 @@
 <html>
 
 <head>
-
-    <script src="../dist/loader.js"></script>
-
-    <link rel="stylesheet" type="text/css" href="assets/dist/test.css" />
-
-    <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,600,700" rel="stylesheet">
-
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
+    <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Loader Playground</title>
 
+    <link rel="stylesheet" type="text/css" href="./assets/dist/page-preloader.css" />
 </head>
 
 <body>
@@ -22,149 +16,111 @@
 
         <nav></nav>
 
-        <div id="console"></div>
-
+        <div id="preloader"></div>
+        
         <main class="playground">
-
+        
             <span class="playground__percentage">
                 <i data-percentage></i>
             </span>
-
+        
             <section class="playground__area">
-
                 <div class="playground__area__inner">
-
                     <div class="playground__area__row">
-
+        
                         <div class="playground__col">
                             <figure class="playground__item">
-                                <img src="http://placehold.it/1x1/ff0000.jpg" data-src="http://placehold.it/720x720/c2b6f9.jpg" />
+                                <img src="http://placehold.it/720x720/c2b6f9.jpg" />
                             </figure>
                         </div>
-
+        
                         <div class="playground__col">
                             <figure class="playground__item">
-                                <img data-src="http://placehold.it/720x720/fed4bc.jpg" />
+                                <img src="http://placehold.it/720x720/fed4bc.jpg" />
                             </figure>
                         </div>
-
+        
                         <div class="playground__col">
                             <figure class="playground__item">
-                                <img data-src="http://placehold.it/720x720/bbefda.webp" />
+                                <img src="http://placehold.it/720x720/bbefda.webp" />
                             </figure>
                         </div>
-
+        
                         <div class="playground__col">
                             <figure class="playground__item">
-                                <img data-src="http://placehold.it/720x720/e2fcea.jpg" />
+                                <img src="http://placehold.it/720x720/e2fcea.jpg" />
                             </figure>
                         </div>
-
+        
                     </div>
-
                 </div>
-
             </section>
-
+        
             <section class="playground__area">
-
                 <div class="playground__area__inner">
-
                     <div class="playground__area__row">
-
+        
                         <div class="playground__col">
                             <figure class="playground__item">
-                                <img data-src="http://placehold.it/720x720/d5dcfc.jpg" />
+                                <img src="http://placehold.it/720x720/d5dcfc.jpg" />
                             </figure>
                         </div>
-
+        
                         <div class="playground__col">
                             <figure class="playground__item">
-                                <img data-src="#" />
+                                <img src="#" />
                             </figure>
                         </div>
-
+        
                     </div>
-
                 </div>
-
             </section>
-
+        
         </main>
-
+        
         <section class="playground">
-
+        
             <span class="playground__percentage">
                 <i data-percentage></i>
             </span>
-
+        
             <section class="playground__area">
-
                 <div class="playground__area__inner">
-
                     <div class="playground__area__row">
-
+        
                         <div class="playground__col">
                             <figure class="playground__item">
-                                <img data-src="http://placehold.it/720x720/d9cbf9.jpg" />
+                                <img src="http://placehold.it/720x720/d9cbf9.jpg" />
                             </figure>
                         </div>
-
+        
                     </div>
-
                 </div>
-
             </section>
-
+        
             <section class="playground__area">
-
                 <div class="playground__area__inner">
-
                     <div class="playground__area__row">
-
+        
                         <div class="playground__col--full">
-
                             <figure class="playground__item">
-
                                 <video autoplay muted loop class="target">
-                                    <source data-src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
-                                    <source data-src="https://www.w3schools.com/html/mov_bbb.ogg" type="video/ogg">
+                                    <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+                                    <source src="https://www.w3schools.com/html/mov_bbb.ogg" type="video/ogg">
                                 </video>
-
                             </figure>
-
                         </div>
-
+        
                     </div>
-
                 </div>
-
             </section>
-
+        
         </section>
-
-        <section class="playground">
-
-            <section class="playground__area">
-
-                <div class="playground__area__inner">
-
-                    <button class="program-load--run">Generate Programmatically</button>
-                    <button class="program-load--kill" style="display:none;">Abort</button>
-                    <button class="program-mode--sequential" style="display:none;">Switch to Sequential Mode</button>
-                    <button class="program-mode--parallel">Switch to Parallel Mode</button>
-                    <span>(...have la look at "Network" tab in dev tools!)</span>
-
-                </div>
-
-            </section>
-
-        </section>
+        <div id="console"></div>
 
     </div>
 
-    <script src="assets/dist/test.js"></script>
-
+    <script defer src="./assets/dist/page-preloader.js"></script>
 </body>
 
 </html>

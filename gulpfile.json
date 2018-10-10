@@ -1,0 +1,17 @@
+[
+    {
+        "sourcemaps": {
+            "loadMaps": true,
+            "largeFile": true
+        },
+        "sass": {
+            "outputStyle": "expanded"
+        },
+        "rollup": {
+            "format": "umd"
+        },
+        "hbs": {
+            "bustCache": true
+        }
+    }
+]

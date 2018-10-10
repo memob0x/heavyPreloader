@@ -142,7 +142,7 @@ body {
   right: 20px;
   opacity: 0.75;
   max-width: 100%;
-  z-index: 4;
+  z-index: 5;
 }
 
 #console ul,
@@ -271,4 +271,30 @@ body {
   opacity: 1;
 }
 
-/*# sourceMappingURL=test.css.map */
+.playground__item.error {
+  display: none;
+}
+
+#preloader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  left: 0;
+  background: #000;
+  color: #fff;
+  z-index: 4;
+  opacity: 1;
+  visibility: visible;
+}
+
+body.loaded #preloader {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.4s ease 0s, visibility 0s ease 0.4s;
+}
+
+/*# sourceMappingURL=page-preloader.css.map */

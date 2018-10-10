@@ -1,357 +1,367 @@
-import { generateInstanceID, stringStartsWith, arrayFindIndex, hyphensToCamelCase, nodelistToArray, isInArray, capitalize } from './loader.utils';
+import { Media } from './loader.media.js';
+import { LoaderPromise } from './loader.promise.js';
+import { find } from './loader.find.js';
+import { switchAttributes, copyAttributes, removeAttributes } from './loader.utils.js';
 
-import { isVisible, isHTMLElement } from './loader.element';
-
-import { SingleLoader } from './loader.single';
-import { intersectionObserverSupported } from './loader.client';
-
-// TODO: Promise support
-// TODO: private vars
-// TODO: refactory succes/done/progress code...
-/** TODO: description of the MyClass constructor function.
- * @class
- * @classdesc TODO: description of the Loader class.
+/**
+ *
+ *
  */
 export default class Loader {
-    /**
-     * @param {Object} [options={srcAttr: 'data-src', srcsetAttr: 'data-srcset', playthrough: false, visible: false, backgrounds: false }]
-     */
-    constructor(options) {
-        this._collection = [];
-        this._collectionLoaded = [];
-        this._collectionInstances = [];
-        this._collectionPending = [];
-        this._resourcesLoaded = [];
-
-        this._observing = false;
-
-        this._settings = {
+    constructor(options = {}) {
+        this._options = {
             ...{
-                srcAttr: 'data-src',
-                srcsetAttr: 'data-srcset',
+                srcAttributes: {
+                    src: !!!options.lazy ? 'src' : 'data-src',
+                    srcset: !!!options.lazy ? 'srcset' : 'data-srcset'
+                },
+                sizesAttributes: {
+                    sizes: !!!options.lazy ? 'sizes' : 'data-sizes',
+                    media: !!!options.lazy ? 'media' : 'data-media'
+                },
+                lazy: false,
                 playthrough: false,
-                visible: false,
-                backgrounds: false
+                backgrounds: true,
+                sequential: false
             },
             ...options
         };
 
-        if (!stringStartsWith(this._settings.srcAttr, 'data-') || !stringStartsWith(this._settings.srcsetAttr, 'data-')) {
-            throw new Error('Wrong arguments format: srcAttr and srcsetAttr parameters must be dataset values.');
+        this._collection = []; // resources (array of type Media)
+        this._queue = new Map(); // loading resources
+
+        this._load = null; // main load Promise
+
+        this._percentage = 0; // loading percentage
+        this._state = 0; // 0: inactive - 1: busy
+    }
+
+    /**
+     * @returns {Number} percentage
+     */
+    get percentage() {
+        return this._percentage;
+    }
+
+    /**
+     * @param {(Array|HTMLElement)} collection
+     */
+    set collection(collection) {
+        if (this._state === 0) {
+            if (collection instanceof HTMLElement) {
+                collection = find(collection, this._options);
+            }
+
+            if (typeof item === 'string') {
+                collection = [new Media({ url: item })];
+            }
+
+            if (Media.isMedia(collection)) {
+                collection = [collection];
+            }
+
+            if (Array.isArray(collection)) {
+                collection.forEach(item => {
+                    const pushCheck = media => {
+                        if (media.type === 'image' || media.type === 'video' || media.type === 'audio' || (media.type === 'iframe' && media.consistent)) {
+                            this._collection.push(media);
+
+                            return;
+                        }
+
+                        console.warn("Couldn't add media to collection", media);
+                    };
+
+                    if (item instanceof HTMLElement) {
+                        find(item, this._options).forEach(media => pushCheck(new Media(media)));
+                    }
+
+                    if (typeof item === 'string') {
+                        pushCheck(new Media({ url: item }));
+                    }
+
+                    if (Media.isMedia(item)) {
+                        pushCheck(item);
+                    }
+                });
+            }
         }
-
-        this.srcAttr = hyphensToCamelCase(this._settings.srcAttr.replace('data-', ''));
-        this.srcsetAttr = hyphensToCamelCase(this._settings.srcsetAttr.replace('data-', ''));
-
-        this.percentage = 0;
-
-        this._done = () => {};
-        this._progress = () => {};
-        this._success = () => {};
-        this._error = () => {};
-        this._loop = this.load;
-
-        this._abort = false;
-        this._loaded = 0;
-        this._complete = false;
-        this._busy = false;
     }
 
     /**
      *
-     * @param {HTMLElement} [element=document.body]
-     * @param {Object} [options={ srcAttr: 'src', srcsetAttr: 'srcset', backgrounds: false }]
-     */
-    static findResources(element, options) {
-        let settings = {
-            srcAttr: 'src',
-            srcsetAttr: 'srcset',
-            backgrounds: false
-        };
-
-        if (typeof element === 'object' && undefined === options) {
-            for (let key in settings) {
-                if (key in element) {
-                    options = element;
-                    element = undefined;
-                    break;
-                }
-            }
-        }
-
-        if (undefined === element || element === document) {
-            element = document.body;
-        }
-
-        if (!isHTMLElement(element)) {
-            throw new Error('TypeError: ' + element + ' is not of type HTMLElement.');
-        }
-
-        let collectedResources = [];
-
-        settings = {
-            ...settings,
-            ...options
-        };
-
-        const targets = 'img, video, audio';
-        const targetsExtended = targets + ', picture, source';
-        const targetsFilter = '[' + settings.srcAttr + '], [' + settings.srcsetAttr + ']';
-
-        let targetsTags = nodelistToArray(element.querySelectorAll(targets));
-
-        if (element.matches(targetsExtended)) {
-            targetsTags.push(element);
-        }
-
-        targetsTags = targetsTags.filter(target => {
-            let children = nodelistToArray(target.children);
-            children = children.filter(x => x.matches(targetsExtended));
-            children = children.filter(x => x.matches(targetsFilter));
-            return target.matches(targetsFilter) || children.length;
-        });
-        targetsTags.forEach(target => {
-            let targetSource = target;
-
-            if (!targetSource.matches(targetsFilter)) {
-                targetSource = targetSource.querySelectorAll(targetsFilter);
-                targetSource = [...targetSource][0];
-            }
-
-            collectedResources.push({
-                element: target,
-                resource: targetSource.getAttribute(settings.srcAttr) || targetSource.getAttribute(settings.srcsetAttr)
-            });
-        });
-
-        if (true === settings.backgrounds) {
-            let targetsBg = nodelistToArray(element.querySelectorAll('*'));
-            targetsBg.push(element);
-            targetsBg = targetsBg.filter(target => !target.matches(targetsExtended));
-            targetsBg = targetsBg.filter(target => getComputedStyle(target).backgroundImage !== 'none');
-            targetsBg.forEach(target => {
-                const url = getComputedStyle(target).backgroundImage.match(/\((.*?)\)/);
-
-                if (null !== url && url.length >= 2) {
-                    collectedResources.push({
-                        element: target,
-                        resource: url[1].replace(/('|")/g, '')
-                    });
-                }
-            });
-        }
-
-        return collectedResources;
-    }
-
-    observe() {
-        if (intersectionObserverSupported) {
-        } else {
-            // scroll event?
-        }
-    }
-
-    /**
-     * @param {(Array.<String>|HTMLElement)} collection
-     */
-    set collection(collection) {
-        let collectedResources = collection;
-
-        try {
-            collectedResources = Loader.findResources(collection, this._settings);
-        } catch (err) {}
-
-        collectedResources.forEach(item => {
-            let element = {
-                resource: '',
-                element: null,
-                id: generateInstanceID()
-            };
-
-            if (typeof item === 'string') {
-                element.resource = item;
-            } else if (typeof item === 'object' && 'resource' in item) {
-                element = { ...element, ...item };
-            } else {
-                return;
-            }
-
-            this._collection.push(element);
-        });
-    }
-
-    /**
      * @returns {Array} collection
      */
     get collection() {
         return this._collection;
     }
 
-    observe() {
-        this._observing = true;
-    }
-    unobserve() {
-        this._observing = false;
-    }
-
     /**
-     * @returns {undefined}
-     */
-    load() {
-        if (!this._collection.length) {
-            this._done.call(this, this._resourcesLoaded);
-        }
-
-        // resets pending elements (sequential opt helper array) every time we loop
-        this._collectionPending = [];
-
-        const sequentialMode = true === this._settings.sequential;
-
-        for (let i = 0; i < this._collection.length; i++) {
-            if (this._abort) {
-                break;
-            }
-
-            let thisLoadId = this._collection[i].id;
-            let thisLoadIndex = arrayFindIndex(this._collectionInstances, x => x.id === thisLoadId);
-            let thisLoadInstance = new SingleLoader(this._settings);
-
-            if (this._observing) {
-                thisLoadInstance.observe();
-            }
-
-            if (thisLoadIndex === -1) {
-                this._collectionInstances.push({
-                    id: thisLoadId,
-                    instance: thisLoadInstance
-                });
-                thisLoadIndex = arrayFindIndex(this._collectionInstances, x => x.id === thisLoadId);
-            } else {
-                this._collectionInstances[thisLoadIndex].instance = thisLoadInstance;
-            }
-
-            thisLoadInstance.resource = this._collection[i];
-
-            thisLoadInstance.done((element, status, resource, id) => {
-                if (this._complete || this._abort) {
-                    return;
-                }
-
-                const aProgress = !isInArray(id, this._collectionLoaded);
-
-                if (aProgress) {
-                    this._collectionLoaded.push(id);
-                    this._busy = false;
-
-                    this._loaded++;
-                    this.percentage = (this._loaded / this._collection.length) * 100;
-                    this.percentage = parseFloat(this.percentage.toFixed(4));
-
-                    const thisResource = {
-                        resource: resource,
-                        status: status,
-                        element: element
-                    };
-                    this._resourcesLoaded.push(thisResource);
-                    this._progress.call(this, thisResource);
-                    this[status !== 'error' ? '_success' : '_error'].call(this, thisResource);
-
-                    element.dispatchEvent(new CustomEvent('resource' + capitalize(status), { detail: thisResource }));
-                    document.dispatchEvent(new CustomEvent('resource' + capitalize(status), { detail: thisResource }));
-                }
-
-                if (this._loaded === this._collection.length) {
-                    this._done.call(this, this._resourcesLoaded);
-
-                    this._complete = true;
-                } else if (aProgress && sequentialMode && this._collectionPending.length) {
-                    this._collectionPending = this._collectionPending.filter(x => x.id !== id);
-
-                    if (this._collectionPending.length) {
-                        this._busy = this._collectionPending[0].instance.process();
-                    }
-                }
-            });
-
-            if (!sequentialMode || (sequentialMode && !this._busy)) {
-                this._busy = thisLoadInstance.process();
-            } else if (
-                sequentialMode &&
-                this._busy &&
-                (!this._settings.visible || !thisLoadInstance._exists || (this._settings.visible && thisLoadInstance._exists && isVisible(thisLoadInstance._originalElement)))
-            ) {
-                this._collectionPending.push({
-                    id: thisLoadId,
-                    instance: thisLoadInstance
-                });
-            }
-        }
-    }
-
-    /**
-     * @param {Function} callback
-     * @returns {undefined}
-     */
-    done(callback) {
-        if (typeof callback !== 'function') {
-            return;
-        }
-
-        this._done = function(resources) {
-            callback.call(this, resources);
-        };
-    }
-
-    /**
-     * @param {Function} callback
-     * @returns {undefined}
-     */
-    progress(callback) {
-        if (typeof callback !== 'function') {
-            return;
-        }
-
-        this._progress = function(resource) {
-            callback.call(this, resource);
-        };
-    }
-
-    /**
-     * @param {Function} callback
-     * @returns {undefined}
-     */
-    success(callback) {
-        if (typeof callback !== 'function') {
-            return;
-        }
-
-        this._success = function(resource) {
-            callback.call(this, resource);
-        };
-    }
-
-    /**
-     * @param {Function} callback
-     * @returns {undefined}
-     */
-    error(callback) {
-        if (typeof callback !== 'function') {
-            return;
-        }
-
-        this._error = function(resource) {
-            callback.call(this, resource);
-        };
-    }
-
-    /**
-     * @returns {undefined}
+     *
+     * @returns {void}
      */
     abort() {
-        this._collectionInstances.forEach(thisInstance => {
-            thisInstance.instance.abort();
+        if (this._state === 0) {
+            return;
+        }
+
+        this._state = 0;
+
+        this._queue.forEach((data, element) => element.dispatchEvent(new CustomEvent('Aborted')));
+    }
+
+    /**
+     *
+     * @returns {Promise}
+     */
+    load() {
+        this._load = new LoaderPromise((resolve, reject, progress) => {
+            if (this._state === 1) {
+                reject('A Loader instance is already in progress.');
+            }
+            if (!this._collection.length) {
+                reject('Collection is empty.');
+            }
+
+            this._state = 1;
+
+            if (this._options.sequential) {
+                let loaded = 0;
+                const pipeline = () => {
+                    if (this._state === 0) {
+                        reject('Aborted');
+
+                        return;
+                    }
+
+                    const loadStep = (media, cb) => {
+                        loaded++;
+
+                        this._percentage = (loaded / this._collection.length) * 100;
+
+                        progress(media);
+
+                        if (loaded < this._collection.length) {
+                            pipeline();
+
+                            return;
+                        }
+
+                        this._state = 0;
+
+                        cb();
+                    };
+
+                    const load = this.fetch(this._collection[loaded]);
+                    load.then(e => loadStep(e, () => resolve({}))); // TODO: returned something
+                    load.catch(e => loadStep(e, () => reject('Error')));
+                };
+
+                pipeline();
+            } else {
+                let loaded = 0;
+                const loadStep = (e, cb) => {
+                    loaded++;
+
+                    this._percentage = (loaded / this._collection.length) * 100;
+
+                    progress(e);
+
+                    if (loaded >= this._collection.length) {
+                        this._state = 0;
+
+                        cb();
+                    }
+                };
+
+                for (let i = 0; i < this._collection.length; i++) {
+                    if (this._state === 0) {
+                        reject('Aborted');
+
+                        break;
+                    }
+
+                    const load = this.fetch(this._collection[i]);
+                    load.then(e => loadStep(e, () => resolve({}))); // TODO: returned something
+                    load.catch(e => loadStep(e, () => reject(e)));
+                }
+            }
         });
 
-        this._abort = true;
+        return this._load;
+    }
+
+    /**
+     *
+     * @param {Media} resource
+     * @returns {Promise}
+     */
+    fetch(media) {
+        return new Promise((resolve, reject) => {
+            const isConsistent = media.consistent && document.body.contains(media.element);
+            const hasSources = isConsistent && media.element.querySelectorAll('source').length;
+            const createdElement = document.createElement(media.tagName);
+
+            let mainEventsTarget = createdElement;
+
+            if (media.type === 'iframe') {
+                createdElement.style.visibility = 'hidden';
+                createdElement.style.position = 'fixed';
+                createdElement.style.top = '-999px';
+                createdElement.style.left = '-999px';
+                createdElement.style.width = '1px';
+                createdElement.style.height = '1px';
+                document.body.appendChild(createdElement);
+            }
+
+            if (isConsistent) {
+                copyAttributes(createdElement, media.element, Object.values(this._options.srcAttributes));
+                copyAttributes(createdElement, media.element, Object.values(this._options.sizesAttributes));
+
+                if (hasSources) {
+                    [...media.element.querySelectorAll('source')].forEach(source => {
+                        const createdSource = document.createElement('source');
+                        copyAttributes(createdSource, source, Object.values(this._options.srcAttributes));
+                        copyAttributes(createdSource, source, Object.values(this._options.sizesAttributes));
+                        createdElement.append(createdSource);
+                    });
+                }
+
+                if (media.tagName === 'picture') {
+                    // picture element loads only with a fallback img in it...
+                    mainEventsTarget = document.createElement('img');
+                    createdElement.append(mainEventsTarget);
+                }
+            }
+
+            const finishPromise = cb => {
+                if (isConsistent) {
+                    switchAttributes(media.element, this._options.srcAttributes);
+                    switchAttributes(media.element, this._options.sizesAttributes);
+
+                    if (hasSources) {
+                        [...media.element.querySelectorAll('source')].forEach(source => {
+                            switchAttributes(source, this._options.srcAttributes);
+                            switchAttributes(source, this._options.sizesAttributes);
+                        });
+                    }
+
+                    if (media.type === 'video' || media.type === 'audio') {
+                        media.element.load();
+                    }
+
+                    if (media.type === 'iframe') {
+                        createdElement.parentElement.removeChild(createdElement);
+                    }
+                }
+
+                this._queue.delete(createdElement);
+
+                cb(media);
+            };
+
+            const prepareLoad = () => {
+                if (isConsistent) {
+                    switchAttributes(createdElement, this._options.srcAttributes);
+                    switchAttributes(createdElement, this._options.sizesAttributes);
+
+                    if (hasSources) {
+                        [...createdElement.querySelectorAll('source')].forEach(source => {
+                            switchAttributes(source, this._options.srcAttributes);
+                            switchAttributes(source, this._options.sizesAttributes);
+                        });
+                    }
+                } else {
+                    createdElement.setAttribute('src', media.url);
+                }
+
+                if (media.type === 'video' || media.type === 'audio') {
+                    createdElement.load();
+                }
+            };
+
+            const dispatchEvent = type => {
+                const event = new CustomEvent(type, { detail: media });
+
+                if (media.element) {
+                    media.element.dispatchEvent(event);
+                }
+
+                document.dispatchEvent(event);
+            };
+
+            let queuer = { media: media, observer: null, element: createdElement };
+
+            // TODO: "abort" custom event must be "private" . instance?
+            createdElement.addEventListener('abort', () => {
+                removeAttributes(createdElement, Object.keys(this._options.srcAttributes));
+                removeAttributes(createdElement, Object.values(this._options.srcAttributes));
+                removeAttributes(createdElement, Object.keys(this._options.sizesAttributes));
+                removeAttributes(createdElement, Object.values(this._options.sizesAttributes));
+
+                if (hasSources) {
+                    [...createdElement.querySelectorAll('source')].forEach(source => {
+                        removeAttributes(source, Object.keys(this._options.srcAttributes));
+                        removeAttributes(source, Object.values(this._options.srcAttributes));
+                        removeAttributes(source, Object.keys(this._options.sizesAttributes));
+                        removeAttributes(source, Object.values(this._options.sizesAttributes));
+                    });
+                }
+
+                finishPromise(reject);
+            });
+
+            mainEventsTarget.addEventListener('error', () => {
+                finishPromise(reject);
+
+                dispatchEvent('mediaError');
+            });
+
+            if (media.type === 'image' || media.type === 'iframe') {
+                mainEventsTarget.addEventListener('load', e => {
+                    if (e.target.tagName.toLowerCase() === 'iframe' && !e.target.getAttribute('src')) {
+                        return; // iframes fire load at landing
+                    }
+
+                    finishPromise(resolve);
+
+                    dispatchEvent('mediaLoad');
+                });
+            }
+
+            if (media.type === 'audio' || media.type === 'video') {
+                mainEventsTarget.addEventListener(this._options.playthrough ? 'canplaythrough' : 'loadedmetadata', () => {
+                    finishPromise(resolve);
+
+                    dispatchEvent('mediaLoad');
+                });
+            }
+
+            if (media.element instanceof HTMLElement && this._options.lazy && 'IntersectionObserver' in window) {
+                queuer.observer = new IntersectionObserver(
+                    (entries, observer) => {
+                        entries.forEach(entry => {
+                            if (entry.intersectionRatio > 0) {
+                                observer.unobserve(entry.target);
+
+                                prepareLoad();
+                            }
+                        });
+                    },
+                    {
+                        root: null,
+                        rootMargin: '0px',
+                        threshold: 0.1
+                    }
+                );
+
+                queuer.observer.observe(media.element);
+                this._queue.set(media.element, queuer);
+            } else {
+                this._queue.set(createdElement, queuer);
+
+                prepareLoad();
+            }
+        });
     }
 }

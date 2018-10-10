@@ -1,56 +1,92 @@
-
-WIP...
+# Loader
 
 💤 A preloader/lazy-load library for images, videos, and audio elements with full control on events callbacks, loading percentage, sequential/parallel mode, resources auto-discovery (including backgrounds), and much more.
 
+---
+
+## 1. Instance
+
 ```
-let loadInstance = new Loader({
-    srcAttr: 'data-src',
-    srcsetAttr: 'data-srcset',
+const loader = new Loader();
+```
+
+#### Options
+
+```
+const loader = new Loader({
+    srcAttributes: {
+        src: 'data-src',
+        srcset: 'data-srcset'
+    },
+    sizesAttributes: {
+        sizes: 'data-sizes',
+        media: 'data-media'
+    },
+    lazy: false,
     playthrough: false,
-    visible: false,
-    backgrounds: false
+    backgrounds: false,
+    sequential: false
 });
 ```
 
-```
-loadInstance.collection = ['image-1.jpg', 'image-2.webp', 'video.webm', 'audio.mp3'];
-```
+---
+
+## 2. Collection
 
 ```
-loadInstance.collection = document.body;
+loader.collection;
 ```
 
-```
-loadInstance.collection = document.querySelector('#test');
-```
+#### From Element(s)
 
 ```
-Loader.findResources(document.querySelector('#has-backgrounds', { backgrounds:true }));
+loader.collection = document.body;
 ```
 
-```
-Loader.findResources({ backgrounds:true }));
-```
+#### From URLs
 
 ```
-loadInstance.done((resources) => { });
+loader.collection = ['image-1.jpg', 'image-2.webp', 'video.webm', 'audio.mp3'];
 ```
 
-```
-loadInstance.load();
-```
+---
+
+## 3. Execution
 
 ```
-console.log(loadInstance.percentage);
+const load = loader.load();
 ```
 
-```
-global event
-document.addEventListener('resourceLoad', e => e.detail.element.classList.add('loaded-image'));
-```
+#### Percentage
 
 ```
-targeted event
-[...document.querySelectorAll('figure img')].forEach(element => element.addEventListener('resourceError', e => e.detail.element.classList.add('missing-image')));
+loader.percentage;
 ```
+
+#### Callbacks
+
+```
+load.progress(resource => console.log(resource));
+load.then(object => console.log(object));
+load.catch(error => console.log(error));
+```
+
+---
+
+## 4. Events
+
+#### Scoped
+
+```
+document.querySelector('img').addEventListener('mediaLoad', e => e.detail.element.classList.add('loaded'));
+document.querySelector('img').addEventListener('mediaError', e => e.detail.element.classList.add('missing'));
+```
+
+#### Global
+
+```
+document.addEventListener('mediaLoad', e => e.detail.element.classList.add('loaded'));
+document.addEventListener('mediaError', e => e.detail.element.classList.add('missing'));
+```
+
+---

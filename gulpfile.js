@@ -1,178 +1,178 @@
-// command list:
-// gulp
-// gulp --development
-// gulp --development --nowatch
-// gulp --debugger
-
 'use strict';
 
-const arg = (argList => {
-    let arg = {},
-        a,
-        opt,
-        thisOpt,
-        curOpt;
-    for (a = 0; a < argList.length; a++) {
-        thisOpt = argList[a].trim();
-        opt = thisOpt.replace(/^\-+/, '');
-
-        if (opt === thisOpt) {
-            if (curOpt) {
-                arg[curOpt] = opt;
-            }
-
-            curOpt = null;
-        } else {
-            curOpt = opt;
-
-            arg[curOpt] = true;
-        }
-    }
-
-    return arg;
-})(process.argv);
-
-const production = !arg.development;
-const debug = arg.debugger;
-
+const clearRequire = module => {
+    delete require.cache[require.resolve(module)];
+    return require(module);
+};
 const gulp = require('gulp');
+const glob = require('glob');
 const watch = require('gulp-watch');
-const gulpif = require('gulp-if');
 const pump = require('pump');
 const rename = require('gulp-rename');
-const del = require('del');
 const rollup = require('gulp-better-rollup');
 const sourcemaps = require('gulp-sourcemaps');
 const babel = require('gulp-babel');
+const del = require('del');
 const sass = require('gulp-sass');
 const postcss = require('gulp-postcss');
 const minify = require('gulp-minify');
 const autoprefixer = require('autoprefixer');
 const log = require('fancy-log');
-const clear = require('clear');
+const hb = require('gulp-hb');
+const configuration = require('./gulpfile.json')[0];
 
-const resources = [
-    {
-        paths: {
-            src: './src/',
-            dist: './dist/'
-        },
-        files: {
-            js: { module: 'Loader', list: ['loader.js'] }
-        }
-    },
-    {
-        paths: {
-            src: './test/assets/src/',
-            dist: './test/assets/dist/'
-        },
-        files: {
-            js: { list: ['test.js'] },
-            css: { list: ['test.scss'] }
-        }
-    }
-];
-
-const sourcemapsConf = { loadMaps: true, largeFile: true };
-
-let watchedFiles = [];
-resources.forEach(resource => {
-    for (let type in resource.files) {
-        watchedFiles = watchedFiles.concat(resource.paths.src + resource.files[type].list);
-    }
-});
-
-let pumpCounter = 0;
-const pumpCallback = args => {
-    pumpCounter++;
-
-    if (pumpCounter === watchedFiles.length) {
-        args[0]();
-    }
+let processedFiles = {
+    js: [],
+    scss: [],
+    html: [],
+    json: []
 };
 
-gulp.task('clean', done => {
-    resources.forEach(resource => {
-        del.sync(resource.paths.dist);
-    });
-
+// library micro tasks
+// - - - - - - - - - - - - - - - - - - - -
+// cleanup
+gulp.task('library:clean', done => {
+    del.sync('./dist/');
     done();
 });
 
-gulp.task('build', callback => {
-    pumpCounter = 0;
+// minify js
+gulp.task('library:js', callback => {
+    const source = './src/loader.js';
 
-    resources.forEach(resource => {
-        // js files
-        if ('js' in resource.files && resource.files.js.list.length) {
-            const isModule = 'module' in resource.files.js && !!resource.files.js.module;
-            const moduleConf = {
-                name: resource.files.js.module,
-                format: 'umd'
-            };
+    processedFiles.js.push(source);
 
-            // prettier-ignore
-            resource.files.js.list.forEach(filename => pump([
+    pump(
+        [
+            gulp.src(source),
+            sourcemaps.init(configuration.sourcemaps),
+            rollup(
+                {},
+                {
+                    ...configuration.rollup,
+                    name: 'Loader'
+                }
+            ).on('error', err => log(err)),
+            babel().on('error', err => log(err)),
+            minify({ ext: { min: '.min.js' } }),
+            sourcemaps.write('.'),
+            gulp.dest('./dist/')
+        ],
+        callback
+    );
+});
 
-				// rollup modules + transpilation to ES5 (production only)
-				gulp.src(resource.paths.src + filename),
-				gulpif(production, sourcemaps.init(sourcemapsConf)),
-                gulpif(isModule, rollup({}, moduleConf).on('error', err => log(err))),
-				gulpif(production, babel().on('error', err => log(err))),
-				gulpif(production, sourcemaps.write('.')),
-				gulp.dest(resource.paths.dist),
+// demo pages micro tasks
+// - - - - - - - - - - - - - - - - - - - -
+// cleanup
+gulp.task('demos:clean', done => {
+    del.sync('./demos/assets/dist/');
+    del.sync('./demos/*.html');
+    done();
+});
+// transpile css
+gulp.task('demos:scss', callback => {
+    let pumpLine = [];
 
-				// minification (production only)
-				gulpif(production, gulp.src(resource.paths.src + filename)),
-				gulpif(production, sourcemaps.init(sourcemapsConf)),
-                gulpif(production && isModule, rollup({}, moduleConf).on('error', err => log(err))),
-                gulpif(production, babel().on('error', err => log(err))),
-				gulpif(production, minify({ ext: { min: '.min.js' } })),
-				gulpif(production, sourcemaps.write('.')),
-				gulpif(production, gulp.dest(resource.paths.dist))
+    glob.sync('demos/assets/src/pages/*.scss').forEach(source => {
+        processedFiles.scss.push(source);
 
-			], pumpCallback.bind(this, [callback])));
-        }
+        pumpLine.push([
+            gulp.src(source),
+            sourcemaps.init(configuration.sourcemaps),
+            sass(configuration.sass).on('error', err => log(err)),
+            postcss([autoprefixer()]).on('error', err => log(err)),
+            sourcemaps.write('.'),
+            gulp.dest('./demos/assets/dist/')
+        ]);
+    });
 
-        // css files
-        if ('css' in resource.files && resource.files.css.list.length) {
-            // prettier-ignore
-            resource.files.css.list.forEach(filename => pump([
+    pump(pumpLine.reduce((a, b) => a.concat(b)), callback);
+});
+// rollup js includes and transpile
+gulp.task('demos:js', callback => {
+    let pumpLine = [];
 
-				// transpilation to standard CSS
-				gulp.src(resource.paths.src + filename),
-				gulpif(production,sourcemaps.init(sourcemapsConf)),
-				sass({ outputStyle: 'expanded', onError : err => log(err) }),
-				postcss([autoprefixer()]).on('error', err => log(err)),
-				gulpif(production, sourcemaps.write('.')),
-				gulp.dest(resource.paths.dist),
+    glob.sync('demos/assets/src/pages/*.js').forEach(source => {
+        processedFiles.js.push(source);
 
-				// minification (production only)
-				gulpif(production, gulp.src(resource.paths.src + filename)),
-				gulpif(production, sourcemaps.init(sourcemapsConf)),
-                gulpif(production, sass({ outputStyle: 'compressed', onError: err => log(err) })),
-                gulpif(production, postcss([autoprefixer()])).on('error', err => log(err)),
-				gulpif(production, rename({ suffix: '.min' })),
-				gulpif(production, sourcemaps.write('.')),
-				gulpif(production, gulp.dest(resource.paths.dist)),
+        pumpLine.push([
+            gulp.src(source),
+            sourcemaps.init(configuration.sourcemaps),
+            rollup({}, configuration.rollup).on('error', err => log(err)),
+            babel().on('error', err => log(err)),
+            sourcemaps.write('.'),
+            gulp.dest('./demos/assets/dist/')
+        ]);
+    });
 
-			], pumpCallback.bind(this, [callback])));
+    pump(pumpLine.reduce((a, b) => a.concat(b)), callback);
+});
+
+const buildHTML = (modules, callback) => {
+    let pumpLine = [];
+
+    const main = './demos/assets/src/main.hbs';
+    processedFiles.html.push(main);
+
+    glob.sync('demos/assets/src/pages/*.hbs').forEach(source => {
+        const file = source.match(/[^\\/]+$/)[0];
+        const filestruct = file.split('.');
+
+        processedFiles.html.push(source);
+
+        if (filestruct.length === 2) {
+            const filename = filestruct[0];
+
+            const json = './demos/assets/src/pages/' + filename + '.json';
+            processedFiles.json.push(json);
+
+            pumpLine.push([
+                gulp.src(main),
+                hb(configuration.hbs)
+                    .data(clearRequire(json))
+                    .data({
+                        modules: modules,
+                        filename: filename
+                    })
+                    .partials({
+                        content: '{{> ' + filename + '}}'
+                    })
+                    .partials(source)
+                    .partials('./demos/assets/src/pages/' + filename + '.*.hbs'),
+                rename({
+                    basename: filename,
+                    extname: '.html'
+                }),
+                gulp.dest('./demos/')
+            ]);
         }
     });
 
-    if (!production && !arg.nowatch) {
-        gulp.watch(watchedFiles, ['default']);
-    }
-});
+    pump(pumpLine.reduce((a, b) => a.concat(b)), callback);
+};
+// build handlebar
+gulp.task('demos:html', callback => buildHTML(true, callback));
+// build handlebar es5
+gulp.task('demos:html:es5', callback => buildHTML(false, callback));
 
-gulp.task('default', ['clean', 'build'], () => {
-    if (debug) {
-        return;
-    }
-    clear();
-    log('');
-    log('loader.js Build: ' + (production ? 'Production' : 'Development'));
-    log('--------------------------------------');
-    log(watchedFiles);
-    log('--------------------------------------');
+// main tasks
+// - - - - - - - - - - - - - - - - - - - -
+// clean all
+gulp.task('clean', ['library:clean', 'demos:clean']);
+// setup library distribution (legacy ES5)
+gulp.task('library', ['clean', 'library:js']);
+gulp.task('library:watch', ['library'], () => gulp.watch(processedFiles.js, ['library']));
+// setup demo pages
+gulp.task('demos', ['clean', 'demos:scss', 'demos:html']);
+gulp.task('demos:watch', ['demos'], () => {
+    gulp.watch(processedFiles.scss, ['demos:scss']);
+    gulp.watch([...processedFiles.html, ...processedFiles.json], ['demos:html']);
+});
+// setup demo pages for old browsers (ES5 and single file js with no modules)
+gulp.task('demos:es5', ['clean', 'library', 'demos:scss', 'demos:js', 'demos:html:es5']);
+gulp.task('demos:es5:watch', ['demos:es5'], () => {
+    gulp.watch(processedFiles.scss, ['demos:scss']);
+    gulp.watch([...processedFiles.html, ...processedFiles.json], ['demos:html:es5']);
+    gulp.watch(processedFiles.js, ['library', 'demos:js']);
 });
