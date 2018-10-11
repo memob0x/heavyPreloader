@@ -8,29 +8,26 @@ module.exports = function(config) {
 
         // frameworks to use
         // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
-        frameworks: ['mocha', 'common_js', 'chai'],
+        frameworks: ['mocha', 'requirejs', 'chai'],
 
         // list of files / patterns to load in the browser
         files: [
             {
-                pattern: './dist/*.js',
+                pattern: './dist/loader*.js',
+                included: false
+            },
+            {
+                pattern: './dist/toolbox/src/toolbox*.js',
                 included: false
             },
             {
                 pattern: './tests/*.test.js',
-                included: false
-            } /*,
-            'karma.entrypoint.js'*/
+                included: true
+            }
         ],
 
         // list of files / patterns to exclude
         exclude: [],
-
-        // preprocess matching files before serving them to the browser
-        // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
-        preprocessors: {
-            './dist/*.js': ['common_js']
-        },
 
         // test results reporter to use
         // possible values: 'dots', 'progress'

@@ -63,10 +63,18 @@ gulp.task('library:rollup', callback => {
 });
 
 // commonjs, used for tests
-gulp.task('library:commonjs', callback => {
+gulp.task('library:amd:toolbox', callback => {
     let pumpLine = [];
 
-    glob.sync('src/*.js').forEach(source => {
+    glob.sync('./src/toolbox/src/*.js').forEach(source => pumpLine.push([gulp.src(source), babel().on('error', err => log(err)), gulp.dest('./dist/toolbox/dist')]));
+
+    pump(pumpLine.reduce((a, b) => a.concat(b)), callback);
+});
+// commonjs, used for tests
+gulp.task('library:amd', ['library:amd:toolbox'], callback => {
+    let pumpLine = [];
+
+    glob.sync('./src/*.js').forEach(source => {
         processedFiles.js.push(source);
 
         pumpLine.push([gulp.src(source), babel().on('error', err => log(err)), gulp.dest('./dist/')]);
@@ -189,3 +197,8 @@ gulp.task('demos:es5:watch', ['demos:es5'], () => {
     gulp.watch([...processedFiles.html, ...processedFiles.json], ['demos:html:es5']);
     gulp.watch(processedFiles.js, ['library', 'demos:js']);
 });
+// npm shortcuts
+gulp.task('build', ['demos']);
+gulp.task('watch', ['demos:watch']);
+gulp.task('build:transpile', ['library', 'demos:es5']);
+gulp.task('watch:transpile', ['library:watch', 'demos:es5:watch']);
