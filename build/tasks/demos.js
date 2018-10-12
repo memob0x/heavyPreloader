@@ -1,33 +1,3 @@
-'use strict';
-
-const clearRequire = module => {
-    delete require.cache[require.resolve(module)];
-    return require(module);
-};
-const gulp = require('gulp');
-const glob = require('glob');
-const watch = require('gulp-watch');
-const pump = require('pump');
-const rename = require('gulp-rename');
-const rollup = require('gulp-better-rollup');
-const sourcemaps = require('gulp-sourcemaps');
-const babel = require('gulp-babel');
-const del = require('del');
-const sass = require('gulp-sass');
-const postcss = require('gulp-postcss');
-const minify = require('gulp-minify');
-const autoprefixer = require('autoprefixer');
-const log = require('fancy-log');
-const hb = require('gulp-hb');
-const configuration = require('./gulpfile.json')[0];
-
-let processedFiles = {
-    js: [],
-    scss: [],
-    html: [],
-    json: []
-};
-
 // library micro tasks
 // - - - - - - - - - - - - - - - - - - - -
 // cleanup
@@ -53,7 +23,12 @@ gulp.task('library:rollup', callback => {
                     name: 'Loader'
                 }
             ).on('error', err => log(err)),
-            babel().on('error', err => log(err)),
+            babel(
+                babel({
+                    presets: ['@babel/env'],
+                    plugins: 
+                })
+            ).on('error', err => log(err)),
             minify({ ext: { min: '.min.js' } }),
             sourcemaps.write('.'),
             gulp.dest('./dist/')
@@ -62,11 +37,11 @@ gulp.task('library:rollup', callback => {
     );
 });
 
-// commonjs, used for tests
+// deps in commonjs, used for tests
 gulp.task('library:amd:toolbox', callback => {
     let pumpLine = [];
 
-    glob.sync('./src/toolbox/src/*.js').forEach(source => pumpLine.push([gulp.src(source), babel().on('error', err => log(err)), gulp.dest('./dist/toolbox/dist')]));
+    glob.sync('./src/toolbox/src/*.js').forEach(source => pumpLine.push([gulp.src(source), babel().on('error', err => log(err)), gulp.dest('./dist/toolbox/src')]));
 
     pump(pumpLine.reduce((a, b) => a.concat(b)), callback);
 });

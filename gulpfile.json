@@ -12,6 +12,10 @@
         },
         "hbs": {
             "bustCache": true
+        },
+        "babel": {
+            "ignore": ["node_modules/", "dist/", "src/toolbox/"],
+            "babelrcRoots": ["../../"]
         }
     }
 ]
