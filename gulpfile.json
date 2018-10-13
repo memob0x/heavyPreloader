@@ -1,9 +1,6 @@
 [
     {
-        "sourcemaps": {
-            "loadMaps": true,
-            "largeFile": true
-        },
+        "sourcemaps": {},
         "sass": {
             "outputStyle": "expanded"
         },

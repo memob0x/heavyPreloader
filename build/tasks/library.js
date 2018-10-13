@@ -6,7 +6,8 @@ const babel = require('gulp-babel');
 const del = require('del');
 const minify = require('gulp-minify');
 const log = require('fancy-log');
-const configuration = require('../../gulpfile.json')[0];
+
+const settings = require('../settings');
 
 const libraryClean = done => {
     del.sync('../dist/', { force: true });
@@ -21,15 +22,9 @@ const libraryRollup = done => {
     return pump(
         [
             gulp.src(source),
-            sourcemaps.init(configuration.sourcemaps),
-            rollup(
-                {},
-                {
-                    ...configuration.rollup,
-                    name: 'Loader'
-                }
-            ).on('error', err => log(err)),
-            babel(configuration.babel).on('error', err => log(err)),
+            sourcemaps.init(settings.sourcemaps),
+            rollup({}, { ...settings.rollup, name: 'Loader' }).on('error', err => log(err)),
+            babel(settings.babel).on('error', err => log(err)),
             minify({ ext: { min: '.min.js' } }),
             sourcemaps.write('.'),
             gulp.dest('../dist/')

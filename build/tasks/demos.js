@@ -1,131 +1,78 @@
-// library micro tasks
-// - - - - - - - - - - - - - - - - - - - -
-// cleanup
-gulp.task('library:clean', done => {
-    del.sync('./dist/');
+const gulp = require('gulp');
+const pump = require('pump');
+const rollup = require('gulp-better-rollup');
+const sourcemaps = require('gulp-sourcemaps');
+const babel = require('gulp-babel');
+const del = require('del');
+const glob = require('glob');
+const log = require('fancy-log');
+const hb = require('gulp-hb');
+const rename = require('gulp-rename');
+const sass = require('gulp-sass');
+const postcss = require('gulp-postcss');
+const autoprefixer = require('autoprefixer');
+const path = require('path');
+
+const settings = require('../settings');
+
+const clearRequire = module => {
+    module = path.resolve(module);
+    delete require.cache[module];
+    return require(module);
+};
+
+const demosClean = done => {
+    del.sync(['../demos/assets/dist/', '../demos/*.html'], { force: true });
     done();
-});
+};
 
-// rollup
-gulp.task('library:rollup', callback => {
-    const source = './src/loader.js';
-
-    processedFiles.js.push(source);
-
+const demosStyles = done =>
     pump(
         [
-            gulp.src(source),
-            sourcemaps.init(configuration.sourcemaps),
-            rollup(
-                {},
-                {
-                    ...configuration.rollup,
-                    name: 'Loader'
-                }
-            ).on('error', err => log(err)),
-            babel(
-                babel({
-                    presets: ['@babel/env'],
-                    plugins: 
-                })
-            ).on('error', err => log(err)),
-            minify({ ext: { min: '.min.js' } }),
-            sourcemaps.write('.'),
-            gulp.dest('./dist/')
-        ],
-        callback
-    );
-});
-
-// deps in commonjs, used for tests
-gulp.task('library:amd:toolbox', callback => {
-    let pumpLine = [];
-
-    glob.sync('./src/toolbox/src/*.js').forEach(source => pumpLine.push([gulp.src(source), babel().on('error', err => log(err)), gulp.dest('./dist/toolbox/src')]));
-
-    pump(pumpLine.reduce((a, b) => a.concat(b)), callback);
-});
-// commonjs, used for tests
-gulp.task('library:amd', ['library:amd:toolbox'], callback => {
-    let pumpLine = [];
-
-    glob.sync('./src/*.js').forEach(source => {
-        processedFiles.js.push(source);
-
-        pumpLine.push([gulp.src(source), babel().on('error', err => log(err)), gulp.dest('./dist/')]);
-    });
-
-    pump(pumpLine.reduce((a, b) => a.concat(b)), callback);
-});
-
-// demo pages micro tasks
-// - - - - - - - - - - - - - - - - - - - -
-// cleanup
-gulp.task('demos:clean', done => {
-    del.sync('./demos/assets/dist/');
-    del.sync('./demos/*.html');
-    done();
-});
-// transpile css
-gulp.task('demos:scss', callback => {
-    let pumpLine = [];
-
-    glob.sync('demos/assets/src/pages/*.scss').forEach(source => {
-        processedFiles.scss.push(source);
-
-        pumpLine.push([
-            gulp.src(source),
-            sourcemaps.init(configuration.sourcemaps),
-            sass(configuration.sass).on('error', err => log(err)),
+            gulp.src('../demos/assets/src/pages/*.scss'),
+            sourcemaps.init(settings.sourcemaps),
+            sass(settings.sass).on('error', err => log(err)),
             postcss([autoprefixer()]).on('error', err => log(err)),
             sourcemaps.write('.'),
-            gulp.dest('./demos/assets/dist/')
-        ]);
-    });
+            gulp.dest('../demos/assets/dist/')
+        ],
+        done
+    );
 
-    pump(pumpLine.reduce((a, b) => a.concat(b)), callback);
-});
-// rollup js includes and transpile
-gulp.task('demos:js', callback => {
-    let pumpLine = [];
-
-    glob.sync('demos/assets/src/pages/*.js').forEach(source => {
-        processedFiles.js.push(source);
-
-        pumpLine.push([
-            gulp.src(source),
-            sourcemaps.init(configuration.sourcemaps),
-            rollup({}, configuration.rollup).on('error', err => log(err)),
-            babel().on('error', err => log(err)),
+const demosScripts = done =>
+    pump(
+        [
+            gulp.src('../demos/assets/src/pages/*.js'),
+            sourcemaps.init(settings.sourcemaps),
+            rollup({}, settings.rollup).on('error', err => log(err)),
+            babel(settings.babel).on('error', err => log(err)),
             sourcemaps.write('.'),
-            gulp.dest('./demos/assets/dist/')
-        ]);
-    });
+            gulp.dest('../demos/assets/dist/')
+        ],
+        done
+    );
 
-    pump(pumpLine.reduce((a, b) => a.concat(b)), callback);
-});
-
-const buildHTML = (modules, callback) => {
+const buildHtml = (modules = false, done) => {
     let pumpLine = [];
 
-    const main = './demos/assets/src/main.hbs';
-    processedFiles.html.push(main);
+    const main = '../demos/assets/src/main.hbs';
+    // processedFiles.html.push(main);
 
-    glob.sync('demos/assets/src/pages/*.hbs').forEach(source => {
+    glob.sync('../demos/assets/src/pages/*.hbs').forEach(source => {
         const file = source.match(/[^\\/]+$/)[0];
         const filestruct = file.split('.');
 
-        processedFiles.html.push(source);
+        // processedFiles.html.push(source);
 
         if (filestruct.length === 2) {
             const filename = filestruct[0];
 
-            const json = './demos/assets/src/pages/' + filename + '.json';
-            processedFiles.json.push(json);
+            const json = '../demos/assets/src/pages/' + filename + '.json';
+            // processedFiles.json.push(json);
 
             pumpLine.push([
                 gulp.src(main),
-                hb(configuration.hbs)
+                hb(settings.hbs)
                     .data(clearRequire(json))
                     .data({
                         modules: modules,
@@ -135,45 +82,23 @@ const buildHTML = (modules, callback) => {
                         content: '{{> ' + filename + '}}'
                     })
                     .partials(source)
-                    .partials('./demos/assets/src/pages/' + filename + '.*.hbs'),
+                    .partials('../demos/assets/src/pages/' + filename + '.*.hbs'),
                 rename({
                     basename: filename,
                     extname: '.html'
                 }),
-                gulp.dest('./demos/')
+                gulp.dest('../demos/')
             ]);
         }
     });
 
-    pump(pumpLine.reduce((a, b) => a.concat(b)), callback);
+    pump(pumpLine.reduce((a, b) => a.concat(b)), done);
 };
-// build handlebar
-gulp.task('demos:html', callback => buildHTML(true, callback));
-// build handlebar es5
-gulp.task('demos:html:es5', callback => buildHTML(false, callback));
 
-// main tasks
-// - - - - - - - - - - - - - - - - - - - -
-// clean all
-gulp.task('clean', ['library:clean', 'demos:clean']);
-// setup library distribution (legacy ES5)
-gulp.task('library', ['clean', 'library:rollup']);
-gulp.task('library:watch', ['library'], () => gulp.watch(processedFiles.js, ['library']));
-// setup demo pages
-gulp.task('demos', ['clean', 'demos:scss', 'demos:html']);
-gulp.task('demos:watch', ['demos'], () => {
-    gulp.watch(processedFiles.scss, ['demos:scss']);
-    gulp.watch([...processedFiles.html, ...processedFiles.json], ['demos:html']);
-});
-// setup demo pages for old browsers (ES5 and single file js with no modules)
-gulp.task('demos:es5', ['clean', 'library', 'demos:scss', 'demos:js', 'demos:html:es5']);
-gulp.task('demos:es5:watch', ['demos:es5'], () => {
-    gulp.watch(processedFiles.scss, ['demos:scss']);
-    gulp.watch([...processedFiles.html, ...processedFiles.json], ['demos:html:es5']);
-    gulp.watch(processedFiles.js, ['library', 'demos:js']);
-});
-// npm shortcuts
-gulp.task('build', ['demos']);
-gulp.task('watch', ['demos:watch']);
-gulp.task('build:transpile', ['library', 'demos:es5']);
-gulp.task('watch:transpile', ['library:watch', 'demos:es5:watch']);
+module.exports = {
+    demosClean: demosClean,
+    demosScripts: demosScripts,
+    demosStyles: demosStyles,
+    demosHtmlNativeModules: done => buildHtml(true, done),
+    demosHtml: done => buildHtml(false, done)
+};
