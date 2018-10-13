@@ -1,5 +1,5 @@
-import { isInArray } from './toolbox/src/toolbox.utils.js';
-import { supportedExtensions, supportedTags, allSupportedTags, supportedTypes } from './loader.settings.js';
+import { isInArray } from './toolbox/src/toolbox.utils.mjs';
+import { supportedExtensions, supportedTags, allSupportedTags, supportedTypes } from './loader.settings.mjs';
 
 /**
  * @param {Object} item

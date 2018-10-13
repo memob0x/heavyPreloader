@@ -42,7 +42,7 @@ const demosStyles = done =>
 const demosScripts = done =>
     pump(
         [
-            gulp.src('../demos/assets/src/pages/*.js'),
+            gulp.src('../demos/assets/src/pages/*.{js,mjs}'),
             sourcemaps.init(settings.sourcemaps),
             rollup({}, settings.rollup).on('error', err => log(err)),
             babel(settings.babel).on('error', err => log(err)),

@@ -15,7 +15,7 @@ const libraryClean = done => {
 };
 
 const libraryRollup = done => {
-    const source = '../src/loader.js';
+    const source = '../src/loader.{mjs,js}';
 
     // processedFiles.js.push(source);
 

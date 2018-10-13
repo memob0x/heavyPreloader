@@ -1,4 +1,4 @@
-import Loader from '../../../../src/loader.js';
+import Loader from '../../../../src/loader.mjs';
 import { log } from '../main.js';
 
 const pageLoader = new Loader({

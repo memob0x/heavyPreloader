@@ -6,8 +6,8 @@
         "clean": "npm run gulp -- clean",
         "build": "npm run gulp -- build",
         "build:transpile": "npm run gulp -- release",
-        "test": "npm run gulp -- clean",
-        "release": "npm run clean && npm run test && npm run build:transpile"
+        "test": "node --experimental-modules ./test/loader.test.mjs",
+        "release": "npm run test && npm run gulp -- release"
     },
     "devDependencies": {
         "@babel/cli": "^7.0.0",
@@ -18,6 +18,7 @@
         "@babel/polyfill": "^7.0.0",
         "@babel/preset-env": "^7.1.0",
         "autoprefixer": "^9.1.5",
+        "chai": "^4.2.0",
         "del": "^3.0.0",
         "fancy-log": "^1.3.2",
         "gulp": "^4.0.0",
@@ -28,13 +29,15 @@
         "gulp-postcss": "^8.0.0",
         "gulp-rename": "^1.4.0",
         "gulp-sass": "^4.0.1",
+        "gulp-sourcemaps": "^2.6.4",
         "gulp-util": "^3.0.8",
         "gulp-watch": "^5.0.1",
+        "jsdom": "^12.2.0",
+        "mocha": "^5.2.0",
         "npm": "^6.4.1",
         "postcss-cli": "^6.0.0",
         "pump": "^3.0.0",
-        "gulp-sourcemaps": "^2.6.4"
+        "requirejs": "^2.3.6"
     },
-    "dependencies": {
-    }
+    "dependencies": {}
 }

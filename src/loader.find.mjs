@@ -1,6 +1,6 @@
-import { getComputed } from './toolbox/src/toolbox.utils.js';
-import { Media } from './loader.media.js';
-import { allSupportedTags } from './loader.settings.js';
+import { getComputed } from './toolbox/src/toolbox.utils.mjs';
+import { Media } from './loader.media.mjs';
+import { allSupportedTags } from './loader.settings.mjs';
 
 /**
  *

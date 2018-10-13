@@ -1,7 +1,7 @@
-import { Media } from './loader.media.js';
-import { LoaderPromise } from './loader.promise.js';
-import { find } from './loader.find.js';
-import { switchAttributes, copyAttributes, removeAttributes } from './loader.utils.js';
+import { Media } from './loader.media.mjs';
+import { LoaderPromise } from './loader.promise.mjs';
+import { find } from './loader.find.mjs';
+import { switchAttributes, copyAttributes, removeAttributes } from './loader.utils.mjs';
 
 /**
  *

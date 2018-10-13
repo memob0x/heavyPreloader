@@ -8,5 +8,5 @@ const Tasks = {
 };
 
 gulp.task('clean', gulp.parallel(Tasks.libraryClean, Tasks.demosClean));
-gulp.task('build', gulp.parallel(Tasks.demosHtmlNativeModules, Tasks.demosStyles));
-gulp.task('release', gulp.parallel(Tasks.libraryRollup, Tasks.demosHtml, Tasks.demosScripts, Tasks.demosStyles));
+gulp.task('build', gulp.series(Tasks.demosClean, gulp.parallel(Tasks.demosHtmlNativeModules, Tasks.demosStyles)));
+gulp.task('release', gulp.series(gulp.parallel(Tasks.libraryClean, Tasks.demosClean), gulp.parallel(Tasks.libraryRollup, Tasks.demosHtml, Tasks.demosScripts, Tasks.demosStyles)));
