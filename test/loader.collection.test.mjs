@@ -31,7 +31,7 @@ testCase.addTest(
     })
 );
 testCase.addTest(
-    new Mocha.Test('can add a media url to collection', function() {
+    new Mocha.Test('can add a resource url to collection', function() {
         const instance = new Loader();
         const url = this.imagesURLs[0];
 
@@ -71,7 +71,7 @@ testCase.addTest(
     })
 );
 testCase.addTest(
-    new Mocha.Test('can discover inner media elements on collection set', function() {
+    new Mocha.Test('can discover inner resource elements on collection set', function() {
         const instance = new Loader();
         const targets = document.querySelector('div');
 

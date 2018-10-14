@@ -5,7 +5,7 @@ import { supportedExtensions, supportedTags, allSupportedTags, supportedTypes } 
  * @param {Object} item
  * @returns {Object}
  */
-export class Media {
+export class Resource {
     constructor(item) {
         const isElement = item.element instanceof HTMLElement;
 
@@ -50,7 +50,7 @@ export class Media {
         }
     }
 
-    static isMedia(item) {
+    static isResource(item) {
         return typeof item === 'object' && 'tagName' in item && 'type' in item && 'url' in item && 'extension' in item && 'element' in item;
     }
 }

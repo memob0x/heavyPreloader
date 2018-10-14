@@ -1,5 +1,5 @@
 import { getComputed } from './toolbox/src/toolbox.utils.mjs';
-import { Media } from './loader.media.mjs';
+import { Resource } from './loader.resource.mjs';
 import { allSupportedTags } from './loader.settings.mjs';
 
 /**
@@ -54,7 +54,7 @@ export const find = (element = document.body, options = {}) => {
             }
 
             collection.push(
-                new Media({
+                new Resource({
                     element: target,
                     url: attribute
                 })
@@ -72,7 +72,7 @@ export const find = (element = document.body, options = {}) => {
 
             if (null !== url && url.length >= 2) {
                 collection.push(
-                    new Media({
+                    new Resource({
                         element: target,
                         url: url[1].replace(/('|")/g, '')
                     })

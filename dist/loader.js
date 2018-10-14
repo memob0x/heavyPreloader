@@ -67,9 +67,9 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     return a.concat(b);
   })));
 
-  var Media = function () {
-    function Media(item) {
-      _classCallCheck(this, Media);
+  var Resource = function () {
+    function Resource(item) {
+      _classCallCheck(this, Resource);
 
       var isElement = item.element instanceof HTMLElement;
       this.url = item.url;
@@ -112,14 +112,14 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
       }
     }
 
-    _createClass(Media, null, [{
-      key: "isMedia",
-      value: function isMedia(item) {
+    _createClass(Resource, null, [{
+      key: "isResource",
+      value: function isResource(item) {
         return _typeof(item) === 'object' && 'tagName' in item && 'type' in item && 'url' in item && 'extension' in item && 'element' in item;
       }
     }]);
 
-    return Media;
+    return Resource;
   }();
 
   var LoaderPromise = function (_Promise) {
@@ -209,7 +209,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
           }
         }
 
-        collection.push(new Media({
+        collection.push(new Resource({
           element: target,
           url: attribute
         }));
@@ -229,7 +229,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
         var url = getComputed(target, 'background-image').match(/\((.*?)\)/);
 
         if (null !== url && url.length >= 2) {
-          collection.push(new Media({
+          collection.push(new Resource({
             element: target,
             url: url[1].replace(/('|")/g, '')
           }));
@@ -334,10 +334,10 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
                 return;
               }
 
-              var loadStep = function loadStep(media, cb) {
+              var loadStep = function loadStep(resource, cb) {
                 loaded++;
                 _this2._percentage = loaded / _this2._collection.length * 100;
-                progress(media);
+                progress(resource);
 
                 if (loaded < _this2._collection.length) {
                   pipeline();
@@ -404,16 +404,16 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
       }
     }, {
       key: "fetch",
-      value: function fetch(media) {
+      value: function fetch(resource) {
         var _this3 = this;
 
         return new Promise(function (resolve, reject) {
-          var isConsistent = media.consistent && document.body.contains(media.element);
-          var hasSources = isConsistent && media.element.querySelectorAll('source').length;
-          var createdElement = document.createElement(media.tagName);
+          var isConsistent = resource.consistent && document.body.contains(resource.element);
+          var hasSources = isConsistent && resource.element.querySelectorAll('source').length;
+          var createdElement = document.createElement(resource.tagName);
           var mainEventsTarget = createdElement;
 
-          if (media.type === 'iframe') {
+          if (resource.type === 'iframe') {
             createdElement.style.visibility = 'hidden';
             createdElement.style.position = 'fixed';
             createdElement.style.top = '-999px';
@@ -424,11 +424,11 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
           }
 
           if (isConsistent) {
-            copyAttributes(createdElement, media.element, Object.values(_this3._options.srcAttributes));
-            copyAttributes(createdElement, media.element, Object.values(_this3._options.sizesAttributes));
+            copyAttributes(createdElement, resource.element, Object.values(_this3._options.srcAttributes));
+            copyAttributes(createdElement, resource.element, Object.values(_this3._options.sizesAttributes));
 
             if (hasSources) {
-              _toConsumableArray(media.element.querySelectorAll('source')).forEach(function (source) {
+              _toConsumableArray(resource.element.querySelectorAll('source')).forEach(function (source) {
                 var createdSource = document.createElement('source');
                 copyAttributes(createdSource, source, Object.values(_this3._options.srcAttributes));
                 copyAttributes(createdSource, source, Object.values(_this3._options.sizesAttributes));
@@ -436,7 +436,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
               });
             }
 
-            if (media.tagName === 'picture') {
+            if (resource.tagName === 'picture') {
               mainEventsTarget = document.createElement('img');
               createdElement.append(mainEventsTarget);
             }
@@ -444,28 +444,28 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 
           var finishPromise = function finishPromise(cb) {
             if (isConsistent) {
-              switchAttributes(media.element, _this3._options.srcAttributes);
-              switchAttributes(media.element, _this3._options.sizesAttributes);
+              switchAttributes(resource.element, _this3._options.srcAttributes);
+              switchAttributes(resource.element, _this3._options.sizesAttributes);
 
               if (hasSources) {
-                _toConsumableArray(media.element.querySelectorAll('source')).forEach(function (source) {
+                _toConsumableArray(resource.element.querySelectorAll('source')).forEach(function (source) {
                   switchAttributes(source, _this3._options.srcAttributes);
                   switchAttributes(source, _this3._options.sizesAttributes);
                 });
               }
 
-              if (media.type === 'video' || media.type === 'audio') {
-                media.element.load();
+              if (resource.type === 'video' || resource.type === 'audio') {
+                resource.element.load();
               }
 
-              if (media.type === 'iframe') {
+              if (resource.type === 'iframe') {
                 createdElement.parentElement.removeChild(createdElement);
               }
             }
 
             _this3._queue.delete(createdElement);
 
-            cb(media);
+            cb(resource);
           };
 
           var prepareLoad = function prepareLoad() {
@@ -480,28 +480,28 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
                 });
               }
             } else {
-              createdElement.setAttribute('src', media.url);
+              createdElement.setAttribute('src', resource.url);
             }
 
-            if (media.type === 'video' || media.type === 'audio') {
+            if (resource.type === 'video' || resource.type === 'audio') {
               createdElement.load();
             }
           };
 
           var dispatchEvent = function dispatchEvent(type) {
             var event = new CustomEvent(type, {
-              detail: media
+              detail: resource
             });
 
-            if (media.element) {
-              media.element.dispatchEvent(event);
+            if (resource.element) {
+              resource.element.dispatchEvent(event);
             }
 
             document.dispatchEvent(event);
           };
 
           var queuer = {
-            media: media,
+            resource: resource,
             observer: null,
             element: createdElement
           };
@@ -524,28 +524,28 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
           });
           mainEventsTarget.addEventListener('error', function () {
             finishPromise(reject);
-            dispatchEvent('mediaError');
+            dispatchEvent('resourceError');
           });
 
-          if (media.type === 'image' || media.type === 'iframe') {
+          if (resource.type === 'image' || resource.type === 'iframe') {
             mainEventsTarget.addEventListener('load', function (e) {
               if (e.target.tagName.toLowerCase() === 'iframe' && !e.target.getAttribute('src')) {
                 return;
               }
 
               finishPromise(resolve);
-              dispatchEvent('mediaLoad');
+              dispatchEvent('resourceLoad');
             });
           }
 
-          if (media.type === 'audio' || media.type === 'video') {
+          if (resource.type === 'audio' || resource.type === 'video') {
             mainEventsTarget.addEventListener(_this3._options.playthrough ? 'canplaythrough' : 'loadedmetadata', function () {
               finishPromise(resolve);
-              dispatchEvent('mediaLoad');
+              dispatchEvent('resourceLoad');
             });
           }
 
-          if (media.element instanceof HTMLElement && _this3._options.lazy && 'IntersectionObserver' in window) {
+          if (resource.element instanceof HTMLElement && _this3._options.lazy && 'IntersectionObserver' in window) {
             queuer.observer = new IntersectionObserver(function (entries, observer) {
               entries.forEach(function (entry) {
                 if (entry.intersectionRatio > 0) {
@@ -558,9 +558,9 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
               rootMargin: '0px',
               threshold: 0.1
             });
-            queuer.observer.observe(media.element);
+            queuer.observer.observe(resource.element);
 
-            _this3._queue.set(media.element, queuer);
+            _this3._queue.set(resource.element, queuer);
           } else {
             _this3._queue.set(createdElement, queuer);
 
@@ -588,40 +588,40 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
           }
 
           if (typeof collection === 'string') {
-            collection = [new Media({
+            collection = [new Resource({
               url: collection
             })];
           }
 
-          if (Media.isMedia(collection)) {
+          if (Resource.isResource(collection)) {
             collection = [collection];
           }
 
           if (Array.isArray(collection)) {
             collection.forEach(function (item) {
-              var pushCheck = function pushCheck(media) {
-                if (media.type === 'image' || media.type === 'video' || media.type === 'audio' || media.type === 'iframe' && media.consistent) {
-                  _this4._collection.push(media);
+              var pushCheck = function pushCheck(resource) {
+                if (resource.type === 'image' || resource.type === 'video' || resource.type === 'audio' || resource.type === 'iframe' && resource.consistent) {
+                  _this4._collection.push(resource);
 
                   return;
                 }
 
-                console.warn("Couldn't add media to collection", media);
+                console.warn("Couldn't add resource to collection", resource);
               };
 
               if (item instanceof HTMLElement) {
-                find(item, _this4._options).forEach(function (media) {
-                  return pushCheck(new Media(media));
+                find(item, _this4._options).forEach(function (resource) {
+                  return pushCheck(new Resource(resource));
                 });
               }
 
               if (typeof item === 'string') {
-                pushCheck(new Media({
+                pushCheck(new Resource({
                   url: item
                 }));
               }
 
-              if (Media.isMedia(item)) {
+              if (Resource.isResource(item)) {
                 pushCheck(item);
               }
             });

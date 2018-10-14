@@ -1,4 +1,4 @@
-import { Media } from './loader.media.mjs';
+import { Resource } from './loader.resource.mjs';
 import { LoaderPromise } from './loader.promise.mjs';
 import { find } from './loader.find.mjs';
 import { switchAttributes, copyAttributes, removeAttributes } from './loader.utils.mjs';
@@ -27,7 +27,7 @@ export default class Loader {
             ...options
         };
 
-        this._collection = []; // resources (array of type Media)
+        this._collection = []; // resources (array of type Resource)
         this._queue = new Map(); // loading resources
 
         this._load = null; // main load Promise
@@ -57,34 +57,34 @@ export default class Loader {
             }
 
             if (typeof collection === 'string') {
-                collection = [new Media({ url: collection })];
+                collection = [new Resource({ url: collection })];
             }
 
-            if (Media.isMedia(collection)) {
+            if (Resource.isResource(collection)) {
                 collection = [collection];
             }
 
             if (Array.isArray(collection)) {
                 collection.forEach(item => {
-                    const pushCheck = media => {
-                        if (media.type === 'image' || media.type === 'video' || media.type === 'audio' || (media.type === 'iframe' && media.consistent)) {
-                            this._collection.push(media);
+                    const pushCheck = resource => {
+                        if (resource.type === 'image' || resource.type === 'video' || resource.type === 'audio' || (resource.type === 'iframe' && resource.consistent)) {
+                            this._collection.push(resource);
 
                             return;
                         }
 
-                        console.warn("Couldn't add media to collection", media);
+                        console.warn("Couldn't add resource to collection", resource);
                     };
 
                     if (item instanceof HTMLElement) {
-                        find(item, this._options).forEach(media => pushCheck(new Media(media)));
+                        find(item, this._options).forEach(resource => pushCheck(new Resource(resource)));
                     }
 
                     if (typeof item === 'string') {
-                        pushCheck(new Media({ url: item }));
+                        pushCheck(new Resource({ url: item }));
                     }
 
-                    if (Media.isMedia(item)) {
+                    if (Resource.isResource(item)) {
                         pushCheck(item);
                     }
                 });
@@ -138,12 +138,12 @@ export default class Loader {
                         return;
                     }
 
-                    const loadStep = (media, cb) => {
+                    const loadStep = (resource, cb) => {
                         loaded++;
 
                         this._percentage = (loaded / this._collection.length) * 100;
 
-                        progress(media);
+                        progress(resource);
 
                         if (loaded < this._collection.length) {
                             pipeline();
@@ -197,18 +197,18 @@ export default class Loader {
 
     /**
      *
-     * @param {Media} resource
+     * @param {Resource} resource
      * @returns {Promise}
      */
-    fetch(media) {
+    fetch(resource) {
         return new Promise((resolve, reject) => {
-            const isConsistent = media.consistent && document.body.contains(media.element);
-            const hasSources = isConsistent && media.element.querySelectorAll('source').length;
-            const createdElement = document.createElement(media.tagName);
+            const isConsistent = resource.consistent && document.body.contains(resource.element);
+            const hasSources = isConsistent && resource.element.querySelectorAll('source').length;
+            const createdElement = document.createElement(resource.tagName);
 
             let mainEventsTarget = createdElement;
 
-            if (media.type === 'iframe') {
+            if (resource.type === 'iframe') {
                 createdElement.style.visibility = 'hidden';
                 createdElement.style.position = 'fixed';
                 createdElement.style.top = '-999px';
@@ -219,11 +219,11 @@ export default class Loader {
             }
 
             if (isConsistent) {
-                copyAttributes(createdElement, media.element, Object.values(this._options.srcAttributes));
-                copyAttributes(createdElement, media.element, Object.values(this._options.sizesAttributes));
+                copyAttributes(createdElement, resource.element, Object.values(this._options.srcAttributes));
+                copyAttributes(createdElement, resource.element, Object.values(this._options.sizesAttributes));
 
                 if (hasSources) {
-                    [...media.element.querySelectorAll('source')].forEach(source => {
+                    [...resource.element.querySelectorAll('source')].forEach(source => {
                         const createdSource = document.createElement('source');
                         copyAttributes(createdSource, source, Object.values(this._options.srcAttributes));
                         copyAttributes(createdSource, source, Object.values(this._options.sizesAttributes));
@@ -231,7 +231,7 @@ export default class Loader {
                     });
                 }
 
-                if (media.tagName === 'picture') {
+                if (resource.tagName === 'picture') {
                     // picture element loads only with a fallback img in it...
                     mainEventsTarget = document.createElement('img');
                     createdElement.append(mainEventsTarget);
@@ -240,28 +240,28 @@ export default class Loader {
 
             const finishPromise = cb => {
                 if (isConsistent) {
-                    switchAttributes(media.element, this._options.srcAttributes);
-                    switchAttributes(media.element, this._options.sizesAttributes);
+                    switchAttributes(resource.element, this._options.srcAttributes);
+                    switchAttributes(resource.element, this._options.sizesAttributes);
 
                     if (hasSources) {
-                        [...media.element.querySelectorAll('source')].forEach(source => {
+                        [...resource.element.querySelectorAll('source')].forEach(source => {
                             switchAttributes(source, this._options.srcAttributes);
                             switchAttributes(source, this._options.sizesAttributes);
                         });
                     }
 
-                    if (media.type === 'video' || media.type === 'audio') {
-                        media.element.load();
+                    if (resource.type === 'video' || resource.type === 'audio') {
+                        resource.element.load();
                     }
 
-                    if (media.type === 'iframe') {
+                    if (resource.type === 'iframe') {
                         createdElement.parentElement.removeChild(createdElement);
                     }
                 }
 
                 this._queue.delete(createdElement);
 
-                cb(media);
+                cb(resource);
             };
 
             const prepareLoad = () => {
@@ -276,25 +276,25 @@ export default class Loader {
                         });
                     }
                 } else {
-                    createdElement.setAttribute('src', media.url);
+                    createdElement.setAttribute('src', resource.url);
                 }
 
-                if (media.type === 'video' || media.type === 'audio') {
+                if (resource.type === 'video' || resource.type === 'audio') {
                     createdElement.load();
                 }
             };
 
             const dispatchEvent = type => {
-                const event = new CustomEvent(type, { detail: media });
+                const event = new CustomEvent(type, { detail: resource });
 
-                if (media.element) {
-                    media.element.dispatchEvent(event);
+                if (resource.element) {
+                    resource.element.dispatchEvent(event);
                 }
 
                 document.dispatchEvent(event);
             };
 
-            let queuer = { media: media, observer: null, element: createdElement };
+            let queuer = { resource: resource, observer: null, element: createdElement };
 
             // TODO: "abort" custom event must be "private" . instance?
             createdElement.addEventListener('abort', () => {
@@ -318,10 +318,10 @@ export default class Loader {
             mainEventsTarget.addEventListener('error', () => {
                 finishPromise(reject);
 
-                dispatchEvent('mediaError');
+                dispatchEvent('resourceError');
             });
 
-            if (media.type === 'image' || media.type === 'iframe') {
+            if (resource.type === 'image' || resource.type === 'iframe') {
                 mainEventsTarget.addEventListener('load', e => {
                     if (e.target.tagName.toLowerCase() === 'iframe' && !e.target.getAttribute('src')) {
                         return; // iframes fire load at landing
@@ -329,19 +329,19 @@ export default class Loader {
 
                     finishPromise(resolve);
 
-                    dispatchEvent('mediaLoad');
+                    dispatchEvent('resourceLoad');
                 });
             }
 
-            if (media.type === 'audio' || media.type === 'video') {
+            if (resource.type === 'audio' || resource.type === 'video') {
                 mainEventsTarget.addEventListener(this._options.playthrough ? 'canplaythrough' : 'loadedmetadata', () => {
                     finishPromise(resolve);
 
-                    dispatchEvent('mediaLoad');
+                    dispatchEvent('resourceLoad');
                 });
             }
 
-            if (media.element instanceof HTMLElement && this._options.lazy && 'IntersectionObserver' in window) {
+            if (resource.element instanceof HTMLElement && this._options.lazy && 'IntersectionObserver' in window) {
                 queuer.observer = new IntersectionObserver(
                     (entries, observer) => {
                         entries.forEach(entry => {
@@ -352,15 +352,11 @@ export default class Loader {
                             }
                         });
                     },
-                    {
-                        root: null,
-                        rootMargin: '0px',
-                        threshold: 0.1
-                    }
+                    { root: null, rootMargin: '0px', threshold: 0.1 }
                 );
 
-                queuer.observer.observe(media.element);
-                this._queue.set(media.element, queuer);
+                queuer.observer.observe(resource.element);
+                this._queue.set(resource.element, queuer);
             } else {
                 this._queue.set(createdElement, queuer);
 
