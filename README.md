@@ -153,7 +153,7 @@ pagePreloader.collection = document.querySelectorAll('img'); // all loading imag
 
 const pagePreload = instance.load();
 
-pagePreload.done(() => console.log('Page ready.'));
+pagePreload.then(() => console.log('Page ready.'));
 ```
 
 <!--TODO: demo link -->
