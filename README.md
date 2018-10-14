@@ -14,7 +14,7 @@ const instance = new Loader();
 
 #### Options
 
-The class constructor accepts the following _parameters_ as an `Object` `argument`.
+The constructor accepts the following `Object` _properties_ as only `argument`.
 
 ```javascript
 const instance = new Loader({
@@ -43,7 +43,7 @@ The _collection_ is the list of resources that a **Loader** instance would proce
 
 As a `setter`, this method would let you to create a _collection_ based on the supplied value.
 
-##### With element(s)
+##### ...with element(s)
 
 A single `HTMLElement` can be supplied...
 
@@ -57,7 +57,7 @@ instance.collection = document.querySelector('img#main');
 instance.collection = document.querySelectorAll('img');
 ```
 
-##### Auto-discover within descendants elements
+##### ...and descendants auto-discovery
 
 A further **media lookup** is triggered by default when an `HTMLElement` or a `NodeList` value is supplied, in order to find descendants resources.
 
@@ -65,17 +65,7 @@ A further **media lookup** is triggered by default when an `HTMLElement` or a `N
 instance.collection = document.body; // All img, picture, audio, video, iframe tags inside body.
 ```
 
-#### Retrieve
-
-As a `getter`, this method gives you back the collection as an `Array.<Object>` of `Resource` instances.
-
-```javascript
-const collection = instance.collection;
-```
-
-<!-- TODO: describe type Resource -->
-
-##### With URL(s)
+##### ...with URL(s)
 
 Just like element-values, you'll be able to supply a single `String` of **url**...
 
@@ -88,6 +78,16 @@ instance.collection = 'image.jpg';
 ```javascript
 instance.collection = ['image.jpg', 'another-image.webp', 'video.webm', 'another-video.mp4', 'audio.mp3'];
 ```
+
+#### Retrieve
+
+As a `getter`, this method gives you back the collection as an `Array.<Object>` of `Resource` instances.
+
+```javascript
+const collection = instance.collection;
+```
+
+<!-- TODO: describe type Resource -->
 
 ---
 
@@ -109,12 +109,13 @@ instance.percentage; // 25, 33.3333, 50 ...
 
 #### Callbacks
 
-Every **load** method returns a `Promise`-like `Object`; in addition to the common structure there's a unique `progress` method which fires a **callback** on every _resource load_.
+Every **load** call returns a `Promise`-like `Object`.<br>
+In addition to its common structure there's a unique `progress` method which fires a **callback** on every _resource load_.
 
 ```javascript
 load.progress(resource => console.log('A resource is ready:', resource.element));
 
-load.then(collection => console.log('All loaded!'));
+load.then(() => console.log('All loaded!'));
 
 load.catch((resource, error) => console.log(error));
 ```
@@ -146,27 +147,31 @@ document.addEventListener('resourceError', e => e.detail.element.classList.add('
 #### Preloader
 
 ```javascript
-const loader = new Loader();
+const pagePreloader = new Loader();
 
-loader.collection = document.querySelectorAll('img'); // all loading images
+pagePreloader.collection = document.querySelectorAll('img'); // all loading images
 
-const pagePreload = loader.load();
+const pagePreload = instance.load();
 
 pagePreload.done(() => console.log('Page ready.'));
 ```
 
+<!--TODO: demo link -->
+
 #### Lazyloader
 
 ```javascript
-const loader = new Loader({
+const pageLazyLoader = new Loader({
     lazy: true
 });
 
-loader.collection = document.querySelectorAll('img'); // all images with data-src and/or data-srcset attributes
+pageLazyLoader.collection = document.querySelectorAll('img'); // all images with data-src and/or data-srcset attributes
 
-const lazyLoader = loader.load();
+const pageLazyLoad = instance.load();
 
-lazyLoader.progress(resource => console.log(resource.element, 'appeared and loaded.'));
+pageLazyLoad.progress(resource => console.log(resource.element, 'appeared and loaded.'));
 ```
+
+<!--TODO: demo link -->
 
 ---

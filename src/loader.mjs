@@ -158,7 +158,7 @@ export default class Loader {
 
                     const load = this.fetch(this._collection[loaded]);
                     load.then(e => loadStep(e, () => resolve({}))); // TODO: returned something
-                    load.catch(e => loadStep(e, () => reject('Error')));
+                    load.catch(e => loadStep(e, () => reject('Error'))); // TODO: return resource + error event obect
                 };
 
                 pipeline();
@@ -187,7 +187,7 @@ export default class Loader {
 
                     const load = this.fetch(this._collection[i]);
                     load.then(e => loadStep(e, () => resolve({}))); // TODO: returned something
-                    load.catch(e => loadStep(e, () => reject(e)));
+                    load.catch(e => loadStep(e, () => reject(e))); // TODO: return resource + error event obect
                 }
             }
         });
