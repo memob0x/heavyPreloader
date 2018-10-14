@@ -579,13 +579,17 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
         var _this4 = this;
 
         if (this._state === 0) {
+          if (collection instanceof NodeList) {
+            collection = _toConsumableArray(collection);
+          }
+
           if (collection instanceof HTMLElement) {
             collection = find(collection, this._options);
           }
 
-          if (typeof item === 'string') {
+          if (typeof collection === 'string') {
             collection = [new Media({
-              url: item
+              url: collection
             })];
           }
 

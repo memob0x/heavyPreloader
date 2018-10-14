@@ -48,12 +48,16 @@ export default class Loader {
      */
     set collection(collection) {
         if (this._state === 0) {
+            if (collection instanceof NodeList) {
+                collection = [...collection];
+            }
+
             if (collection instanceof HTMLElement) {
                 collection = find(collection, this._options);
             }
 
-            if (typeof item === 'string') {
-                collection = [new Media({ url: item })];
+            if (typeof collection === 'string') {
+                collection = [new Media({ url: collection })];
             }
 
             if (Media.isMedia(collection)) {
