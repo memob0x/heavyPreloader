@@ -1,5 +1,5 @@
 import { Mocha, mocha, expect } from './setup.mjs';
 import Loader from '../src/loader.mjs';
 
-//const testCase = Mocha.Suite.create(mocha.suite, 'Load flux');
+const dashboard = Mocha.Suite.create(mocha.suite, 'Load class main workflow');
 // TODO: ...

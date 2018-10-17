@@ -2,10 +2,10 @@
 import { Mocha, mocha, expect } from './setup.mjs';
 import Loader from '../src/loader.mjs';
 
-const testCase = Mocha.Suite.create(mocha.suite, 'Collection method');
+const dashboard = Mocha.Suite.create(mocha.suite, 'Loader collection method');
 
 // virtual DOM preparation and cleanup
-testCase.beforeAll(function() {
+dashboard.beforeAll(function() {
     document.body.innerHTML = '';
 
     this.imagesURLs = ['http://placehold.it/1x1.jpg', 'http://placehold.it/1x2.jpg'];
@@ -19,18 +19,18 @@ testCase.beforeAll(function() {
 
     document.body.append(container);
 });
-testCase.afterAll(function() {
+dashboard.afterAll(function() {
     document.body.innerHTML = '';
 });
 
 // tests
-testCase.addTest(
+dashboard.addTest(
     new Mocha.Test('can retrieve the current collection', function() {
         const instance = new Loader();
         expect(instance.collection).to.be.an('array');
     })
 );
-testCase.addTest(
+dashboard.addTest(
     new Mocha.Test('can add a resource url to collection', function() {
         const instance = new Loader();
         const url = this.imagesURLs[0];
@@ -40,7 +40,7 @@ testCase.addTest(
         expect(instance.collection[0]).to.deep.include({ url: url });
     })
 );
-testCase.addTest(
+dashboard.addTest(
     new Mocha.Test('can add an array of urls to collection', function() {
         const instance = new Loader();
         const array = this.imagesURLs;
@@ -50,7 +50,7 @@ testCase.addTest(
         expect(instance.collection[0]).to.deep.include({ url: array[0] }) && expect(instance.collection[1]).to.deep.include({ url: array[1] });
     })
 );
-testCase.addTest(
+dashboard.addTest(
     new Mocha.Test('can add an image element to collection', function() {
         const instance = new Loader();
         const target = document.querySelector('img');
@@ -60,7 +60,7 @@ testCase.addTest(
         expect(instance.collection[0]).to.deep.include({ url: target.src });
     })
 );
-testCase.addTest(
+dashboard.addTest(
     new Mocha.Test('can add a NodeList of images to collection', function() {
         const instance = new Loader();
         const targets = document.querySelectorAll('img');
@@ -70,7 +70,7 @@ testCase.addTest(
         expect(instance.collection.length).to.equals(targets.length);
     })
 );
-testCase.addTest(
+dashboard.addTest(
     new Mocha.Test('can discover inner resource elements on collection set', function() {
         const instance = new Loader();
         const targets = document.querySelector('div');
@@ -80,7 +80,7 @@ testCase.addTest(
         expect(instance.collection.length).to.equals(targets.children.length);
     })
 );
-testCase.addTest(
+dashboard.addTest(
     new Mocha.Test('can discover image backgrounds on collection set', function() {
         const instance = new Loader({
             backgrounds: true
