@@ -1,6 +1,6 @@
 # Loader
 
-💤 A _preloader_ / _lazy-load_ library for **images**, **videos**, **audio** and **iframe** elements with full control on _events callbacks_, _loading percentage_, _sequential_ / _parallel_ mode, resources _auto-discovery_ (including **backgrounds**), and much more.
+💤 A _preloader_ / _lazy-load_ library for `img`, `picture`, `video`, `audio` and `iframe` elements with full control on _events callbacks_, _loading percentage_, _sequential_ / _parallel_ mode, resources _auto-discovery_ (including **backgrounds**), and much more.
 
 ---
 
