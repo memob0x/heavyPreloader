@@ -606,20 +606,16 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
                 }
 
                 _this3._state = 0;
-                cb();
+                cb(resource);
               };
 
               var load = _this3.fetch(_this3._collection[loaded]);
 
-              load.then(function (e) {
-                return loadStep(e, function () {
-                  return resolve({});
-                });
+              load.then(function (resource) {
+                return loadStep(resource, resolve);
               });
-              load.catch(function (e) {
-                return loadStep(e, function () {
-                  return reject('Error');
-                });
+              load.catch(function (resource) {
+                return loadStep(resource, reject);
               });
             };
 
@@ -628,14 +624,14 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
             (function () {
               var loaded = 0;
 
-              var loadStep = function loadStep(e, cb) {
+              var loadStep = function loadStep(resource, resolver) {
                 loaded++;
                 _this3._percentage = loaded / _this3._collection.length * 100;
-                progress(e);
+                progress(resource);
 
                 if (loaded >= _this3._collection.length) {
                   _this3._state = 0;
-                  cb();
+                  resolver(resource);
                 }
               };
 
@@ -647,15 +643,11 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 
                 var load = _this3.fetch(_this3._collection[i]);
 
-                load.then(function (e) {
-                  return loadStep(e, function () {
-                    return resolve({});
-                  });
+                load.then(function (resource) {
+                  return loadStep(resource, resolve);
                 });
-                load.catch(function (e) {
-                  return loadStep(e, function () {
-                    return reject(e);
-                  });
+                load.catch(function (resource) {
+                  return loadStep(resource, reject);
                 });
               }
             })();

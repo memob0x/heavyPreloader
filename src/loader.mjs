@@ -137,6 +137,10 @@ export default class Loader {
      * @returns {Promise}
      */
     load() {
+        /**
+         * TODO: error cause Uncaught in Promise...
+         * TODO: returned argument catch/then methods, then should return something else, error should return something more detailed to the error intercurse (?)
+         */
         this._load = new LoaderPromise((resolve, reject, progress) => {
             if (this._state === 1) {
                 reject('A Loader instance is already in progress.');
@@ -171,28 +175,28 @@ export default class Loader {
 
                         this._state = 0;
 
-                        cb();
+                        cb(resource);
                     };
 
                     const load = this.fetch(this._collection[loaded]);
-                    load.then(e => loadStep(e, () => resolve({}))); // TODO: returned something
-                    load.catch(e => loadStep(e, () => reject('Error'))); // TODO: return resource + error event obect
+                    load.then(resource => loadStep(resource, resolve));
+                    load.catch(resource => loadStep(resource, reject));
                 };
 
                 pipeline();
             } else {
                 let loaded = 0;
-                const loadStep = (e, cb) => {
+                const loadStep = (resource, resolver) => {
                     loaded++;
 
                     this._percentage = (loaded / this._collection.length) * 100;
 
-                    progress(e);
+                    progress(resource);
 
                     if (loaded >= this._collection.length) {
                         this._state = 0;
 
-                        cb();
+                        resolver(resource);
                     }
                 };
 
@@ -204,8 +208,8 @@ export default class Loader {
                     }
 
                     const load = this.fetch(this._collection[i]);
-                    load.then(e => loadStep(e, () => resolve({}))); // TODO: returned something
-                    load.catch(e => loadStep(e, () => reject(e))); // TODO: return resource + error event obect
+                    load.then(resource => loadStep(resource, resolve));
+                    load.catch(resource => loadStep(resource, reject));
                 }
             }
         });
