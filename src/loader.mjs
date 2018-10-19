@@ -2,6 +2,7 @@ import { Resource } from './loader.resource.mjs';
 import { LoaderPromise } from './loader.promise.mjs';
 import { find } from './loader.find.mjs';
 import { switchAttributes, copyAttributes, removeAttributes } from './loader.utils.mjs';
+import { isIntersectionObserverSupported, isElementInViewport } from './toolbox/src/toolbox.viewport.mjs';
 
 /**
  *
@@ -34,6 +35,23 @@ export default class Loader {
 
         this._percentage = 0; // loading percentage
         this._state = 0; // 0: inactive - 1: busy
+
+        if (!isIntersectionObserverSupported) {
+            this.manuallyObservedElements = [];
+
+            const manuallyObserve = () =>
+                this.manuallyObservedElements.filter(item => !item.intersected).forEach(item => {
+                    if (!item.intersected && isElementInViewport(item.element)) {
+                        item.intersected = true;
+                        // TODO: use a class-instance-relative generated-id to privatize internal custom event
+                        item.element.dispatchEvent(new CustomEvent('intersected'));
+                    }
+                });
+
+            window.addEventListener('scroll', manuallyObserve);
+            window.addEventListener('resize', manuallyObserve);
+            window.addEventListener('load', manuallyObserve);
+        }
     }
 
     /**
@@ -296,7 +314,7 @@ export default class Loader {
 
             let queuer = { resource: resource, observer: null, element: createdElement };
 
-            // TODO: "abort" custom event must be "private" . instance?
+            // TODO: use a class-instance-relative generated-id to privatize internal custom event
             createdElement.addEventListener('abort', () => {
                 removeAttributes(createdElement, Object.keys(this._options.srcAttributes));
                 removeAttributes(createdElement, Object.values(this._options.srcAttributes));
@@ -324,7 +342,7 @@ export default class Loader {
             if (resource.type === 'image' || resource.type === 'iframe') {
                 mainEventsTarget.addEventListener('load', e => {
                     if (e.target.tagName.toLowerCase() === 'iframe' && !e.target.getAttribute('src')) {
-                        return; // iframes fire load at landing
+                        return; // iframes fire "load" event when ready in dom
                     }
 
                     finishPromise(resolve);
@@ -341,21 +359,38 @@ export default class Loader {
                 });
             }
 
-            if (resource.element instanceof HTMLElement && this._options.lazy && 'IntersectionObserver' in window) {
-                queuer.observer = new IntersectionObserver(
-                    (entries, observer) => {
-                        entries.forEach(entry => {
-                            if (entry.intersectionRatio > 0) {
-                                observer.unobserve(entry.target);
+            if (resource.element instanceof HTMLElement && this._options.lazy) {
+                if (isIntersectionObserverSupported) {
+                    queuer.observer = new IntersectionObserver(
+                        (entries, observer) => {
+                            entries.forEach(entry => {
+                                if (entry.intersectionRatio > 0) {
+                                    observer.unobserve(entry.target);
 
-                                prepareLoad();
-                            }
+                                    prepareLoad();
+                                }
+                            });
+                        },
+                        {
+                            root: null,
+                            rootMargin: '0px',
+                            threshold: 0.1
+                        }
+                    );
+
+                    queuer.observer.observe(resource.element);
+                } else {
+                    if (isElementInViewport(resource.element)) {
+                        prepareLoad();
+                    } else {
+                        this.manuallyObservedElements.push({
+                            element: resource.element,
+                            intersected: false
                         });
-                    },
-                    { root: null, rootMargin: '0px', threshold: 0.1 }
-                );
+                        resource.element.addEventListener('intersected', () => prepareLoad());
+                    }
+                }
 
-                queuer.observer.observe(resource.element);
                 this._queue.set(resource.element, queuer);
             } else {
                 this._queue.set(createdElement, queuer);

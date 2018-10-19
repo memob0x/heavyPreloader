@@ -43,6 +43,11 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 })(void 0, function () {
   'use strict';
 
+  var roundDecimals = function roundDecimals(num) {
+    var decimals = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 4;
+    return parseFloat(num.toFixed(decimals));
+  };
+
   var isInArray = function isInArray(needle, heystack) {
     return heystack.indexOf(needle) > -1;
   };
@@ -269,8 +274,245 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     });
   };
 
+  var roundPercentage = function roundPercentage(percentage) {
+    if (percentage > 100) {
+      percentage = 100;
+    } else if (percentage < 0) {
+      percentage = 0;
+    } else {
+      percentage = roundDecimals(percentage, 4);
+    }
+
+    return percentage;
+  };
+
+  var isIntersectionObserverSupported = 'IntersectionObserver' in window;
+
+  var Viewport = function () {
+    function Viewport() {
+      _classCallCheck(this, Viewport);
+
+      this._window = window;
+      this._html = document.documentElement;
+      this._body = document.body;
+      this._frame1 = this._window;
+      this._frame2 = this._html || this._body;
+      this._prefix1 = 'inner';
+      this._prefix2 = 'offset';
+
+      if (!this._prefix1 + 'Width' in this._frame1) {
+        this._prefix1 = 'client';
+        this._frame1 = this._frame2;
+      }
+
+      this._offsetWidth = 0;
+      this._offsetHeight = 0;
+      this._width = 0;
+      this._height = 0;
+      this._scrollTop = 0;
+      this._scrollLeft = 0;
+      this._lock = false;
+      this.calcAll();
+    }
+
+    _createClass(Viewport, [{
+      key: "calcOffsetWidth",
+      value: function calcOffsetWidth() {
+        this._offsetWidth = this._body[this._prefix2 + 'Width'];
+        return this.offsetWidth;
+      }
+    }, {
+      key: "calcOffsetHeight",
+      value: function calcOffsetHeight() {
+        this._offsetHeight = this._body[this._prefix2 + 'Height'];
+        return this.offsetHeight;
+      }
+    }, {
+      key: "calcWidth",
+      value: function calcWidth() {
+        this._width = this._frame1[this._prefix1 + 'Width'];
+        return this.width;
+      }
+    }, {
+      key: "calcHeight",
+      value: function calcHeight() {
+        this._height = this._frame1[this._prefix1 + 'Height'];
+        return this.height;
+      }
+    }, {
+      key: "calcScrollTop",
+      value: function calcScrollTop() {
+        this._scrollTop = this._frame2.scrollTop || 0;
+        return this.scrollTop;
+      }
+    }, {
+      key: "calcScrollLeft",
+      value: function calcScrollLeft() {
+        this._scrollLeft = this._frame2.scrollLeft || 0;
+        return this.scrollLeft;
+      }
+    }, {
+      key: "calcAll",
+      value: function calcAll() {
+        this.calcOffsetWidth();
+        this.calcOffsetHeight();
+        this.calcWidth();
+        this.calcHeight();
+        this.calcScrollTop();
+        this.calcScrollLeft();
+        return this.all;
+      }
+    }, {
+      key: "offsetWidth",
+      get: function get() {
+        return this._offsetWidth;
+      }
+    }, {
+      key: "offsetHeight",
+      get: function get() {
+        return this._offsetHeight;
+      }
+    }, {
+      key: "width",
+      get: function get() {
+        return this._width;
+      }
+    }, {
+      key: "height",
+      get: function get() {
+        return this._height;
+      }
+    }, {
+      key: "scrollTop",
+      get: function get() {
+        return this._scrollTop;
+      }
+    }, {
+      key: "scrollLeft",
+      get: function get() {
+        return this._scrollLeft;
+      }
+    }, {
+      key: "all",
+      get: function get() {
+        return {
+          offsetWidth: this.offsetWidth,
+          offsetHeight: this.offsetHeight,
+          width: this.width,
+          height: this.height,
+          scrollTop: this.scrollTop,
+          scrollLeft: this.scrollLeft
+        };
+      }
+    }, {
+      key: "lock",
+      get: function get() {
+        return this._lock;
+      },
+      set: function set(bool) {
+        this._lock = bool;
+
+        if (this._lock) {
+          this._body.style.top = -this.calcScrollTop() + 'px';
+          this._body.style.left = -this.calcScrollLeft() + 'px';
+          var scrollBarWidth = this.calcOffsetWidth();
+          var scrollBarHeight = this.calcOffsetHeight();
+          this._html.style.top = '0px';
+          this._html.style.left = '0px';
+          this._html.style.position = 'fixed';
+          this._body.style.position = 'fixed';
+          this._html.style.width = '100%';
+          this._body.style.width = '100%';
+          var offsetWidth = this.calcOffsetWidth();
+          var offsetHeight = this.calcOffsetHeight();
+          scrollBarWidth = offsetWidth - scrollBarWidth;
+          scrollBarHeight = offsetHeight - scrollBarHeight;
+          this._body.style.width = offsetWidth - scrollBarWidth + 'px';
+          this._body.style.height = offsetHeight - scrollBarHeight + 'px';
+        } else {
+          var scrollTop = Math.abs(parseFloat(this._body.style.top));
+          var scrollLeft = Math.abs(parseFloat(this._body.style.left));
+          this._html.style.position = '';
+          this._html.style.top = '';
+          this._html.style.left = '';
+          this._html.style.width = '';
+          this._body.style.position = '';
+          this._body.style.top = '';
+          this._body.style.left = '';
+          this._body.style.width = '';
+
+          this._window.scroll({
+            top: scrollTop,
+            left: scrollLeft,
+            behavior: 'instant'
+          });
+        }
+      }
+    }]);
+
+    return Viewport;
+  }();
+
+  var isElementInViewport = function isElementInViewport(element) {
+    return !!getBoundsViewportIntersection(element.getBoundingClientRect()).ratio;
+  };
+
+  var getBoundsViewportIntersection = function getBoundsViewportIntersection(bounds) {
+    var viewport = new Viewport();
+
+    if (bounds.right < 0 || bounds.bottom < 0 || bounds.left > viewport.width || bounds.top > viewport.height) {
+      return {
+        x: 0,
+        y: 0,
+        ratio: 0
+      };
+    }
+
+    var offTop = bounds.top < 0;
+    var offBottom = bounds.top + bounds.height > viewport.height;
+    var offLeft = bounds.left < 0;
+    var offRight = bounds.left + bounds.width > viewport.width;
+
+    if (!offTop && !offBottom && !offLeft && !offRight) {
+      return {
+        x: 100,
+        y: 100,
+        ratio: 100
+      };
+    }
+
+    var offY = 0;
+    var offX = 0;
+
+    if (offTop) {
+      offY = Math.abs(bounds.top);
+    }
+
+    if (offBottom) {
+      offY = bounds.top + bounds.height - viewport.height;
+    }
+
+    if (offLeft) {
+      offX = Math.abs(bounds.left);
+    }
+
+    if (offRight) {
+      offX = bounds.left + bounds.width - viewport.width;
+    }
+
+    var percentageX = roundPercentage((bounds.width - offX) * 100 / (bounds.width || 1));
+    var percentageY = roundPercentage((bounds.height - offY) * 100 / (bounds.height || 1));
+    return {
+      x: percentageX,
+      y: percentageY,
+      ratio: Math.min(percentageX, percentageY)
+    };
+  };
+
   var Loader = function () {
     function Loader() {
+      var _this2 = this;
+
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
       _classCallCheck(this, Loader);
@@ -294,6 +536,25 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
       this._load = null;
       this._percentage = 0;
       this._state = 0;
+
+      if (!isIntersectionObserverSupported) {
+        this.manuallyObservedElements = [];
+
+        var manuallyObserve = function manuallyObserve() {
+          return _this2.manuallyObservedElements.filter(function (item) {
+            return !item.intersected;
+          }).forEach(function (item) {
+            if (!item.intersected && isElementInViewport(item.element)) {
+              item.intersected = true;
+              item.element.dispatchEvent(new CustomEvent('intersected'));
+            }
+          });
+        };
+
+        window.addEventListener('scroll', manuallyObserve);
+        window.addEventListener('resize', manuallyObserve);
+        window.addEventListener('load', manuallyObserve);
+      }
     }
 
     _createClass(Loader, [{
@@ -312,43 +573,43 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     }, {
       key: "load",
       value: function load() {
-        var _this2 = this;
+        var _this3 = this;
 
         this._load = new LoaderPromise(function (resolve, reject, progress) {
-          if (_this2._state === 1) {
+          if (_this3._state === 1) {
             reject('A Loader instance is already in progress.');
           }
 
-          if (!_this2._collection.length) {
+          if (!_this3._collection.length) {
             reject('Collection is empty.');
           }
 
-          _this2._state = 1;
+          _this3._state = 1;
 
-          if (_this2._options.sequential) {
+          if (_this3._options.sequential) {
             var loaded = 0;
 
             var pipeline = function pipeline() {
-              if (_this2._state === 0) {
+              if (_this3._state === 0) {
                 reject('Aborted');
                 return;
               }
 
               var loadStep = function loadStep(resource, cb) {
                 loaded++;
-                _this2._percentage = loaded / _this2._collection.length * 100;
+                _this3._percentage = loaded / _this3._collection.length * 100;
                 progress(resource);
 
-                if (loaded < _this2._collection.length) {
+                if (loaded < _this3._collection.length) {
                   pipeline();
                   return;
                 }
 
-                _this2._state = 0;
+                _this3._state = 0;
                 cb();
               };
 
-              var load = _this2.fetch(_this2._collection[loaded]);
+              var load = _this3.fetch(_this3._collection[loaded]);
 
               load.then(function (e) {
                 return loadStep(e, function () {
@@ -369,22 +630,22 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 
               var loadStep = function loadStep(e, cb) {
                 loaded++;
-                _this2._percentage = loaded / _this2._collection.length * 100;
+                _this3._percentage = loaded / _this3._collection.length * 100;
                 progress(e);
 
-                if (loaded >= _this2._collection.length) {
-                  _this2._state = 0;
+                if (loaded >= _this3._collection.length) {
+                  _this3._state = 0;
                   cb();
                 }
               };
 
-              for (var i = 0; i < _this2._collection.length; i++) {
-                if (_this2._state === 0) {
+              for (var i = 0; i < _this3._collection.length; i++) {
+                if (_this3._state === 0) {
                   reject('Aborted');
                   break;
                 }
 
-                var load = _this2.fetch(_this2._collection[i]);
+                var load = _this3.fetch(_this3._collection[i]);
 
                 load.then(function (e) {
                   return loadStep(e, function () {
@@ -405,7 +666,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     }, {
       key: "fetch",
       value: function fetch(resource) {
-        var _this3 = this;
+        var _this4 = this;
 
         return new Promise(function (resolve, reject) {
           var isConsistent = resource.consistent && document.body.contains(resource.element);
@@ -424,14 +685,14 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
           }
 
           if (isConsistent) {
-            copyAttributes(createdElement, resource.element, Object.values(_this3._options.srcAttributes));
-            copyAttributes(createdElement, resource.element, Object.values(_this3._options.sizesAttributes));
+            copyAttributes(createdElement, resource.element, Object.values(_this4._options.srcAttributes));
+            copyAttributes(createdElement, resource.element, Object.values(_this4._options.sizesAttributes));
 
             if (hasSources) {
               _toConsumableArray(resource.element.querySelectorAll('source')).forEach(function (source) {
                 var createdSource = document.createElement('source');
-                copyAttributes(createdSource, source, Object.values(_this3._options.srcAttributes));
-                copyAttributes(createdSource, source, Object.values(_this3._options.sizesAttributes));
+                copyAttributes(createdSource, source, Object.values(_this4._options.srcAttributes));
+                copyAttributes(createdSource, source, Object.values(_this4._options.sizesAttributes));
                 createdElement.append(createdSource);
               });
             }
@@ -444,13 +705,13 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 
           var finishPromise = function finishPromise(cb) {
             if (isConsistent) {
-              switchAttributes(resource.element, _this3._options.srcAttributes);
-              switchAttributes(resource.element, _this3._options.sizesAttributes);
+              switchAttributes(resource.element, _this4._options.srcAttributes);
+              switchAttributes(resource.element, _this4._options.sizesAttributes);
 
               if (hasSources) {
                 _toConsumableArray(resource.element.querySelectorAll('source')).forEach(function (source) {
-                  switchAttributes(source, _this3._options.srcAttributes);
-                  switchAttributes(source, _this3._options.sizesAttributes);
+                  switchAttributes(source, _this4._options.srcAttributes);
+                  switchAttributes(source, _this4._options.sizesAttributes);
                 });
               }
 
@@ -463,20 +724,20 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
               }
             }
 
-            _this3._queue.delete(createdElement);
+            _this4._queue.delete(createdElement);
 
             cb(resource);
           };
 
           var prepareLoad = function prepareLoad() {
             if (isConsistent) {
-              switchAttributes(createdElement, _this3._options.srcAttributes);
-              switchAttributes(createdElement, _this3._options.sizesAttributes);
+              switchAttributes(createdElement, _this4._options.srcAttributes);
+              switchAttributes(createdElement, _this4._options.sizesAttributes);
 
               if (hasSources) {
                 _toConsumableArray(createdElement.querySelectorAll('source')).forEach(function (source) {
-                  switchAttributes(source, _this3._options.srcAttributes);
-                  switchAttributes(source, _this3._options.sizesAttributes);
+                  switchAttributes(source, _this4._options.srcAttributes);
+                  switchAttributes(source, _this4._options.sizesAttributes);
                 });
               }
             } else {
@@ -506,17 +767,17 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
             element: createdElement
           };
           createdElement.addEventListener('abort', function () {
-            removeAttributes(createdElement, Object.keys(_this3._options.srcAttributes));
-            removeAttributes(createdElement, Object.values(_this3._options.srcAttributes));
-            removeAttributes(createdElement, Object.keys(_this3._options.sizesAttributes));
-            removeAttributes(createdElement, Object.values(_this3._options.sizesAttributes));
+            removeAttributes(createdElement, Object.keys(_this4._options.srcAttributes));
+            removeAttributes(createdElement, Object.values(_this4._options.srcAttributes));
+            removeAttributes(createdElement, Object.keys(_this4._options.sizesAttributes));
+            removeAttributes(createdElement, Object.values(_this4._options.sizesAttributes));
 
             if (hasSources) {
               _toConsumableArray(createdElement.querySelectorAll('source')).forEach(function (source) {
-                removeAttributes(source, Object.keys(_this3._options.srcAttributes));
-                removeAttributes(source, Object.values(_this3._options.srcAttributes));
-                removeAttributes(source, Object.keys(_this3._options.sizesAttributes));
-                removeAttributes(source, Object.values(_this3._options.sizesAttributes));
+                removeAttributes(source, Object.keys(_this4._options.srcAttributes));
+                removeAttributes(source, Object.values(_this4._options.srcAttributes));
+                removeAttributes(source, Object.keys(_this4._options.sizesAttributes));
+                removeAttributes(source, Object.values(_this4._options.sizesAttributes));
               });
             }
 
@@ -539,30 +800,45 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
           }
 
           if (resource.type === 'audio' || resource.type === 'video') {
-            mainEventsTarget.addEventListener(_this3._options.playthrough ? 'canplaythrough' : 'loadedmetadata', function () {
+            mainEventsTarget.addEventListener(_this4._options.playthrough ? 'canplaythrough' : 'loadedmetadata', function () {
               finishPromise(resolve);
               dispatchEvent('resourceLoad');
             });
           }
 
-          if (resource.element instanceof HTMLElement && _this3._options.lazy && 'IntersectionObserver' in window) {
-            queuer.observer = new IntersectionObserver(function (entries, observer) {
-              entries.forEach(function (entry) {
-                if (entry.intersectionRatio > 0) {
-                  observer.unobserve(entry.target);
-                  prepareLoad();
-                }
+          if (resource.element instanceof HTMLElement && _this4._options.lazy) {
+            if (isIntersectionObserverSupported) {
+              queuer.observer = new IntersectionObserver(function (entries, observer) {
+                entries.forEach(function (entry) {
+                  if (entry.intersectionRatio > 0) {
+                    observer.unobserve(entry.target);
+                    prepareLoad();
+                  }
+                });
+              }, {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.1
               });
-            }, {
-              root: null,
-              rootMargin: '0px',
-              threshold: 0.1
-            });
-            queuer.observer.observe(resource.element);
+              queuer.observer.observe(resource.element);
+            } else {
+              if (isElementInViewport(resource.element)) {
+                prepareLoad();
+              } else {
+                _this4.manuallyObservedElements.push({
+                  element: resource.element,
+                  intersected: false
+                });
 
-            _this3._queue.set(resource.element, queuer);
+                resource.element.addEventListener('intersected', function () {
+                  return prepareLoad();
+                });
+              }
+            }
+
+            _this4._queue.set(resource.element, queuer);
           } else {
-            _this3._queue.set(createdElement, queuer);
+            _this4._queue.set(createdElement, queuer);
 
             prepareLoad();
           }
@@ -576,7 +852,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     }, {
       key: "collection",
       set: function set(collection) {
-        var _this4 = this;
+        var _this5 = this;
 
         if (this._state === 0) {
           if (collection instanceof NodeList) {
@@ -601,7 +877,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
             collection.forEach(function (item) {
               var pushCheck = function pushCheck(resource) {
                 if (resource.type === 'image' || resource.type === 'video' || resource.type === 'audio' || resource.type === 'iframe' && resource.consistent) {
-                  _this4._collection.push(resource);
+                  _this5._collection.push(resource);
 
                   return;
                 }
@@ -610,7 +886,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
               };
 
               if (item instanceof HTMLElement) {
-                find(item, _this4._options).forEach(function (resource) {
+                find(item, _this5._options).forEach(function (resource) {
                   return pushCheck(new Resource(resource));
                 });
               }
