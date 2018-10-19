@@ -35,4 +35,4 @@ pageLoad.progress(e => {
     log('Total page load: ' + pageLoader.percentage + '% ' + e.url);
 });
 pageLoad.then(e => log('All done, this page has completely loaded!', e));
-pageLoad.catch(error => console.log('Error', error));
+pageLoad.catch(e => console.log(e));
