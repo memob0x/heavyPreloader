@@ -113,11 +113,9 @@ Every **load** call returns a `Promise`-like `Object`.<br>
 In addition to its common structure there's a unique `progress` method which fires a **callback** on every _resource load_.
 
 ```javascript
-load.progress(resource => console.log('A resource is ready:', resource.element));
-
-load.then(() => console.log('All loaded!'));
-
-load.catch((resource, error) => console.log(error));
+load.progress(data => console.log('A resource is ready', data.event, data.resource))
+    .catch(error => console.log(error))
+    .then(() => console.log('Fulfillment!'));
 ```
 
 ---

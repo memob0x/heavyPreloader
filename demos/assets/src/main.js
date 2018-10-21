@@ -1,5 +1,7 @@
 const logEl = document.querySelector('#console');
-export const log = string => {
+export const log = (...message) => {
+    console.log(...message);
+
     if (!logEl.hasChildNodes()) {
         const ol = document.createElement('ol');
         logEl.append(ol);
@@ -7,7 +9,7 @@ export const log = string => {
 
     const list = logEl.querySelector('ol');
     const li = document.createElement('li');
-    li.innerHTML = string;
+    li.innerHTML = message;
     list.append(li);
 
     logEl.scrollTop = list.offsetHeight;

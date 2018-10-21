@@ -48,6 +48,14 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     return parseFloat(num.toFixed(decimals));
   };
 
+  var s4 = function s4() {
+    return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+  };
+
+  var uniqueID = function uniqueID() {
+    return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
+  };
+
   var isInArray = function isInArray(needle, heystack) {
     return heystack.indexOf(needle) > -1;
   };
@@ -509,6 +517,8 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     };
   };
 
+  var ID = uniqueID();
+
   var Loader = function () {
     function Loader() {
       var _this2 = this;
@@ -546,7 +556,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
           }).forEach(function (item) {
             if (!item.intersected && isElementInViewport(item.element)) {
               item.intersected = true;
-              item.element.dispatchEvent(new CustomEvent('intersected'));
+              item.element.dispatchEvent(new CustomEvent('intersected__' + ID));
             }
           });
         };
@@ -567,7 +577,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
         this._state = 0;
 
         this._queue.forEach(function (data, element) {
-          return element.dispatchEvent(new CustomEvent('Aborted'));
+          return element.dispatchEvent(new CustomEvent('abort__' + ID));
         });
       }
     }, {
@@ -577,11 +587,11 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 
         this._load = new LoaderPromise(function (resolve, reject, progress) {
           if (_this3._state === 1) {
-            reject('A Loader instance is already in progress.');
+            reject('This Loader instance is already in progress');
           }
 
           if (!_this3._collection.length) {
-            reject('Collection is empty.');
+            reject('Resources collection is empty');
           }
 
           _this3._state = 1;
@@ -591,14 +601,24 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 
             var pipeline = function pipeline() {
               if (_this3._state === 0) {
-                reject('Aborted');
+                reject('Loader instance aborted');
+                _this3._collection = [];
                 return;
               }
 
-              var loadStep = function loadStep(resource, cb) {
-                loaded++;
+              _this3.fetch(_this3._collection[loaded]).catch(function (payload) {
+                console.warn(payload.event.detail.message + ': ' + payload.resource.url);
+                return payload;
+              }).then(function (payload) {
+                if (_this3._state !== 0) {
+                  loaded++;
+                }
+
                 _this3._percentage = loaded / _this3._collection.length * 100;
-                progress(resource);
+
+                if (_this3._state !== 0) {
+                  progress(payload);
+                }
 
                 if (loaded < _this3._collection.length) {
                   pipeline();
@@ -606,16 +626,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
                 }
 
                 _this3._state = 0;
-                cb(resource);
-              };
-
-              var load = _this3.fetch(_this3._collection[loaded]);
-
-              load.then(function (resource) {
-                return loadStep(resource, resolve);
-              });
-              load.catch(function (resource) {
-                return loadStep(resource, reject);
+                resolve(payload);
               });
             };
 
@@ -624,30 +635,31 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
             (function () {
               var loaded = 0;
 
-              var loadStep = function loadStep(resource, resolver) {
-                loaded++;
-                _this3._percentage = loaded / _this3._collection.length * 100;
-                progress(resource);
-
-                if (loaded >= _this3._collection.length) {
-                  _this3._state = 0;
-                  resolver(resource);
-                }
-              };
-
               for (var i = 0; i < _this3._collection.length; i++) {
                 if (_this3._state === 0) {
-                  reject('Aborted');
+                  reject('Loader instance aborted');
+                  _this3._collection = [];
                   break;
                 }
 
-                var load = _this3.fetch(_this3._collection[i]);
+                _this3.fetch(_this3._collection[i]).catch(function (payload) {
+                  console.warn(payload.event.detail.message + ': ' + payload.resource.url);
+                  return payload;
+                }).then(function (payload) {
+                  if (_this3._state !== 0) {
+                    loaded++;
+                  }
 
-                load.then(function (resource) {
-                  return loadStep(resource, resolve);
-                });
-                load.catch(function (resource) {
-                  return loadStep(resource, reject);
+                  _this3._percentage = loaded / _this3._collection.length * 100;
+
+                  if (_this3._state !== 0) {
+                    progress(payload);
+                  }
+
+                  if (loaded >= _this3._collection.length) {
+                    _this3._state = 0;
+                    resolve();
+                  }
                 });
               }
             })();
@@ -695,7 +707,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
             }
           }
 
-          var finishPromise = function finishPromise(cb) {
+          var finishPromise = function finishPromise(event, resolver) {
             if (isConsistent) {
               switchAttributes(resource.element, _this4._options.srcAttributes);
               switchAttributes(resource.element, _this4._options.sizesAttributes);
@@ -718,7 +730,10 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 
             _this4._queue.delete(createdElement);
 
-            cb(resource);
+            resolver({
+              event: event,
+              resource: resource
+            });
           };
 
           var prepareLoad = function prepareLoad() {
@@ -741,9 +756,13 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
             }
           };
 
-          var dispatchEvent = function dispatchEvent(type) {
-            var event = new CustomEvent(type, {
-              detail: resource
+          var dispatchEvent = function dispatchEvent() {
+            var eventName = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
+            var data = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+            var event = new CustomEvent(eventName, {
+              detail: _objectSpread({}, data, {
+                resource: resource
+              })
             });
 
             if (resource.element) {
@@ -751,6 +770,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
             }
 
             document.dispatchEvent(event);
+            return event;
           };
 
           var queuer = {
@@ -758,7 +778,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
             observer: null,
             element: createdElement
           };
-          createdElement.addEventListener('abort', function () {
+          createdElement.addEventListener('abort__' + ID, function () {
             removeAttributes(createdElement, Object.keys(_this4._options.srcAttributes));
             removeAttributes(createdElement, Object.values(_this4._options.srcAttributes));
             removeAttributes(createdElement, Object.keys(_this4._options.sizesAttributes));
@@ -773,11 +793,18 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
               });
             }
 
-            finishPromise(reject);
+            var dispatchedEvent = dispatchEvent('resourceError', {
+              type: 'abortion',
+              message: 'Resource load aborted'
+            });
+            finishPromise(dispatchedEvent, reject);
           });
-          mainEventsTarget.addEventListener('error', function () {
-            finishPromise(reject);
-            dispatchEvent('resourceError');
+          mainEventsTarget.addEventListener('error', function (e) {
+            var dispatchedEvent = dispatchEvent('resourceError', {
+              type: e.type,
+              message: 'Resource failed to load'
+            });
+            finishPromise(dispatchedEvent, reject);
           });
 
           if (resource.type === 'image' || resource.type === 'iframe') {
@@ -786,15 +813,19 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
                 return;
               }
 
-              finishPromise(resolve);
-              dispatchEvent('resourceLoad');
+              var dispatchedEvent = dispatchEvent('resourceLoad', {
+                type: e.type
+              });
+              finishPromise(dispatchedEvent, resolve);
             });
           }
 
           if (resource.type === 'audio' || resource.type === 'video') {
-            mainEventsTarget.addEventListener(_this4._options.playthrough ? 'canplaythrough' : 'loadedmetadata', function () {
-              finishPromise(resolve);
-              dispatchEvent('resourceLoad');
+            mainEventsTarget.addEventListener(_this4._options.playthrough ? 'canplaythrough' : 'loadedmetadata', function (e) {
+              var dispatchedEvent = dispatchEvent('resourceLoad', {
+                type: e.type
+              });
+              finishPromise(dispatchedEvent, resolve);
             });
           }
 
@@ -822,7 +853,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
                   intersected: false
                 });
 
-                resource.element.addEventListener('intersected', function () {
+                resource.element.addEventListener('intersected__' + ID, function () {
                   return prepareLoad();
                 });
               }
@@ -866,6 +897,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
           }
 
           if (Array.isArray(collection)) {
+            this._collection = [];
             collection.forEach(function (item) {
               var pushCheck = function pushCheck(resource) {
                 if (resource.type === 'image' || resource.type === 'video' || resource.type === 'audio' || resource.type === 'iframe' && resource.consistent) {
@@ -906,7 +938,15 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 
   var logEl = document.querySelector('#console');
 
-  var log = function log(string) {
+  var log = function log() {
+    var _console;
+
+    for (var _len = arguments.length, message = new Array(_len), _key = 0; _key < _len; _key++) {
+      message[_key] = arguments[_key];
+    }
+
+    (_console = console).log.apply(_console, message);
+
     if (!logEl.hasChildNodes()) {
       var ol = document.createElement('ol');
       logEl.append(ol);
@@ -914,7 +954,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 
     var list = logEl.querySelector('ol');
     var li = document.createElement('li');
-    li.innerHTML = string;
+    li.innerHTML = message;
     list.append(li);
     logEl.scrollTop = list.offsetHeight;
   };
@@ -924,40 +964,40 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     playthrough: true,
     backgrounds: true
   });
-
-  _toConsumableArray(document.querySelectorAll('.playground')).forEach(function (element) {
-    return pageLoader.collection = element;
-  });
-
+  pageLoader.collection = document.querySelectorAll('.playground');
   var pageLoad = pageLoader.load();
   pageLoad.progress(function (e) {
-    if (!e.element) {
+    if (!e.resource.element) {
       return;
     }
 
-    var container = e.element.matches('.playground') ? e.element : e.element.closest('.playground');
+    var container = e.resource.element.matches('.playground') ? e.resource.element : e.resource.element.closest('.playground');
     var percentage = container.querySelector('.playground__percentage');
-    var item = e.element.closest('.playground__item');
+    var item = e.resource.element.closest('.playground__item');
 
     if (percentage) {
       percentage.classList.add('visible');
     }
 
     if (item) {
-      e.element.closest('.playground__item').classList.add('loaded');
+      e.resource.element.closest('.playground__item').classList.add('loaded');
     }
 
     if (percentage) {
       percentage.children[0].dataset.percentage = container.querySelectorAll('.playground__item.loaded').length / container.querySelectorAll('.playground__item').length * 100;
     }
 
-    log('Total page load: ' + pageLoader.percentage + '% ' + e.url);
+    log('Total page load: ' + pageLoader.percentage + '% ' + e.resource.url, e);
   });
-  pageLoad.then(function (e) {
-    return log('All done, this page has completely loaded!', e);
+  pageLoad.catch(function (error) {
+    return console.log(error);
+  }).then(function (e) {
+    return log('All done!');
   });
-  pageLoad.catch(function (e) {
-    return console.log(e);
+  document.querySelectorAll('img').forEach(function (img) {
+    return img.addEventListener('resourceError', function (e) {
+      return e.detail.resource.element.classList.add('missing');
+    });
   });
 });
 //# sourceMappingURL=lazyloader.js.map

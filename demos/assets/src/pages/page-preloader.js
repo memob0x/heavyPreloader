@@ -7,25 +7,25 @@ const pageLoader = new Loader({
     sequential: false
 });
 
-[...document.querySelectorAll('.playground')].forEach(element => (pageLoader.collection = element));
+pageLoader.collection = document.querySelectorAll('.playground');
 
 const pageLoad = pageLoader.load();
 
 pageLoad.progress(e => {
-    if (!e.element) {
+    if (!e.resource.element) {
         return;
     }
 
-    const container = e.element.matches('.playground') ? e.element : e.element.closest('.playground');
+    const container = e.resource.element.matches('.playground') ? e.resource.element : e.resource.element.closest('.playground');
     const percentage = container.querySelector('.playground__percentage');
-    const item = e.element.closest('.playground__item');
+    const item = e.resource.element.closest('.playground__item');
 
     if (percentage) {
         percentage.classList.add('visible');
     }
 
     if (item) {
-        e.element.closest('.playground__item').classList.add('loaded');
+        e.resource.element.closest('.playground__item').classList.add('loaded');
     }
 
     if (percentage) {
@@ -34,11 +34,12 @@ pageLoad.progress(e => {
 
     document.querySelector('#preloader').innerHTML = pageLoader.percentage + '%';
 
-    log('Total page load: ' + pageLoader.percentage + '% ' + e.url);
+    log('Total page load: ' + pageLoader.percentage + '% ' + e.resource.url);
 });
-pageLoad.then(e => {
+pageLoad.catch(error => log(error)).then(() => {
     document.querySelector('#preloader').innerHTML = 'done!';
     setTimeout(() => document.body.classList.add('loaded'), 500);
-    log('All done, this page has completely loaded!', e);
+    log('All done!');
 });
-pageLoad.catch(error => console.log('Error', error));
+
+document.querySelectorAll('img').forEach(img => img.addEventListener('resourceError', e => e.detail.resource.element.classList.add('missing')));

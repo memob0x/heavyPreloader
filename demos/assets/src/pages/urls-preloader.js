@@ -29,9 +29,12 @@ document.querySelector('button.load').addEventListener('click', e => {
 
     const testLoad = testLoader.load();
 
-    testLoad.then(e => log('All done, test array has completely loaded!', e));
-    testLoad.progress(e => log('Total programmatic load percentage: ' + testLoader.percentage + '% ' + e.url));
-    testLoad.catch(e => console.log('error', e));
+    testLoad
+        .progress(e => log('Total programmatic load percentage: ' + testLoader.percentage + '% ' + e.resource.url))
+        .catch(e => {
+            log(e);
+        })
+        .then(() => log('All done, loader finished processing resources...'));
 });
 
 document.querySelector('button.abort').addEventListener('click', e => testLoader.abort());

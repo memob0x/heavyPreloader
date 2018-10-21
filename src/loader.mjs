@@ -3,10 +3,13 @@ import { LoaderPromise } from './loader.promise.mjs';
 import { find } from './loader.find.mjs';
 import { switchAttributes, copyAttributes, removeAttributes } from './loader.utils.mjs';
 import { isIntersectionObserverSupported, isElementInViewport } from './toolbox/src/toolbox.viewport.mjs';
+import { uniqueID } from './toolbox/src/toolbox.utils.mjs';
+
+const ID = uniqueID();
 
 /**
  *
- *
+ * TODO: find a way to get a recap of what Resource items were loaded and what failed in collection list...
  */
 export default class Loader {
     constructor(options = {}) {
@@ -43,8 +46,7 @@ export default class Loader {
                 this.manuallyObservedElements.filter(item => !item.intersected).forEach(item => {
                     if (!item.intersected && isElementInViewport(item.element)) {
                         item.intersected = true;
-                        // TODO: use a class-instance-relative generated-id to privatize internal custom event
-                        item.element.dispatchEvent(new CustomEvent('intersected'));
+                        item.element.dispatchEvent(new CustomEvent('intersected__' + ID));
                     }
                 });
 
@@ -83,6 +85,8 @@ export default class Loader {
             }
 
             if (Array.isArray(collection)) {
+                this._collection = [];
+
                 collection.forEach(item => {
                     const pushCheck = resource => {
                         if (resource.type === 'image' || resource.type === 'video' || resource.type === 'audio' || (resource.type === 'iframe' && resource.consistent)) {
@@ -129,7 +133,7 @@ export default class Loader {
 
         this._state = 0;
 
-        this._queue.forEach((data, element) => element.dispatchEvent(new CustomEvent('Aborted')));
+        this._queue.forEach((data, element) => element.dispatchEvent(new CustomEvent('abort__' + ID)));
     }
 
     /**
@@ -137,16 +141,13 @@ export default class Loader {
      * @returns {Promise}
      */
     load() {
-        /**
-         * TODO: error cause Uncaught in Promise...
-         * TODO: returned argument catch/then methods, then should return something else, error should return something more detailed to the error intercurse (?)
-         */
         this._load = new LoaderPromise((resolve, reject, progress) => {
             if (this._state === 1) {
-                reject('A Loader instance is already in progress.');
+                reject('This Loader instance is already in progress');
             }
+
             if (!this._collection.length) {
-                reject('Collection is empty.');
+                reject('Resources collection is empty');
             }
 
             this._state = 1;
@@ -155,61 +156,80 @@ export default class Loader {
                 let loaded = 0;
                 const pipeline = () => {
                     if (this._state === 0) {
-                        reject('Aborted');
+                        reject('Loader instance aborted');
+
+                        this._collection = [];
 
                         return;
                     }
 
-                    const loadStep = (resource, cb) => {
-                        loaded++;
+                    this.fetch(this._collection[loaded])
+                        .catch(payload => {
+                            console.warn(payload.event.detail.message + ': ' + payload.resource.url);
 
-                        this._percentage = (loaded / this._collection.length) * 100;
+                            return payload;
+                        })
+                        .then(payload => {
+                            if (this._state !== 0) {
+                                loaded++;
+                            }
 
-                        progress(resource);
+                            this._percentage = (loaded / this._collection.length) * 100;
 
-                        if (loaded < this._collection.length) {
-                            pipeline();
+                            // TODO: more robust way, possibly inside LoaderPromise?
+                            if (this._state !== 0) {
+                                progress(payload);
+                            }
 
-                            return;
-                        }
+                            if (loaded < this._collection.length) {
+                                pipeline();
 
-                        this._state = 0;
+                                return;
+                            }
 
-                        cb(resource);
-                    };
+                            this._state = 0;
 
-                    const load = this.fetch(this._collection[loaded]);
-                    load.then(resource => loadStep(resource, resolve));
-                    load.catch(resource => loadStep(resource, reject));
+                            resolve(payload);
+                        });
                 };
 
                 pipeline();
             } else {
                 let loaded = 0;
-                const loadStep = (resource, resolver) => {
-                    loaded++;
-
-                    this._percentage = (loaded / this._collection.length) * 100;
-
-                    progress(resource);
-
-                    if (loaded >= this._collection.length) {
-                        this._state = 0;
-
-                        resolver(resource);
-                    }
-                };
 
                 for (let i = 0; i < this._collection.length; i++) {
                     if (this._state === 0) {
-                        reject('Aborted');
+                        reject('Loader instance aborted');
+
+                        this._collection = [];
 
                         break;
                     }
 
-                    const load = this.fetch(this._collection[i]);
-                    load.then(resource => loadStep(resource, resolve));
-                    load.catch(resource => loadStep(resource, reject));
+                    this.fetch(this._collection[i])
+                        .catch(payload => {
+                            console.warn(payload.event.detail.message + ': ' + payload.resource.url);
+
+                            return payload;
+                        })
+                        .then(payload => {
+                            if (this._state !== 0) {
+                                loaded++;
+                            }
+
+                            this._percentage = (loaded / this._collection.length) * 100;
+
+                            // TODO: more robust way, possibly inside LoaderPromise?
+                            if (this._state !== 0) {
+                                progress(payload);
+                            }
+
+                            if (loaded >= this._collection.length) {
+                                this._state = 0;
+
+                                resolve();
+                            }
+                        });
                 }
             }
         });
@@ -260,7 +280,7 @@ export default class Loader {
                 }
             }
 
-            const finishPromise = cb => {
+            const finishPromise = (event, resolver) => {
                 if (isConsistent) {
                     switchAttributes(resource.element, this._options.srcAttributes);
                     switchAttributes(resource.element, this._options.sizesAttributes);
@@ -283,7 +303,10 @@ export default class Loader {
 
                 this._queue.delete(createdElement);
 
-                cb(resource);
+                resolver({
+                    event: event,
+                    resource: resource
+                });
             };
 
             const prepareLoad = () => {
@@ -306,20 +329,32 @@ export default class Loader {
                 }
             };
 
-            const dispatchEvent = type => {
-                const event = new CustomEvent(type, { detail: resource });
+            const dispatchEvent = (eventName = '', data = {}) => {
+                const event = new CustomEvent(eventName, {
+                    detail: {
+                        ...data,
+                        ...{
+                            resource: resource
+                        }
+                    }
+                });
 
                 if (resource.element) {
                     resource.element.dispatchEvent(event);
                 }
 
                 document.dispatchEvent(event);
+
+                return event;
             };
 
-            let queuer = { resource: resource, observer: null, element: createdElement };
+            let queuer = {
+                resource: resource,
+                observer: null,
+                element: createdElement
+            };
 
-            // TODO: use a class-instance-relative generated-id to privatize internal custom event
-            createdElement.addEventListener('abort', () => {
+            createdElement.addEventListener('abort__' + ID, () => {
                 removeAttributes(createdElement, Object.keys(this._options.srcAttributes));
                 removeAttributes(createdElement, Object.values(this._options.srcAttributes));
                 removeAttributes(createdElement, Object.keys(this._options.sizesAttributes));
@@ -334,13 +369,21 @@ export default class Loader {
                     });
                 }
 
-                finishPromise(reject);
+                const dispatchedEvent = dispatchEvent('resourceError', {
+                    type: 'abortion',
+                    message: 'Resource load aborted'
+                });
+
+                finishPromise(dispatchedEvent, reject);
             });
 
-            mainEventsTarget.addEventListener('error', () => {
-                finishPromise(reject);
+            mainEventsTarget.addEventListener('error', e => {
+                const dispatchedEvent = dispatchEvent('resourceError', {
+                    type: e.type,
+                    message: 'Resource failed to load' // TODO: a way to retrieve http error code ?
+                });
 
-                dispatchEvent('resourceError');
+                finishPromise(dispatchedEvent, reject);
             });
 
             if (resource.type === 'image' || resource.type === 'iframe') {
@@ -349,17 +392,21 @@ export default class Loader {
                         return; // iframes fire "load" event when ready in dom
                     }
 
-                    finishPromise(resolve);
+                    const dispatchedEvent = dispatchEvent('resourceLoad', {
+                        type: e.type
+                    });
 
-                    dispatchEvent('resourceLoad');
+                    finishPromise(dispatchedEvent, resolve);
                 });
             }
 
             if (resource.type === 'audio' || resource.type === 'video') {
-                mainEventsTarget.addEventListener(this._options.playthrough ? 'canplaythrough' : 'loadedmetadata', () => {
-                    finishPromise(resolve);
+                mainEventsTarget.addEventListener(this._options.playthrough ? 'canplaythrough' : 'loadedmetadata', e => {
+                    const dispatchedEvent = dispatchEvent('resourceLoad', {
+                        type: e.type
+                    });
 
-                    dispatchEvent('resourceLoad');
+                    finishPromise(dispatchedEvent, resolve);
                 });
             }
 
@@ -391,7 +438,7 @@ export default class Loader {
                             element: resource.element,
                             intersected: false
                         });
-                        resource.element.addEventListener('intersected', () => prepareLoad());
+                        resource.element.addEventListener('intersected__' + ID, () => prepareLoad());
                     }
                 }
 

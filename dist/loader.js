@@ -48,6 +48,14 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     return parseFloat(num.toFixed(decimals));
   };
 
+  var s4 = function s4() {
+    return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+  };
+
+  var uniqueID = function uniqueID() {
+    return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
+  };
+
   var isInArray = function isInArray(needle, heystack) {
     return heystack.indexOf(needle) > -1;
   };
@@ -509,6 +517,8 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     };
   };
 
+  var ID = uniqueID();
+
   var Loader = function () {
     function Loader() {
       var _this2 = this;
@@ -546,7 +556,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
           }).forEach(function (item) {
             if (!item.intersected && isElementInViewport(item.element)) {
               item.intersected = true;
-              item.element.dispatchEvent(new CustomEvent('intersected'));
+              item.element.dispatchEvent(new CustomEvent('intersected__' + ID));
             }
           });
         };
@@ -567,7 +577,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
         this._state = 0;
 
         this._queue.forEach(function (data, element) {
-          return element.dispatchEvent(new CustomEvent('Aborted'));
+          return element.dispatchEvent(new CustomEvent('abort__' + ID));
         });
       }
     }, {
@@ -577,11 +587,11 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 
         this._load = new LoaderPromise(function (resolve, reject, progress) {
           if (_this3._state === 1) {
-            reject('A Loader instance is already in progress.');
+            reject('This Loader instance is already in progress');
           }
 
           if (!_this3._collection.length) {
-            reject('Collection is empty.');
+            reject('Resources collection is empty');
           }
 
           _this3._state = 1;
@@ -591,14 +601,24 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 
             var pipeline = function pipeline() {
               if (_this3._state === 0) {
-                reject('Aborted');
+                reject('Loader instance aborted');
+                _this3._collection = [];
                 return;
               }
 
-              var loadStep = function loadStep(resource, cb) {
-                loaded++;
+              _this3.fetch(_this3._collection[loaded]).catch(function (payload) {
+                console.warn(payload.event.detail.message + ': ' + payload.resource.url);
+                return payload;
+              }).then(function (payload) {
+                if (_this3._state !== 0) {
+                  loaded++;
+                }
+
                 _this3._percentage = loaded / _this3._collection.length * 100;
-                progress(resource);
+
+                if (_this3._state !== 0) {
+                  progress(payload);
+                }
 
                 if (loaded < _this3._collection.length) {
                   pipeline();
@@ -606,16 +626,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
                 }
 
                 _this3._state = 0;
-                cb(resource);
-              };
-
-              var load = _this3.fetch(_this3._collection[loaded]);
-
-              load.then(function (resource) {
-                return loadStep(resource, resolve);
-              });
-              load.catch(function (resource) {
-                return loadStep(resource, reject);
+                resolve(payload);
               });
             };
 
@@ -624,30 +635,31 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
             (function () {
               var loaded = 0;
 
-              var loadStep = function loadStep(resource, resolver) {
-                loaded++;
-                _this3._percentage = loaded / _this3._collection.length * 100;
-                progress(resource);
-
-                if (loaded >= _this3._collection.length) {
-                  _this3._state = 0;
-                  resolver(resource);
-                }
-              };
-
               for (var i = 0; i < _this3._collection.length; i++) {
                 if (_this3._state === 0) {
-                  reject('Aborted');
+                  reject('Loader instance aborted');
+                  _this3._collection = [];
                   break;
                 }
 
-                var load = _this3.fetch(_this3._collection[i]);
+                _this3.fetch(_this3._collection[i]).catch(function (payload) {
+                  console.warn(payload.event.detail.message + ': ' + payload.resource.url);
+                  return payload;
+                }).then(function (payload) {
+                  if (_this3._state !== 0) {
+                    loaded++;
+                  }
 
-                load.then(function (resource) {
-                  return loadStep(resource, resolve);
-                });
-                load.catch(function (resource) {
-                  return loadStep(resource, reject);
+                  _this3._percentage = loaded / _this3._collection.length * 100;
+
+                  if (_this3._state !== 0) {
+                    progress(payload);
+                  }
+
+                  if (loaded >= _this3._collection.length) {
+                    _this3._state = 0;
+                    resolve();
+                  }
                 });
               }
             })();
@@ -695,7 +707,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
             }
           }
 
-          var finishPromise = function finishPromise(cb) {
+          var finishPromise = function finishPromise(event, resolver) {
             if (isConsistent) {
               switchAttributes(resource.element, _this4._options.srcAttributes);
               switchAttributes(resource.element, _this4._options.sizesAttributes);
@@ -718,7 +730,10 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 
             _this4._queue.delete(createdElement);
 
-            cb(resource);
+            resolver({
+              event: event,
+              resource: resource
+            });
           };
 
           var prepareLoad = function prepareLoad() {
@@ -741,9 +756,13 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
             }
           };
 
-          var dispatchEvent = function dispatchEvent(type) {
-            var event = new CustomEvent(type, {
-              detail: resource
+          var dispatchEvent = function dispatchEvent() {
+            var eventName = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
+            var data = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+            var event = new CustomEvent(eventName, {
+              detail: _objectSpread({}, data, {
+                resource: resource
+              })
             });
 
             if (resource.element) {
@@ -751,6 +770,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
             }
 
             document.dispatchEvent(event);
+            return event;
           };
 
           var queuer = {
@@ -758,7 +778,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
             observer: null,
             element: createdElement
           };
-          createdElement.addEventListener('abort', function () {
+          createdElement.addEventListener('abort__' + ID, function () {
             removeAttributes(createdElement, Object.keys(_this4._options.srcAttributes));
             removeAttributes(createdElement, Object.values(_this4._options.srcAttributes));
             removeAttributes(createdElement, Object.keys(_this4._options.sizesAttributes));
@@ -773,11 +793,18 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
               });
             }
 
-            finishPromise(reject);
+            var dispatchedEvent = dispatchEvent('resourceError', {
+              type: 'abortion',
+              message: 'Resource load aborted'
+            });
+            finishPromise(dispatchedEvent, reject);
           });
-          mainEventsTarget.addEventListener('error', function () {
-            finishPromise(reject);
-            dispatchEvent('resourceError');
+          mainEventsTarget.addEventListener('error', function (e) {
+            var dispatchedEvent = dispatchEvent('resourceError', {
+              type: e.type,
+              message: 'Resource failed to load'
+            });
+            finishPromise(dispatchedEvent, reject);
           });
 
           if (resource.type === 'image' || resource.type === 'iframe') {
@@ -786,15 +813,19 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
                 return;
               }
 
-              finishPromise(resolve);
-              dispatchEvent('resourceLoad');
+              var dispatchedEvent = dispatchEvent('resourceLoad', {
+                type: e.type
+              });
+              finishPromise(dispatchedEvent, resolve);
             });
           }
 
           if (resource.type === 'audio' || resource.type === 'video') {
-            mainEventsTarget.addEventListener(_this4._options.playthrough ? 'canplaythrough' : 'loadedmetadata', function () {
-              finishPromise(resolve);
-              dispatchEvent('resourceLoad');
+            mainEventsTarget.addEventListener(_this4._options.playthrough ? 'canplaythrough' : 'loadedmetadata', function (e) {
+              var dispatchedEvent = dispatchEvent('resourceLoad', {
+                type: e.type
+              });
+              finishPromise(dispatchedEvent, resolve);
             });
           }
 
@@ -822,7 +853,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
                   intersected: false
                 });
 
-                resource.element.addEventListener('intersected', function () {
+                resource.element.addEventListener('intersected__' + ID, function () {
                   return prepareLoad();
                 });
               }
@@ -866,6 +897,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
           }
 
           if (Array.isArray(collection)) {
+            this._collection = [];
             collection.forEach(function (item) {
               var pushCheck = function pushCheck(resource) {
                 if (resource.type === 'image' || resource.type === 'video' || resource.type === 'audio' || resource.type === 'iframe' && resource.consistent) {
