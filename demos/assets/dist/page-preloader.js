@@ -973,40 +973,42 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     sequential: false
   });
   pageLoader.collection = document.querySelectorAll('.playground');
-  var pageLoad = pageLoader.load();
-  pageLoad.progress(function (e) {
-    if (!e.resource.element) {
-      return;
-    }
+  window.addEventListener('load', function () {
+    var pageLoad = pageLoader.load();
+    pageLoad.progress(function (e) {
+      if (!e.resource.element) {
+        return;
+      }
 
-    var container = e.resource.element.matches('.playground') ? e.resource.element : e.resource.element.closest('.playground');
-    var percentage = container.querySelector('.playground__percentage');
-    var item = e.resource.element.closest('.playground__item');
+      var container = e.resource.element.matches('.playground') ? e.resource.element : e.resource.element.closest('.playground');
+      var percentage = container.querySelector('.playground__percentage');
+      var item = e.resource.element.closest('.playground__item');
 
-    if (percentage) {
-      percentage.classList.add('visible');
-    }
+      if (percentage) {
+        percentage.classList.add('visible');
+      }
 
-    if (item) {
-      e.resource.element.closest('.playground__item').classList.add('loaded');
-    }
+      if (item) {
+        e.resource.element.closest('.playground__item').classList.add('loaded');
+      }
 
-    if (percentage) {
-      percentage.children[0].dataset.percentage = container.querySelectorAll('.playground__item.loaded').length / container.querySelectorAll('.playground__item').length * 100;
-    }
+      if (percentage) {
+        percentage.children[0].dataset.percentage = container.querySelectorAll('.playground__item.loaded').length / container.querySelectorAll('.playground__item').length * 100;
+      }
 
-    document.querySelector('#preloader').innerHTML = pageLoader.percentage + '%';
-    log('Total page load: ' + pageLoader.percentage + '% ' + e.resource.url);
-  });
-  pageLoad.catch(function (error) {
-    return log(error);
-  }).then(function () {
-    document.querySelector('#preloader').innerHTML = 'done!';
-    setTimeout(function () {
-      return document.body.classList.add('loaded');
-    }, 500);
-    log('All done!');
-  });
+      document.querySelector('#preloader').innerHTML = pageLoader.percentage + '%';
+      log('Total page load: ' + pageLoader.percentage + '% ' + e.resource.url);
+    });
+    pageLoad.catch(function (error) {
+      return log(error);
+    }).then(function () {
+      document.querySelector('#preloader').innerHTML = 'done!';
+      setTimeout(function () {
+        return document.body.classList.add('loaded');
+      }, 500);
+      log('All done!');
+    });
+  }, false);
   document.querySelectorAll('img').forEach(function (img) {
     return img.addEventListener('resourceError', function (e) {
       return e.detail.resource.element.classList.add('missing');
