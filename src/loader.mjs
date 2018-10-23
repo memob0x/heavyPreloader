@@ -46,7 +46,7 @@ export default class Loader {
                 this.manuallyObservedElements.filter(item => !item.intersected).forEach(item => {
                     if (!item.intersected && isElementInViewport(item.element)) {
                         item.intersected = true;
-                        item.element.dispatchEvent(new CustomEvent('intersected__' + ID));
+                        item.element.dispatchEvent(new CustomEvent(`intersected__${ID}`));
                     }
                 });
 
@@ -133,7 +133,7 @@ export default class Loader {
 
         this._state = 0;
 
-        this._queue.forEach((data, element) => element.dispatchEvent(new CustomEvent('abort__' + ID)));
+        this._queue.forEach((data, element) => element.dispatchEvent(new CustomEvent(`abort__${ID}`)));
     }
 
     /**
@@ -165,7 +165,7 @@ export default class Loader {
 
                     this.fetch(this._collection[loaded])
                         .catch(payload => {
-                            console.warn(payload.event.detail.message + ': ' + payload.resource.url);
+                            console.warn(`${payload.event.detail.message}: ${payload.resource.url}`);
 
                             return payload;
                         })
@@ -176,7 +176,7 @@ export default class Loader {
 
                             this._percentage = (loaded / this._collection.length) * 100;
 
-                            // TODO: more robust way, possibly inside LoaderPromise?
+                            // TODO: a more robust way to skip progress call in a then from a catch, possibly inside LoaderPromise?
                             if (this._state !== 0) {
                                 progress(payload);
                             }
@@ -208,7 +208,7 @@ export default class Loader {
 
                     this.fetch(this._collection[i])
                         .catch(payload => {
-                            console.warn(payload.event.detail.message + ': ' + payload.resource.url);
+                            console.warn(`${payload.event.detail.message}: ${payload.resource.url}`);
 
                             return payload;
                         })
@@ -219,7 +219,7 @@ export default class Loader {
 
                             this._percentage = (loaded / this._collection.length) * 100;
 
-                            // TODO: more robust way, possibly inside LoaderPromise?
+                            // TODO: a more robust way to skip progress call in a then from a catch, possibly inside LoaderPromise?
                             if (this._state !== 0) {
                                 progress(payload);
                             }
@@ -354,7 +354,7 @@ export default class Loader {
                 element: createdElement
             };
 
-            createdElement.addEventListener('abort__' + ID, () => {
+            createdElement.addEventListener(`abort__${ID}`, () => {
                 removeAttributes(createdElement, Object.keys(this._options.srcAttributes));
                 removeAttributes(createdElement, Object.values(this._options.srcAttributes));
                 removeAttributes(createdElement, Object.keys(this._options.sizesAttributes));
@@ -369,10 +369,7 @@ export default class Loader {
                     });
                 }
 
-                const dispatchedEvent = dispatchEvent('resourceError', {
-                    type: 'abortion',
-                    message: 'Resource load aborted'
-                });
+                const dispatchedEvent = dispatchEvent('resourceError', { type: 'abortion', message: 'Resource load aborted' });
 
                 finishPromise(dispatchedEvent, reject);
             });
@@ -438,7 +435,7 @@ export default class Loader {
                             element: resource.element,
                             intersected: false
                         });
-                        resource.element.addEventListener('intersected__' + ID, () => prepareLoad());
+                        resource.element.addEventListener(`intersected__${ID}`, () => prepareLoad());
                     }
                 }
 

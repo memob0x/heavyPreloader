@@ -28,7 +28,7 @@ export const find = (element = document.body, options = {}) => {
 
     const tagsSelector = allSupportedTags.join(',');
     const srcAttributesValues = Object.values(settings.srcAttributes);
-    const srcAttributesSelector = srcAttributesValues.map(x => '[' + x + ']').join(',');
+    const srcAttributesSelector = srcAttributesValues.map(x => `[${x}]`).join(',');
 
     let targets = [...element.querySelectorAll(tagsSelector)].filter(el => !el.parentElement || el.parentElement.tagName.toLowerCase() !== 'picture');
     if (element.matches(tagsSelector) && (!element.parentElement || element.parentElement.tagName.toLowerCase() !== 'picture')) {

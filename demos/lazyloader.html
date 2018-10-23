@@ -124,27 +124,43 @@
             <section class="playground__area">
                 <div class="playground__area__inner">
                     <div class="playground__area__row">
-                        <div class="playground__col">
+                        <div class="playground__col--full">
                             <figure class="playground__item">
-                                <img data-src="//placehold.it/1920x1080.jpg" data-srcset="//placehold.it/720x1080.jpg 100w, //placehold.it/1440x900.jpg 500w, //placehold.it/2560x1920.jpg 1000w"
-                                    data-sizes="(min-width: 900px) 1000px,
-                                                        (max-width: 900px) and (min-width: 400px) 50em,
-                                                        ( not (orientation: portrait) ) 300px,
-                                                        ( (orientation: landscape) or (min-width: 1000px) ) 50vw, 
-                                                        100vw">
+                                <img data-src="//placehold.it/720x720/CCFFC2/ffffff.jpg?text=medium" alt="Test" data-srcset="//placehold.it/1280x1280/CCFFC2/ffffff.jpg?text=large 1120w,
+                                    //placehold.it/720x720/CCFFC2/ffffff.jpg?text=medium 720w,
+                                    //placehold.it/460x460/CCFFC2/ffffff.jpg?text=small 400w"
+                                    data-sizes="(min-width: 40em) calc(66.6vw - 4em), 100vw">
                             </figure>
                         </div>
-                        <div class="playground__col">
-                            <figure class="playground__item">
-                                <picture>
-                                    <source data-media="(min-width: 650px)" data-srcset="//placehold.it/1280x1280.jpg">
-                                    <source data-media="(min-width: 465px)" data-srcset="//placehold.it/720x720.jpg">
-                                    <img data-src="//placehold.it/12x12.jpg">
-                                </picture>
-                            </figure>
-                        </div>
-        
                     </div>
+                </div>
+            </section>
+        
+            <section class="playground__area">
+                <div class="playground__area__inner">
+                    <div class="playground__col--full">
+                        <figure class="playground__item">
+                            <picture>
+                                <source data-media="(min-width: 2000px)" data-srcset="//placehold.it/2560x1440/FF9EB6/ffffff.jpg?text=2560, //placehold.it/3000x2560/FF9EB6/ffffff.jpg?text=2560@2 2x"
+                                    data-sizes="100vw">
+                                <source data-media="(min-width: 1500px)" data-srcset="//placehold.it/2000x2000/FF9EB6/ffffff.jpg?text=2000, //placehold.it/2560x1440/FF9EB6/ffffff.jpg?text=2000@2 2x"
+                                    data-sizes="100vw">
+                                <source data-media="(min-width: 1000px)" data-srcset="//placehold.it/1500x1500/FF9EB6/ffffff.jpg?text=1500, //placehold.it/2000x2000/FF9EB6/ffffff.jpg?text=1500@2 2x"
+                                    data-sizes="100vw">
+                                <source data-media="(min-width: 800px)" data-srcset="//placehold.it/1000x1000/FF9EB6/ffffff.jpg?text=1000, //placehold.it/2000x2000/FF9EB6/ffffff.jpg?text=1000@2 2x"
+                                    data-sizes="100vw">
+                                <source data-media="(min-width: 600px)" data-srcset="//placehold.it/800x800/FF9EB6/ffffff.jpg?text=800, //placehold.it/1500x1500/FF9EB6/ffffff.jpg?text=800@2 2x"
+                                    data-sizes="100vw">
+                                <source data-media="(min-width: 400px)" data-srcset="//placehold.it/600x600/FF9EB6/ffffff.jpg?text=600, //placehold.it/1000x1000/FF9EB6/ffffff.jpg?text=600@2 2x"
+                                    data-sizes="100vw">
+                                <source data-media="(min-width: 300px)" data-srcset="//placehold.it/400x400/FF9EB6/ffffff.jpg?text=400, //placehold.it/800x800/FF9EB6/ffffff.jpg?text=400@2 2x"
+                                    data-sizes="100vw">
+                                <source data-srcset="//placehold.it/300x300/FF9EB6/ffffff.jpg?text=300" data-sizes="100vw">
+                                <img data-src="//placehold.it/2560x1440/FF9EB6/ffffff.jpg?text=fallback" alt="Test">
+                            </picture>
+                        </figure>
+                    </div>
+        
                 </div>
             </section>
         

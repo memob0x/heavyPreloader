@@ -80,6 +80,8 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     return a.concat(b);
   })));
 
+  var base64head = ';base64,';
+
   var Resource = function () {
     function Resource(item) {
       _classCallCheck(this, Resource);
@@ -98,15 +100,21 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 
       this.url = item.url;
 
+      if (!new RegExp("".concat(base64head)).test(this.url)) {
+        this.url = this.url.split(',').pop().split(' ').reduce(function (x, y) {
+          return x.length > y.length ? x : y;
+        });
+      }
+
       for (var format in supportedExtensions) {
         var extensions = supportedExtensions[format].join('|');
 
-        if (new RegExp('(.(' + extensions + ')$)|data:' + format + '/(' + extensions + ');base64,').test(this.url)) {
-          var matches = this.url.match(new RegExp('.(' + extensions + ')$', 'g')) || this.url.match(new RegExp('^data:' + format + '/(' + extensions + ')', 'g'));
+        if (new RegExp("(.(".concat(extensions, ")$)|data:").concat(format, "/(").concat(extensions, ")").concat(base64head)).test(this.url)) {
+          var matches = this.url.match(new RegExp(".(".concat(extensions, ")$"), 'g')) || this.url.match(new RegExp("^data:".concat(format, "/(").concat(extensions, ")"), 'g'));
 
           if (null !== matches) {
             this.type = format;
-            this.extension = matches[0].replace('data:' + format + '/', '').replace('.', '');
+            this.extension = matches[0].replace("data:".concat(format, "/"), '').replace('.', '');
             this.tagName = this.tagName ? this.tagName : supportedTags[format][0];
             break;
           }
@@ -192,7 +200,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     var tagsSelector = allSupportedTags.join(',');
     var srcAttributesValues = Object.values(settings.srcAttributes);
     var srcAttributesSelector = srcAttributesValues.map(function (x) {
-      return '[' + x + ']';
+      return "[".concat(x, "]");
     }).join(',');
 
     var targets = _toConsumableArray(element.querySelectorAll(tagsSelector)).filter(function (el) {
@@ -256,7 +264,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
   var switchAttributes = function switchAttributes(el, attrs) {
     Object.keys(attrs).forEach(function (attr) {
       var dataAttr = attrs[attr];
-      dataAttr = dataAttr === 'src' || dataAttr === 'srcset' ? 'data-' + dataAttr : dataAttr;
+      dataAttr = dataAttr === 'src' || dataAttr === 'srcset' ? "data-".concat(dataAttr) : dataAttr;
       var dataAttrVal = el.getAttribute(dataAttr);
 
       if (dataAttrVal) {
@@ -271,7 +279,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
       var attribute = target.getAttribute(attr);
 
       if (attribute) {
-        el.setAttribute(attr === 'src' || attr === 'srcset' ? 'data-' + attr : attr, attribute);
+        el.setAttribute(attr === 'src' || attr === 'srcset' ? "data-".concat(attr) : attr, attribute);
       }
     });
   };
@@ -556,7 +564,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
           }).forEach(function (item) {
             if (!item.intersected && isElementInViewport(item.element)) {
               item.intersected = true;
-              item.element.dispatchEvent(new CustomEvent('intersected__' + ID));
+              item.element.dispatchEvent(new CustomEvent("intersected__".concat(ID)));
             }
           });
         };
@@ -577,7 +585,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
         this._state = 0;
 
         this._queue.forEach(function (data, element) {
-          return element.dispatchEvent(new CustomEvent('abort__' + ID));
+          return element.dispatchEvent(new CustomEvent("abort__".concat(ID)));
         });
       }
     }, {
@@ -607,7 +615,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
               }
 
               _this3.fetch(_this3._collection[loaded]).catch(function (payload) {
-                console.warn(payload.event.detail.message + ': ' + payload.resource.url);
+                console.warn("".concat(payload.event.detail.message, ": ").concat(payload.resource.url));
                 return payload;
               }).then(function (payload) {
                 if (_this3._state !== 0) {
@@ -643,7 +651,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
                 }
 
                 _this3.fetch(_this3._collection[i]).catch(function (payload) {
-                  console.warn(payload.event.detail.message + ': ' + payload.resource.url);
+                  console.warn("".concat(payload.event.detail.message, ": ").concat(payload.resource.url));
                   return payload;
                 }).then(function (payload) {
                   if (_this3._state !== 0) {
@@ -778,7 +786,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
             observer: null,
             element: createdElement
           };
-          createdElement.addEventListener('abort__' + ID, function () {
+          createdElement.addEventListener("abort__".concat(ID), function () {
             removeAttributes(createdElement, Object.keys(_this4._options.srcAttributes));
             removeAttributes(createdElement, Object.values(_this4._options.srcAttributes));
             removeAttributes(createdElement, Object.keys(_this4._options.sizesAttributes));
@@ -853,7 +861,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
                   intersected: false
                 });
 
-                resource.element.addEventListener('intersected__' + ID, function () {
+                resource.element.addEventListener("intersected__".concat(ID), function () {
                   return prepareLoad();
                 });
               }

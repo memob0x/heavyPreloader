@@ -7,7 +7,7 @@
 export const switchAttributes = (el, attrs) => {
     Object.keys(attrs).forEach(attr => {
         let dataAttr = attrs[attr];
-        dataAttr = dataAttr === 'src' || dataAttr === 'srcset' ? 'data-' + dataAttr : dataAttr; // TODO: refactory
+        dataAttr = dataAttr === 'src' || dataAttr === 'srcset' ? `data-${dataAttr}` : dataAttr; // TODO: refactory
         const dataAttrVal = el.getAttribute(dataAttr);
 
         if (dataAttrVal) {
@@ -27,7 +27,7 @@ export const copyAttributes = (el, target, attributes) =>
     attributes.forEach(attr => {
         const attribute = target.getAttribute(attr);
         if (attribute) {
-            el.setAttribute(attr === 'src' || attr === 'srcset' ? 'data-' + attr : attr, attribute); // TODO: refactory
+            el.setAttribute(attr === 'src' || attr === 'srcset' ? `data-${attr}` : attr, attribute); // TODO: refactory
         }
     });
 
