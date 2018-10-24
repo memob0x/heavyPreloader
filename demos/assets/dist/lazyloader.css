@@ -257,12 +257,16 @@ body {
   transition: opacity 0.4s ease;
 }
 
+.playground__item picture,
+.playground__item iframe,
 .playground__item img,
 .playground__item video {
   display: block;
 }
 
-.playground__col--full .playground__item img, .playground__col--full
+.playground__col--full .playground__item picture, .playground__col--full
+.playground__item iframe, .playground__col--full
+.playground__item img, .playground__col--full
 .playground__item video {
   width: 100%;
 }

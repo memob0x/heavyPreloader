@@ -6,6 +6,15 @@ import { isIntersectionObserverSupported, isElementInViewport } from './toolbox/
 import { uniqueID } from './toolbox/src/toolbox.utils.mjs';
 
 const ID = uniqueID();
+const intersectionObserverThreshold = (() => {
+    var n = [];
+    if (isIntersectionObserverSupported) {
+        for (var r = 0; r <= 50; r++) {
+            n.push((2 * r) / 100);
+        }
+    }
+    return n;
+})();
 
 /**
  *
@@ -274,9 +283,13 @@ export default class Loader {
                 }
 
                 if (resource.tagName === 'picture') {
-                    // picture element loads only with a fallback img in it...
-                    mainEventsTarget = document.createElement('img');
-                    createdElement.append(mainEventsTarget);
+                    // picture elements event listeners need to be attached to inner img elements
+                    const img = resource.element.querySelector('img');
+                    const createdImg = document.createElement('img');
+                    copyAttributes(createdImg, img, Object.values(this._options.srcAttributes));
+                    copyAttributes(createdImg, img, Object.values(this._options.sizesAttributes));
+                    createdElement.append(createdImg);
+                    mainEventsTarget = createdImg;
                 }
             }
 
@@ -422,7 +435,7 @@ export default class Loader {
                         {
                             root: null,
                             rootMargin: '0px',
-                            threshold: 0.1
+                            threshold: intersectionObserverThreshold
                         }
                     );
 
@@ -435,6 +448,7 @@ export default class Loader {
                             element: resource.element,
                             intersected: false
                         });
+
                         resource.element.addEventListener(`intersected__${ID}`, () => prepareLoad());
                     }
                 }

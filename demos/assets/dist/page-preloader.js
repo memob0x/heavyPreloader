@@ -527,6 +527,18 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 
   var ID = uniqueID();
 
+  var intersectionObserverThreshold$1 = function () {
+    var n = [];
+
+    if (isIntersectionObserverSupported) {
+      for (var r = 0; r <= 50; r++) {
+        n.push(2 * r / 100);
+      }
+    }
+
+    return n;
+  }();
+
   var Loader = function () {
     function Loader() {
       var _this2 = this;
@@ -710,8 +722,12 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
             }
 
             if (resource.tagName === 'picture') {
-              mainEventsTarget = document.createElement('img');
-              createdElement.append(mainEventsTarget);
+              var img = resource.element.querySelector('img');
+              var createdImg = document.createElement('img');
+              copyAttributes(createdImg, img, Object.values(_this4._options.srcAttributes));
+              copyAttributes(createdImg, img, Object.values(_this4._options.sizesAttributes));
+              createdElement.append(createdImg);
+              mainEventsTarget = createdImg;
             }
           }
 
@@ -849,7 +865,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
               }, {
                 root: null,
                 rootMargin: '0px',
-                threshold: 0.1
+                threshold: intersectionObserverThreshold$1
               });
               queuer.observer.observe(resource.element);
             } else {
