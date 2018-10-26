@@ -4,17 +4,10 @@ import { find } from './loader.find.mjs';
 import { switchAttributes, copyAttributes, removeAttributes } from './loader.utils.mjs';
 import { isIntersectionObserverSupported, isElementInViewport } from './toolbox/src/toolbox.viewport.mjs';
 import { uniqueID } from './toolbox/src/toolbox.utils.mjs';
+import { intersectionObserverThreshold } from './toolbox/src/toolbox.client.mjs';
 
 const ID = uniqueID();
-const intersectionObserverThreshold = (() => {
-    var n = [];
-    if (isIntersectionObserverSupported) {
-        for (var r = 0; r <= 50; r++) {
-            n.push((2 * r) / 100);
-        }
-    }
-    return n;
-})();
+const threshold = intersectionObserverThreshold(50);
 
 /**
  *
@@ -435,7 +428,7 @@ export default class Loader {
                         {
                             root: null,
                             rootMargin: '0px',
-                            threshold: intersectionObserverThreshold
+                            threshold: threshold
                         }
                     );
 

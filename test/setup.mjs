@@ -11,10 +11,15 @@ const mocha = new Mocha({
 
 // virtual DOM creation
 const { JSDOM } = jsdom;
-const dom = new JSDOM(`<!DOCTYPE html><p>Hello world</p>`);
+const dom = new JSDOM(`<!DOCTYPE html>`);
 global.window = dom.window;
 global.document = dom.window.document;
 global.HTMLElement = global.window.HTMLElement;
 global.NodeList = global.window.NodeList;
+global.navigator = global.window.navigator;
 
-export { Mocha, mocha, expect };
+const dummyContents = {
+    images: ['http://placehold.it/1x1.jpg', 'http://placehold.it/1x2.jpg']
+};
+
+export { Mocha, mocha, expect, dummyContents };

@@ -3,6 +3,13 @@ import { Resource } from '../src/loader.resource.mjs';
 
 const dashboard = Mocha.Suite.create(mocha.suite, 'Resource constructor');
 
+// virtual DOM preparation and cleanup
+dashboard.beforeAll(function() {
+    document.body.innerHTML = '';
+});
+dashboard.afterAll(function() {
+    document.body.innerHTML = '';
+});
 // tests
 dashboard.addTest(
     new Mocha.Test('can create a resource object form image url', function() {

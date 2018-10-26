@@ -525,19 +525,51 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     };
   };
 
-  var ID = uniqueID();
+  var userAgent = navigator.userAgent.toLowerCase();
+  var vendorsPrefixes = ['WebKit', 'Moz', 'O', 'Ms', ''];
 
-  var intersectionObserverThreshold$1 = function () {
-    var n = [];
-
-    if (isIntersectionObserverSupported) {
-      for (var r = 0; r <= 50; r++) {
-        n.push(2 * r / 100);
+  var MutationObserver = function () {
+    for (var i = 0; i < vendorsPrefixes.length; i++) {
+      if (vendorsPrefixes[i] + 'MutationObserver' in window) {
+        return window[vendorsPrefixes[i] + 'MutationObserver'];
       }
     }
 
-    return n;
+    return false;
   }();
+
+  var transitionEndEventName = function () {
+    var el = document.createElement('div');
+    var transEndEventNames = {
+      WebkitTransition: 'webkitTransitionEnd',
+      MozTransition: 'transitionend',
+      OTransition: 'oTransitionEnd otransitionend',
+      msTransition: 'MSTransitionEnd',
+      transition: 'transitionend'
+    };
+
+    for (var name in transEndEventNames) {
+      if (el.style[name] !== undefined) {
+        return transEndEventNames[name];
+      }
+    }
+
+    return false;
+  }();
+
+  var intersectionObserverThreshold$1 = function intersectionObserverThreshold$1() {
+    var segments = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
+    var array = [];
+
+    for (var i = 0; i < segments; i++) {
+      array.push(2 * i / 100);
+    }
+
+    return array;
+  };
+
+  var ID = uniqueID();
+  var threshold = intersectionObserverThreshold$1(50);
 
   var Loader = function () {
     function Loader() {
@@ -865,7 +897,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
               }, {
                 root: null,
                 rootMargin: '0px',
-                threshold: intersectionObserverThreshold$1
+                threshold: threshold
               });
               queuer.observer.observe(resource.element);
             } else {

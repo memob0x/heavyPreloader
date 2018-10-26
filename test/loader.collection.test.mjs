@@ -1,5 +1,5 @@
 // dependencies load
-import { Mocha, mocha, expect } from './setup.mjs';
+import { Mocha, mocha, expect, dummyContents } from './setup.mjs';
 import Loader from '../src/loader.mjs';
 
 const dashboard = Mocha.Suite.create(mocha.suite, 'Loader collection method');
@@ -8,15 +8,12 @@ const dashboard = Mocha.Suite.create(mocha.suite, 'Loader collection method');
 dashboard.beforeAll(function() {
     document.body.innerHTML = '';
 
-    this.imagesURLs = ['http://placehold.it/1x1.jpg', 'http://placehold.it/1x2.jpg'];
-
     const container = document.createElement('div');
-    this.imagesURLs.forEach(url => {
+    dummyContents.images.forEach(url => {
         const img = document.createElement('img');
         img.src = url;
         container.append(img);
     });
-
     document.body.append(container);
 });
 dashboard.afterAll(function() {
@@ -33,7 +30,7 @@ dashboard.addTest(
 dashboard.addTest(
     new Mocha.Test('can add a resource url to collection', function() {
         const instance = new Loader();
-        const url = this.imagesURLs[0];
+        const url = dummyContents.images[0];
 
         instance.collection = url;
 
@@ -43,7 +40,7 @@ dashboard.addTest(
 dashboard.addTest(
     new Mocha.Test('can add an array of urls to collection', function() {
         const instance = new Loader();
-        const array = this.imagesURLs;
+        const array = dummyContents.images;
 
         instance.collection = array;
 
@@ -86,10 +83,10 @@ dashboard.addTest(
             backgrounds: true
         });
         const target = document.createElement('div');
-        target.style.backgroundImage = 'url(' + this.imagesURLs[0] + ')';
+        target.style.backgroundImage = 'url(' + dummyContents.images[0] + ')';
 
         instance.collection = target;
 
-        expect(instance.collection[0]).to.deep.include({ url: this.imagesURLs[0] });
+        expect(instance.collection[0]).to.deep.include({ url: dummyContents.images[0] });
     })
 );
