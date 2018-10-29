@@ -1,5 +1,5 @@
 // dependencies load
-import { Mocha, mocha, expect, dummyContents } from './setup.mjs';
+import { Mocha, mocha, expect, dummies } from './setup.mjs';
 import Loader from '../src/loader.mjs';
 
 const dashboard = Mocha.Suite.create(mocha.suite, 'Loader collection method');
@@ -8,13 +8,9 @@ const dashboard = Mocha.Suite.create(mocha.suite, 'Loader collection method');
 dashboard.beforeAll(function() {
     document.body.innerHTML = '';
 
-    const container = document.createElement('div');
-    dummyContents.images.forEach(url => {
-        const img = document.createElement('img');
-        img.src = url;
-        container.append(img);
-    });
-    document.body.append(container);
+    dummies.append.imgs();
+
+    dummies.append.background();
 });
 dashboard.afterAll(function() {
     document.body.innerHTML = '';
@@ -30,7 +26,7 @@ dashboard.addTest(
 dashboard.addTest(
     new Mocha.Test('can add a resource url to collection', function() {
         const instance = new Loader();
-        const url = dummyContents.images[0];
+        const url = dummies.urls.images[0];
 
         instance.collection = url;
 
@@ -40,7 +36,7 @@ dashboard.addTest(
 dashboard.addTest(
     new Mocha.Test('can add an array of urls to collection', function() {
         const instance = new Loader();
-        const array = dummyContents.images;
+        const array = dummies.urls.images;
 
         instance.collection = array;
 
@@ -70,7 +66,7 @@ dashboard.addTest(
 dashboard.addTest(
     new Mocha.Test('can discover inner resource elements on collection set', function() {
         const instance = new Loader();
-        const targets = document.querySelector('div');
+        const targets = document.querySelector('.images');
 
         instance.collection = targets;
 
@@ -82,11 +78,9 @@ dashboard.addTest(
         const instance = new Loader({
             backgrounds: true
         });
-        const target = document.createElement('div');
-        target.style.backgroundImage = 'url(' + dummyContents.images[0] + ')';
 
-        instance.collection = target;
+        instance.collection = document.querySelector('.background');
 
-        expect(instance.collection[0]).to.deep.include({ url: dummyContents.images[0] });
+        expect(instance.collection[0]).to.deep.include({ url: dummies.urls.images[0] });
     })
 );

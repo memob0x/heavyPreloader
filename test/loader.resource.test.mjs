@@ -20,4 +20,12 @@ dashboard.addTest(
         // TODO: expect to be inconsistent, without element, tag = img, extension = jpg
     })
 );
-// TODO: ...
+// TODO: can build Resource obj from image url
+// TODO: can build Resource obj from video url
+// TODO: can build Resource obj from audio url
+// TODO: can build Resource obj from page url (???)
+// TODO: can build Resource obj from img el
+// TODO: can build Resource obj from picture el
+// TODO: can build Resource obj from video el
+// TODO: can build Resource obj from audio el
+// TODO: can build Resource obj from iframe el

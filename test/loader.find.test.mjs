@@ -1,5 +1,5 @@
 // dependencies load
-import { Mocha, mocha, expect, dummyContents } from './setup.mjs';
+import { Mocha, mocha, expect, dummies } from './setup.mjs';
 import { find } from '../src/loader.find.mjs';
 
 const dashboard = Mocha.Suite.create(mocha.suite, 'Resources finder');
@@ -8,19 +8,11 @@ const dashboard = Mocha.Suite.create(mocha.suite, 'Resources finder');
 dashboard.beforeAll(function() {
     document.body.innerHTML = '';
 
-    const container = document.createElement('div');
-    dummyContents.images.forEach(url => {
-        const img = document.createElement('img');
-        img.src = url;
-        container.append(img);
-    });
-
-    document.body.append(container);
-
-    const background = document.createElement('div');
-    background.style.backgroundImage = 'url(' + dummyContents.images + ')';
-    background.id = 'background';
-    document.body.append(background);
+    dummies.append.imgs();
+    dummies.append.pictures();
+    dummies.append.audios();
+    dummies.append.videos();
+    dummies.append.background();
 });
 dashboard.afterAll(function() {
     document.body.innerHTML = '';
@@ -36,9 +28,12 @@ dashboard.addTest(
 );
 dashboard.addTest(
     new Mocha.Test('can find backgrounds inside element', function() {
-        const targets = find(document.querySelector('#background'), { background: true });
+        const targets = find(document.querySelector('.background'), { background: true });
         // TODO: expect to be inconsistent, without element, tag = img, extension = jpg
         expect(targets).to.be.an('array');
     })
 );
-// TODO: ...
+// TODO: expect to find picture
+// TODO: expect to find audio
+// TODO: expect to find video
+// TODO: expect to find iframe
