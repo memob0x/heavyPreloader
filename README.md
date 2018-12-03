@@ -4,7 +4,7 @@
 
 ---
 
-## 1. Instance
+## Instance
 
 Every **Loader** instance needs to be initialized.
 
@@ -35,7 +35,7 @@ const instance = new Loader({
 
 ---
 
-## 2. Collection
+## Collection
 
 The _collection_ is the list of resources that a **Loader** instance would process.
 
@@ -91,7 +91,7 @@ const collection = instance.collection;
 
 ---
 
-## 3. Execution
+## Execution
 
 Every instance needs to be _launched_ in order for it to process its own collection.
 
@@ -120,7 +120,7 @@ load.progress(data => console.log('A resource is ready', data.event, data.resour
 
 ---
 
-## 4. Events
+## Events
 
 #### Scoped
 
@@ -140,37 +140,48 @@ document.addEventListener('resourceError', e => e.detail.element.classList.add('
 
 ---
 
-## 5. Examples
-
-#### Preloader
-
-[Demo](https://memob0x.github.io/loader/demos/page-preloader.html)
-
-```javascript
-const pagePreloader = new Loader();
-
-pagePreloader.collection = document.querySelectorAll('img'); // all loading images
-
-const pagePreload = instance.load();
-
-pagePreload.then(() => console.log('Page ready.'));
-```
+## Examples
 
 #### Lazyloader
 
-[Demo](https://memob0x.github.io/loader/demos/lazyloader.html)
+The [following example](https://memob0x.github.io/loader/demos/lazyloader.html) woud **trigger the load** of all `img`, `picture`, `video`, `audio`, `iframe` elements with `data-src` and/or `data-srcset` attributes as soon as they **appear in the viewport**.
 
 ```javascript
-const pageLazyLoader = new Loader({
+const lazyloader = new Loader({
     lazy: true
 });
 
-pageLazyLoader.collection = document.querySelectorAll('img'); // all images with data-src and/or data-srcset attributes
+lazyloader.collection = document.body;
 
-const pageLazyLoad = instance.load();
+const load = lazyloader.load();
 
-pageLazyLoad.progress(resource => console.log(resource.element, 'appeared and loaded.'));
+load.progress(resource => console.log(resource.element, 'appeared and loaded.'));
 ```
-<!-- TODO: urls preloader example and demo -->
+
+#### Page Preloader
+The [following example](https://memob0x.github.io/loader/demos/page-preloader.html) would **track the natural load** of all `img`, `picture`, `video`, `audio`, `iframe` elements in page.
+
+```javascript
+const preloader = new Loader();
+
+preloader.collection = document.body;
+
+const load = preloader.load();
+
+load.then(() => console.log('Page ready.'));
+```
+
+#### Static Resources
+The [following example](https://memob0x.github.io/loader/demos/urls-preloader.html)  would **trigger the load of resource urls** in the `array`.
+
+```javascript
+const loader = new Loader();
+
+loader.collection = ['resource.jpg', 'resource.mp4', 'resource.mp3'];
+
+const load = loader.load();
+
+load.then(() => console.log('All resources are ready.'));
+```
 
 ---

@@ -40,11 +40,13 @@ window.addEventListener(
 
             log('Total page load: ' + pageLoader.percentage + '% ' + e.resource.url);
         });
-        pageLoad.catch(error => log(error)).then(() => {
-            document.querySelector('#preloader').innerHTML = 'done!';
-            setTimeout(() => document.body.classList.add('loaded'), 500);
-            log('All done!');
-        });
+        pageLoad
+            .catch(error => log(error))
+            .then(() => {
+                document.querySelector('#preloader').innerHTML = 'done!';
+                setTimeout(() => document.body.classList.add('loaded'), 500);
+                log('All done!');
+            });
     },
     false
 );
