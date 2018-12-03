@@ -144,6 +144,8 @@ document.addEventListener('resourceError', e => e.detail.element.classList.add('
 
 #### Preloader
 
+[Demo](https://memob0x.github.io/loader/demos/page-preloader.html)
+
 ```javascript
 const pagePreloader = new Loader();
 
@@ -154,9 +156,9 @@ const pagePreload = instance.load();
 pagePreload.then(() => console.log('Page ready.'));
 ```
 
-<!--TODO: demo link -->
-
 #### Lazyloader
+
+[Demo](https://memob0x.github.io/loader/demos/lazyloader.html)
 
 ```javascript
 const pageLazyLoader = new Loader({
@@ -169,7 +171,6 @@ const pageLazyLoad = instance.load();
 
 pageLazyLoad.progress(resource => console.log(resource.element, 'appeared and loaded.'));
 ```
-
-<!--TODO: demo link -->
+<!-- TODO: urls preloader example and demo -->
 
 ---
