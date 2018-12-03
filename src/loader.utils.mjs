@@ -38,3 +38,33 @@ export const copyAttributes = (el, target, attributes) =>
  * @returns {void}
  */
 export const removeAttributes = (el, attributes) => attributes.forEach(attr => el.removeAttribute(attr));
+
+/**
+ * used in the IntersectionObserver fallback logic
+ * @param el
+ * returns {boolean}
+ */
+export const isElementInViewport = el => true;
+
+// TODO: rename
+export const ID = (() => {
+    const s4 = () =>
+        Math.floor((1 + Math.random()) * 0x10000)
+            .toString(16)
+            .substring(1);
+    return `${s4()}${s4()}-${s4()}-${s4()}-${s4()}-${s4()}${s4()}${s4()}`;
+})();
+
+// TODO: rename
+// TODO: consider exposing it in options maybe?
+export const threshold = (num => {
+    let segments = [];
+
+    for (let i = 0; i < num; i++) {
+        segments.push((2 * i) / 100);
+    }
+
+    return segments;
+})(50);
+
+export const isIntersectionObserverSupported = 'IntersectionObserver' in window;

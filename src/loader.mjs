@@ -1,13 +1,7 @@
 import { Resource } from './loader.resource.mjs';
 import { LoaderPromise } from './loader.promise.mjs';
 import { find } from './loader.find.mjs';
-import { switchAttributes, copyAttributes, removeAttributes } from './loader.utils.mjs';
-import { isIntersectionObserverSupported, isElementInViewport } from './toolbox/src/toolbox.viewport.mjs';
-import { uniqueID } from './toolbox/src/toolbox.utils.mjs';
-import { intersectionObserverThreshold } from './toolbox/src/toolbox.client.mjs';
-
-const ID = uniqueID();
-const threshold = intersectionObserverThreshold(50);
+import { switchAttributes, copyAttributes, removeAttributes, ID, threshold, isIntersectionObserverSupported, isElementInViewport } from './loader.utils.mjs';
 
 /**
  *
@@ -45,12 +39,14 @@ export default class Loader {
             this.manuallyObservedElements = [];
 
             const manuallyObserve = () =>
-                this.manuallyObservedElements.filter(item => !item.intersected).forEach(item => {
-                    if (!item.intersected && isElementInViewport(item.element)) {
-                        item.intersected = true;
-                        item.element.dispatchEvent(new CustomEvent(`intersected__${ID}`));
-                    }
-                });
+                this.manuallyObservedElements
+                    .filter(item => !item.intersected)
+                    .forEach(item => {
+                        if (!item.intersected && isElementInViewport(item.element)) {
+                            item.intersected = true;
+                            item.element.dispatchEvent(new CustomEvent(`intersected__${ID}`));
+                        }
+                    });
 
             window.addEventListener('scroll', manuallyObserve);
             window.addEventListener('resize', manuallyObserve);

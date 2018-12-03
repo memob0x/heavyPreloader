@@ -1,5 +1,4 @@
-import { isInArray } from './toolbox/src/toolbox.utils.mjs';
-import { supportedExtensions, supportedTags, allSupportedTags, supportedTypes } from './loader.settings.mjs';
+import { supportedExtensions, supportedTags, allSupportedTags } from './loader.settings.mjs';
 
 const base64head = ';base64,';
 
@@ -12,7 +11,7 @@ export class Resource {
         const isElement = item.element instanceof HTMLElement;
 
         this.url = item.url;
-        this.consistent = isElement && isInArray(item.element.tagName.toLowerCase(), allSupportedTags);
+        this.consistent = isElement && allSupportedTags.includes(item.element.tagName.toLowerCase());
         this.element = isElement ? item.element : null;
         this.tagName = this.consistent ? this.element.tagName.toLowerCase() : null;
         this.type = null;
@@ -54,7 +53,7 @@ export class Resource {
             this.type = this.tagName;
         } else if (this.tagName) {
             for (let format in supportedTags) {
-                if (isInArray(this.tagName, supportedTags[format])) {
+                if (supportedTags[format].includes(this.tagName)) {
                     this.type = format;
                     break;
                 }

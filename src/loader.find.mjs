@@ -1,4 +1,3 @@
-import { getComputed } from './toolbox/src/toolbox.utils.mjs';
 import { Resource } from './loader.resource.mjs';
 import { allSupportedTags } from './loader.settings.mjs';
 
@@ -66,9 +65,9 @@ export const find = (element = document.body, options = {}) => {
         targets = [...element.querySelectorAll('*')];
         targets.push(element);
         targets = targets.filter(target => !target.matches(tagsSelector));
-        targets = targets.filter(target => getComputed(target, 'background-image') !== 'none');
+        targets = targets.filter(target => window.getComputedStyle(target).getPropertyValue('background-image') !== 'none');
         targets.forEach(target => {
-            const url = getComputed(target, 'background-image').match(/\((.*?)\)/);
+            const url = window.getComputedStyle(target).getPropertyValue('background-image').match(/\((.*?)\)/);
 
             if (null !== url && url.length >= 2) {
                 collection.push(

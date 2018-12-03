@@ -43,27 +43,6 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 })(void 0, function () {
   'use strict';
 
-  var roundDecimals = function roundDecimals(num) {
-    var decimals = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 4;
-    return parseFloat(num.toFixed(decimals));
-  };
-
-  var s4 = function s4() {
-    return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
-  };
-
-  var uniqueID = function uniqueID() {
-    return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
-  };
-
-  var isInArray = function isInArray(needle, heystack) {
-    return heystack.indexOf(needle) > -1;
-  };
-
-  var getComputed = function getComputed(element, property) {
-    return window.getComputedStyle(element).getPropertyValue(property);
-  };
-
   var supportedExtensions = {
     image: ['jp[e]?g', 'jpe', 'jif', 'jfif', 'jfi', 'gif', 'png', 'tif[f]?', 'bmp', 'dib', 'webp', 'ico', 'cur', 'svg'],
     audio: ['mp3', 'ogg', 'oga', 'spx', 'ogg', 'wav'],
@@ -88,7 +67,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 
       var isElement = item.element instanceof HTMLElement;
       this.url = item.url;
-      this.consistent = isElement && isInArray(item.element.tagName.toLowerCase(), allSupportedTags);
+      this.consistent = isElement && allSupportedTags.includes(item.element.tagName.toLowerCase());
       this.element = isElement ? item.element : null;
       this.tagName = this.consistent ? this.element.tagName.toLowerCase() : null;
       this.type = null;
@@ -125,7 +104,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
         this.type = this.tagName;
       } else if (this.tagName) {
         for (var _format in supportedTags) {
-          if (isInArray(this.tagName, supportedTags[_format])) {
+          if (supportedTags[_format].includes(this.tagName)) {
             this.type = _format;
             break;
           }
@@ -244,10 +223,10 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
         return !target.matches(tagsSelector);
       });
       targets = targets.filter(function (target) {
-        return getComputed(target, 'background-image') !== 'none';
+        return window.getComputedStyle(target).getPropertyValue('background-image') !== 'none';
       });
       targets.forEach(function (target) {
-        var url = getComputed(target, 'background-image').match(/\((.*?)\)/);
+        var url = window.getComputedStyle(target).getPropertyValue('background-image').match(/\((.*?)\)/);
 
         if (null !== url && url.length >= 2) {
           collection.push(new Resource({
@@ -290,286 +269,29 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     });
   };
 
-  var roundPercentage = function roundPercentage(percentage) {
-    if (percentage > 100) {
-      percentage = 100;
-    } else if (percentage < 0) {
-      percentage = 0;
-    } else {
-      percentage = roundDecimals(percentage, 4);
+  var isElementInViewport = function isElementInViewport(el) {
+    return true;
+  };
+
+  var ID = function () {
+    var s4 = function s4() {
+      return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+    };
+
+    return "".concat(s4()).concat(s4(), "-").concat(s4(), "-").concat(s4(), "-").concat(s4(), "-").concat(s4()).concat(s4()).concat(s4());
+  }();
+
+  var threshold = function (num) {
+    var segments = [];
+
+    for (var i = 0; i < num; i++) {
+      segments.push(2 * i / 100);
     }
 
-    return percentage;
-  };
+    return segments;
+  }(50);
 
   var isIntersectionObserverSupported = 'IntersectionObserver' in window;
-
-  var Viewport = function () {
-    function Viewport() {
-      _classCallCheck(this, Viewport);
-
-      this._window = window;
-      this._html = document.documentElement;
-      this._body = document.body;
-      this._frame1 = this._window;
-      this._frame2 = this._html || this._body;
-      this._prefix1 = 'inner';
-      this._prefix2 = 'offset';
-
-      if (!this._prefix1 + 'Width' in this._frame1) {
-        this._prefix1 = 'client';
-        this._frame1 = this._frame2;
-      }
-
-      this._offsetWidth = 0;
-      this._offsetHeight = 0;
-      this._width = 0;
-      this._height = 0;
-      this._scrollTop = 0;
-      this._scrollLeft = 0;
-      this._lock = false;
-      this.calcAll();
-    }
-
-    _createClass(Viewport, [{
-      key: "calcOffsetWidth",
-      value: function calcOffsetWidth() {
-        this._offsetWidth = this._body[this._prefix2 + 'Width'];
-        return this.offsetWidth;
-      }
-    }, {
-      key: "calcOffsetHeight",
-      value: function calcOffsetHeight() {
-        this._offsetHeight = this._body[this._prefix2 + 'Height'];
-        return this.offsetHeight;
-      }
-    }, {
-      key: "calcWidth",
-      value: function calcWidth() {
-        this._width = this._frame1[this._prefix1 + 'Width'];
-        return this.width;
-      }
-    }, {
-      key: "calcHeight",
-      value: function calcHeight() {
-        this._height = this._frame1[this._prefix1 + 'Height'];
-        return this.height;
-      }
-    }, {
-      key: "calcScrollTop",
-      value: function calcScrollTop() {
-        this._scrollTop = this._frame2.scrollTop || 0;
-        return this.scrollTop;
-      }
-    }, {
-      key: "calcScrollLeft",
-      value: function calcScrollLeft() {
-        this._scrollLeft = this._frame2.scrollLeft || 0;
-        return this.scrollLeft;
-      }
-    }, {
-      key: "calcAll",
-      value: function calcAll() {
-        this.calcOffsetWidth();
-        this.calcOffsetHeight();
-        this.calcWidth();
-        this.calcHeight();
-        this.calcScrollTop();
-        this.calcScrollLeft();
-        return this.all;
-      }
-    }, {
-      key: "offsetWidth",
-      get: function get() {
-        return this._offsetWidth;
-      }
-    }, {
-      key: "offsetHeight",
-      get: function get() {
-        return this._offsetHeight;
-      }
-    }, {
-      key: "width",
-      get: function get() {
-        return this._width;
-      }
-    }, {
-      key: "height",
-      get: function get() {
-        return this._height;
-      }
-    }, {
-      key: "scrollTop",
-      get: function get() {
-        return this._scrollTop;
-      }
-    }, {
-      key: "scrollLeft",
-      get: function get() {
-        return this._scrollLeft;
-      }
-    }, {
-      key: "all",
-      get: function get() {
-        return {
-          offsetWidth: this.offsetWidth,
-          offsetHeight: this.offsetHeight,
-          width: this.width,
-          height: this.height,
-          scrollTop: this.scrollTop,
-          scrollLeft: this.scrollLeft
-        };
-      }
-    }, {
-      key: "lock",
-      get: function get() {
-        return this._lock;
-      },
-      set: function set(bool) {
-        this._lock = bool;
-
-        if (this._lock) {
-          this._body.style.top = -this.calcScrollTop() + 'px';
-          this._body.style.left = -this.calcScrollLeft() + 'px';
-          var scrollBarWidth = this.calcOffsetWidth();
-          var scrollBarHeight = this.calcOffsetHeight();
-          this._html.style.top = '0px';
-          this._html.style.left = '0px';
-          this._html.style.position = 'fixed';
-          this._body.style.position = 'fixed';
-          this._html.style.width = '100%';
-          this._body.style.width = '100%';
-          var offsetWidth = this.calcOffsetWidth();
-          var offsetHeight = this.calcOffsetHeight();
-          scrollBarWidth = offsetWidth - scrollBarWidth;
-          scrollBarHeight = offsetHeight - scrollBarHeight;
-          this._body.style.width = offsetWidth - scrollBarWidth + 'px';
-          this._body.style.height = offsetHeight - scrollBarHeight + 'px';
-        } else {
-          var scrollTop = Math.abs(parseFloat(this._body.style.top));
-          var scrollLeft = Math.abs(parseFloat(this._body.style.left));
-          this._html.style.position = '';
-          this._html.style.top = '';
-          this._html.style.left = '';
-          this._html.style.width = '';
-          this._body.style.position = '';
-          this._body.style.top = '';
-          this._body.style.left = '';
-          this._body.style.width = '';
-
-          this._window.scroll({
-            top: scrollTop,
-            left: scrollLeft,
-            behavior: 'instant'
-          });
-        }
-      }
-    }]);
-
-    return Viewport;
-  }();
-
-  var isElementInViewport = function isElementInViewport(element) {
-    return !!getBoundsViewportIntersection(element.getBoundingClientRect()).ratio;
-  };
-
-  var getBoundsViewportIntersection = function getBoundsViewportIntersection(bounds) {
-    var viewport = new Viewport();
-
-    if (bounds.right < 0 || bounds.bottom < 0 || bounds.left > viewport.width || bounds.top > viewport.height) {
-      return {
-        x: 0,
-        y: 0,
-        ratio: 0
-      };
-    }
-
-    var offTop = bounds.top < 0;
-    var offBottom = bounds.top + bounds.height > viewport.height;
-    var offLeft = bounds.left < 0;
-    var offRight = bounds.left + bounds.width > viewport.width;
-
-    if (!offTop && !offBottom && !offLeft && !offRight) {
-      return {
-        x: 100,
-        y: 100,
-        ratio: 100
-      };
-    }
-
-    var offY = 0;
-    var offX = 0;
-
-    if (offTop) {
-      offY = Math.abs(bounds.top);
-    }
-
-    if (offBottom) {
-      offY = bounds.top + bounds.height - viewport.height;
-    }
-
-    if (offLeft) {
-      offX = Math.abs(bounds.left);
-    }
-
-    if (offRight) {
-      offX = bounds.left + bounds.width - viewport.width;
-    }
-
-    var percentageX = roundPercentage((bounds.width - offX) * 100 / (bounds.width || 1));
-    var percentageY = roundPercentage((bounds.height - offY) * 100 / (bounds.height || 1));
-    return {
-      x: percentageX,
-      y: percentageY,
-      ratio: Math.min(percentageX, percentageY)
-    };
-  };
-
-  var userAgent = navigator.userAgent.toLowerCase();
-  var vendorsPrefixes = ['WebKit', 'Moz', 'O', 'Ms', ''];
-
-  var MutationObserver = function () {
-    for (var i = 0; i < vendorsPrefixes.length; i++) {
-      if (vendorsPrefixes[i] + 'MutationObserver' in window) {
-        return window[vendorsPrefixes[i] + 'MutationObserver'];
-      }
-    }
-
-    return false;
-  }();
-
-  var transitionEndEventName = function () {
-    var el = document.createElement('div');
-    var transEndEventNames = {
-      WebkitTransition: 'webkitTransitionEnd',
-      MozTransition: 'transitionend',
-      OTransition: 'oTransitionEnd otransitionend',
-      msTransition: 'MSTransitionEnd',
-      transition: 'transitionend'
-    };
-
-    for (var name in transEndEventNames) {
-      if (el.style[name] !== undefined) {
-        return transEndEventNames[name];
-      }
-    }
-
-    return false;
-  }();
-
-  var intersectionObserverThreshold$1 = function intersectionObserverThreshold$1() {
-    var segments = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
-    var array = [];
-
-    for (var i = 0; i < segments; i++) {
-      array.push(2 * i / 100);
-    }
-
-    return array;
-  };
-
-  var ID = uniqueID();
-  var threshold = intersectionObserverThreshold$1(50);
 
   var Loader = function () {
     function Loader() {
