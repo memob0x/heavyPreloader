@@ -293,6 +293,26 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 
   var isIntersectionObserverSupported = 'IntersectionObserver' in window;
 
+  var LoaderEvent = function () {
+    if (typeof window.CustomEvent === 'function') {
+      return window.CustomEvent;
+    }
+
+    function CustomEvent(event, params) {
+      params = params || {
+        bubbles: false,
+        cancelable: false,
+        detail: undefined
+      };
+      var evt = document.createEvent('CustomEvent');
+      evt.initCustomEvent(event, params.bubbles, params.cancelable, params.detail);
+      return evt;
+    }
+
+    CustomEvent.prototype = window.Event.prototype;
+    return CustomEvent;
+  }();
+
   var Loader = function () {
     function Loader() {
       var _this2 = this;
@@ -330,7 +350,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
           }).forEach(function (item) {
             if (!item.intersected && isElementInViewport(item.element)) {
               item.intersected = true;
-              item.element.dispatchEvent(new CustomEvent("intersected__".concat(ID)));
+              item.element.dispatchEvent(new LoaderEvent("intersected__".concat(ID)));
             }
           });
         };
@@ -351,7 +371,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
         this._state = 0;
 
         this._queue.forEach(function (data, element) {
-          return element.dispatchEvent(new CustomEvent("abort__".concat(ID)));
+          return element.dispatchEvent(new LoaderEvent("abort__".concat(ID)));
         });
       }
     }, {
@@ -537,7 +557,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
           var dispatchEvent = function dispatchEvent() {
             var eventName = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
             var data = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-            var event = new CustomEvent(eventName, {
+            var event = new LoaderEvent(eventName, {
               detail: _objectSpread({}, data, {
                 resource: resource
               })

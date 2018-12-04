@@ -1,7 +1,7 @@
 import { Resource } from './loader.resource.mjs';
 import { LoaderPromise } from './loader.promise.mjs';
 import { find } from './loader.find.mjs';
-import { switchAttributes, copyAttributes, removeAttributes, ID, threshold, isIntersectionObserverSupported, isElementInViewport } from './loader.utils.mjs';
+import { switchAttributes, copyAttributes, removeAttributes, ID, threshold, isIntersectionObserverSupported, isElementInViewport, LoaderEvent } from './loader.utils.mjs';
 
 /**
  *
@@ -44,7 +44,7 @@ export default class Loader {
                     .forEach(item => {
                         if (!item.intersected && isElementInViewport(item.element)) {
                             item.intersected = true;
-                            item.element.dispatchEvent(new CustomEvent(`intersected__${ID}`));
+                            item.element.dispatchEvent(new LoaderEvent(`intersected__${ID}`));
                         }
                     });
 
@@ -131,7 +131,7 @@ export default class Loader {
 
         this._state = 0;
 
-        this._queue.forEach((data, element) => element.dispatchEvent(new CustomEvent(`abort__${ID}`)));
+        this._queue.forEach((data, element) => element.dispatchEvent(new LoaderEvent(`abort__${ID}`)));
     }
 
     /**
@@ -332,7 +332,7 @@ export default class Loader {
             };
 
             const dispatchEvent = (eventName = '', data = {}) => {
-                const event = new CustomEvent(eventName, {
+                const event = new LoaderEvent(eventName, {
                     detail: {
                         ...data,
                         ...{
