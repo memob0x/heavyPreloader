@@ -1,5 +1,6 @@
 import { Resource } from './loader.resource.mjs';
 import { LoaderPromise } from './loader.promise.mjs';
+import { supportedTags } from './loader.settings.mjs';
 import { find } from './loader.find.mjs';
 import { switchAttributes, copyAttributes, removeAttributes, ID, threshold, isIntersectionObserverSupported, isElementInViewport, LoaderEvent } from './loader.utils.mjs';
 
@@ -244,7 +245,8 @@ export default class Loader {
         return new Promise((resolve, reject) => {
             const isConsistent = resource.consistent && document.body.contains(resource.element);
             const hasSources = isConsistent && resource.element.querySelectorAll('source').length;
-            const createdElement = document.createElement(resource.tagName);
+            const tagName = isConsistent ? resource.element.tagName.toLowerCase() : supportedTags[resource.type][0];
+            const createdElement = document.createElement(tagName);
 
             let mainEventsTarget = createdElement;
 
@@ -271,7 +273,7 @@ export default class Loader {
                     });
                 }
 
-                if (resource.tagName === 'picture') {
+                if (tagName === 'picture') {
                     // picture elements event listeners need to be attached to inner img elements
                     const img = resource.element.querySelector('img');
                     const createdImg = document.createElement('img');

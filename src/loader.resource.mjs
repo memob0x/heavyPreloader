@@ -13,7 +13,7 @@ export class Resource {
         this.url = item.url;
         this.consistent = isElement && allSupportedTags.includes(item.element.tagName.toLowerCase());
         this.element = isElement ? item.element : null;
-        this.tagName = this.consistent ? this.element.tagName.toLowerCase() : null;
+        const tagName = isElement ? this.element.tagName.toLowerCase() : null;
         this.type = null;
         this.extension = null;
 
@@ -23,14 +23,13 @@ export class Resource {
 
         this.url = item.url;
 
-        // TODO: check if really needed
-        // cleanup es: url.jpg, url.jpg x2 ...
+        // this cleans urls like "url.jpg, url.jpg x2" ...
         if (!new RegExp(`${base64head}`).test(this.url)) {
             this.url = this.url
                 .split(',')
-                .pop() // last
+                .pop() // gets the last
                 .split(' ')
-                .reduce((x, y) => (x.length > y.length ? x : y)); // longest in order to skip "x2", "" etc...
+                .reduce((x, y) => (x.length > y.length ? x : y)); // gets the longest fragment in order to skip "x2", "" etc...
         }
 
         for (let format in supportedExtensions) {
@@ -42,18 +41,17 @@ export class Resource {
                 if (null !== matches) {
                     this.type = format;
                     this.extension = matches[0].replace(`data:${format}/`, '').replace('.', '');
-                    this.tagName = this.tagName ? this.tagName : supportedTags[format][0];
 
                     break;
                 }
             }
         }
 
-        if (this.consistent && (this.tagName === 'audio' || this.tagName === 'video' || this.tagName === 'iframe')) {
-            this.type = this.tagName;
-        } else if (this.tagName) {
+        if (this.consistent && (tagName === 'audio' || tagName === 'video' || tagName === 'iframe')) {
+            this.type = tagName;
+        } else if (tagName) {
             for (let format in supportedTags) {
-                if (supportedTags[format].includes(this.tagName)) {
+                if (supportedTags[format].includes(tagName)) {
                     this.type = format;
                     break;
                 }
@@ -62,6 +60,6 @@ export class Resource {
     }
 
     static isResource(item) {
-        return typeof item === 'object' && 'tagName' in item && 'type' in item && 'url' in item && 'extension' in item && 'element' in item;
+        return typeof item === 'object' && 'type' in item && 'url' in item && 'extension' in item && 'element' in item;
     }
 }

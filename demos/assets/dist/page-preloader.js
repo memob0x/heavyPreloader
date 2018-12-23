@@ -69,7 +69,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
       this.url = item.url;
       this.consistent = isElement && allSupportedTags.includes(item.element.tagName.toLowerCase());
       this.element = isElement ? item.element : null;
-      this.tagName = this.consistent ? this.element.tagName.toLowerCase() : null;
+      var tagName = isElement ? this.element.tagName.toLowerCase() : null;
       this.type = null;
       this.extension = null;
 
@@ -94,17 +94,16 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
           if (null !== matches) {
             this.type = format;
             this.extension = matches[0].replace("data:".concat(format, "/"), '').replace('.', '');
-            this.tagName = this.tagName ? this.tagName : supportedTags[format][0];
             break;
           }
         }
       }
 
-      if (this.consistent && (this.tagName === 'audio' || this.tagName === 'video' || this.tagName === 'iframe')) {
-        this.type = this.tagName;
-      } else if (this.tagName) {
+      if (this.consistent && (tagName === 'audio' || tagName === 'video' || tagName === 'iframe')) {
+        this.type = tagName;
+      } else if (tagName) {
         for (var _format in supportedTags) {
-          if (supportedTags[_format].includes(this.tagName)) {
+          if (supportedTags[_format].includes(tagName)) {
             this.type = _format;
             break;
           }
@@ -115,7 +114,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     _createClass(Resource, null, [{
       key: "isResource",
       value: function isResource(item) {
-        return _typeof(item) === 'object' && 'tagName' in item && 'type' in item && 'url' in item && 'extension' in item && 'element' in item;
+        return _typeof(item) === 'object' && 'type' in item && 'url' in item && 'extension' in item && 'element' in item;
       }
     }]);
 
@@ -469,7 +468,8 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
         return new Promise(function (resolve, reject) {
           var isConsistent = resource.consistent && document.body.contains(resource.element);
           var hasSources = isConsistent && resource.element.querySelectorAll('source').length;
-          var createdElement = document.createElement(resource.tagName);
+          var tagName = isConsistent ? resource.element.tagName.toLowerCase() : supportedTags[resource.type][0];
+          var createdElement = document.createElement(tagName);
           var mainEventsTarget = createdElement;
 
           if (resource.type === 'iframe') {
@@ -495,7 +495,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
               });
             }
 
-            if (resource.tagName === 'picture') {
+            if (tagName === 'picture') {
               var img = resource.element.querySelector('img');
               var createdImg = document.createElement('img');
               copyAttributes(createdImg, img, Object.values(_this4._options.srcAttributes));
