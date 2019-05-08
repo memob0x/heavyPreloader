@@ -399,7 +399,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
                 return;
               }
 
-              _this3.fetch(_this3._collection[loaded]).catch(function (payload) {
+              _this3.fetch(_this3._collection[loaded])["catch"](function (payload) {
                 console.warn("".concat(payload.event.detail.message, ": ").concat(payload.resource.url));
                 return payload;
               }).then(function (payload) {
@@ -435,7 +435,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
                   break;
                 }
 
-                _this3.fetch(_this3._collection[i]).catch(function (payload) {
+                _this3.fetch(_this3._collection[i])["catch"](function (payload) {
                   console.warn("".concat(payload.event.detail.message, ": ").concat(payload.resource.url));
                   return payload;
                 }).then(function (payload) {
@@ -526,7 +526,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
               }
             }
 
-            _this4._queue.delete(createdElement);
+            _this4._queue["delete"](createdElement);
 
             resolver({
               event: event,
@@ -645,15 +645,6 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
             } else {
               if (isElementInViewport(resource.element)) {
                 prepareLoad();
-              } else {
-                _this4.manuallyObservedElements.push({
-                  element: resource.element,
-                  intersected: false
-                });
-
-                resource.element.addEventListener("intersected__".concat(ID), function () {
-                  return prepareLoad();
-                });
               }
             }
 
@@ -787,7 +778,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     var testLoad = testLoader.load();
     testLoad.progress(function (e) {
       return log('Total programmatic load percentage: ' + testLoader.percentage + '% ' + e.resource.url);
-    }).catch(function (e) {
+    })["catch"](function (e) {
       log(e);
     }).then(function () {
       return log('All done, loader finished processing resources...');
