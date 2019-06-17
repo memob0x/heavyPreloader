@@ -39,13 +39,6 @@ export const copyAttributes = (el, target, attributes) =>
  */
 export const removeAttributes = (el, attributes) => attributes.forEach(attr => el.removeAttribute(attr));
 
-/**
- * used in the IntersectionObserver fallback logic
- * @param el
- * returns {boolean}
- */
-export const isElementInViewport = el => true;
-
 // TODO: rename
 export const ID = (() => {
     const s4 = () =>

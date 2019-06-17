@@ -2,7 +2,7 @@ import { Resource } from './loader.resource.mjs';
 import { LoaderPromise } from './loader.promise.mjs';
 import { supportedTags } from './loader.settings.mjs';
 import { find } from './loader.find.mjs';
-import { switchAttributes, copyAttributes, removeAttributes, ID, isIntersectionObserverSupported, isElementInViewport, LoaderEvent } from './loader.utils.mjs';
+import { switchAttributes, copyAttributes, removeAttributes, ID, isIntersectionObserverSupported, LoaderEvent } from './loader.utils.mjs';
 
 export default class Loader {
     constructor(options = {}) {
