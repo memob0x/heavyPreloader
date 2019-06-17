@@ -1,0 +1,6 @@
+-   find a way to get a recap of what Resource items were loaded and what failed in collection list...
+-   warn about intersectionobserver polyfill need?
+-   talk about intersectionobserver polyfill in docs
+-   review the thersholds thing... [0, 1] should be enough...
+-   review in-code TODOs
+-   more unit test!

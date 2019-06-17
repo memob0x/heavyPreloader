@@ -268,10 +268,6 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     });
   };
 
-  var isElementInViewport = function isElementInViewport(el) {
-    return true;
-  };
-
   var ID = function () {
     var s4 = function s4() {
       return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
@@ -314,8 +310,6 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 
   var Loader = function () {
     function Loader() {
-      var _this2 = this;
-
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
       _classCallCheck(this, Loader);
@@ -339,25 +333,6 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
       this._load = null;
       this._percentage = 0;
       this._state = 0;
-
-      if (!isIntersectionObserverSupported) {
-        this.manuallyObservedElements = [];
-
-        var manuallyObserve = function manuallyObserve() {
-          return _this2.manuallyObservedElements.filter(function (item) {
-            return !item.intersected;
-          }).forEach(function (item) {
-            if (!item.intersected && isElementInViewport(item.element)) {
-              item.intersected = true;
-              item.element.dispatchEvent(new LoaderEvent("intersected__".concat(ID)));
-            }
-          });
-        };
-
-        window.addEventListener('scroll', manuallyObserve);
-        window.addEventListener('resize', manuallyObserve);
-        window.addEventListener('load', manuallyObserve);
-      }
     }
 
     _createClass(Loader, [{
@@ -376,49 +351,49 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     }, {
       key: "load",
       value: function load() {
-        var _this3 = this;
+        var _this2 = this;
 
         this._load = new LoaderPromise(function (resolve, reject, progress) {
-          if (_this3._state === 1) {
+          if (_this2._state === 1) {
             reject('This Loader instance is already in progress');
           }
 
-          if (!_this3._collection.length) {
+          if (!_this2._collection.length) {
             reject('Resources collection is empty');
           }
 
-          _this3._state = 1;
+          _this2._state = 1;
 
-          if (_this3._options.sequential) {
+          if (_this2._options.sequential) {
             var loaded = 0;
 
             var pipeline = function pipeline() {
-              if (_this3._state === 0) {
+              if (_this2._state === 0) {
                 reject('Loader instance aborted');
-                _this3._collection = [];
+                _this2._collection = [];
                 return;
               }
 
-              _this3.fetch(_this3._collection[loaded])["catch"](function (payload) {
+              _this2.fetch(_this2._collection[loaded])["catch"](function (payload) {
                 console.warn("".concat(payload.event.detail.message, ": ").concat(payload.resource.url));
                 return payload;
               }).then(function (payload) {
-                if (_this3._state !== 0) {
+                if (_this2._state !== 0) {
                   loaded++;
                 }
 
-                _this3._percentage = loaded / _this3._collection.length * 100;
+                _this2._percentage = loaded / _this2._collection.length * 100;
 
-                if (_this3._state !== 0) {
+                if (_this2._state !== 0) {
                   progress(payload);
                 }
 
-                if (loaded < _this3._collection.length) {
+                if (loaded < _this2._collection.length) {
                   pipeline();
                   return;
                 }
 
-                _this3._state = 0;
+                _this2._state = 0;
                 resolve(payload);
               });
             };
@@ -428,29 +403,29 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
             (function () {
               var loaded = 0;
 
-              for (var i = 0; i < _this3._collection.length; i++) {
-                if (_this3._state === 0) {
+              for (var i = 0; i < _this2._collection.length; i++) {
+                if (_this2._state === 0) {
                   reject('Loader instance aborted');
-                  _this3._collection = [];
+                  _this2._collection = [];
                   break;
                 }
 
-                _this3.fetch(_this3._collection[i])["catch"](function (payload) {
+                _this2.fetch(_this2._collection[i])["catch"](function (payload) {
                   console.warn("".concat(payload.event.detail.message, ": ").concat(payload.resource.url));
                   return payload;
                 }).then(function (payload) {
-                  if (_this3._state !== 0) {
+                  if (_this2._state !== 0) {
                     loaded++;
                   }
 
-                  _this3._percentage = loaded / _this3._collection.length * 100;
+                  _this2._percentage = loaded / _this2._collection.length * 100;
 
-                  if (_this3._state !== 0) {
+                  if (_this2._state !== 0) {
                     progress(payload);
                   }
 
-                  if (loaded >= _this3._collection.length) {
-                    _this3._state = 0;
+                  if (loaded >= _this2._collection.length) {
+                    _this2._state = 0;
                     resolve();
                   }
                 });
@@ -463,7 +438,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     }, {
       key: "fetch",
       value: function fetch(resource) {
-        var _this4 = this;
+        var _this3 = this;
 
         return new Promise(function (resolve, reject) {
           var isConsistent = resource.consistent && document.body.contains(resource.element);
@@ -483,14 +458,14 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
           }
 
           if (isConsistent) {
-            copyAttributes(createdElement, resource.element, Object.values(_this4._options.srcAttributes));
-            copyAttributes(createdElement, resource.element, Object.values(_this4._options.sizesAttributes));
+            copyAttributes(createdElement, resource.element, Object.values(_this3._options.srcAttributes));
+            copyAttributes(createdElement, resource.element, Object.values(_this3._options.sizesAttributes));
 
             if (hasSources) {
               _toConsumableArray(resource.element.querySelectorAll('source')).forEach(function (source) {
                 var createdSource = document.createElement('source');
-                copyAttributes(createdSource, source, Object.values(_this4._options.srcAttributes));
-                copyAttributes(createdSource, source, Object.values(_this4._options.sizesAttributes));
+                copyAttributes(createdSource, source, Object.values(_this3._options.srcAttributes));
+                copyAttributes(createdSource, source, Object.values(_this3._options.sizesAttributes));
                 createdElement.append(createdSource);
               });
             }
@@ -498,8 +473,8 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
             if (tagName === 'picture') {
               var img = resource.element.querySelector('img');
               var createdImg = document.createElement('img');
-              copyAttributes(createdImg, img, Object.values(_this4._options.srcAttributes));
-              copyAttributes(createdImg, img, Object.values(_this4._options.sizesAttributes));
+              copyAttributes(createdImg, img, Object.values(_this3._options.srcAttributes));
+              copyAttributes(createdImg, img, Object.values(_this3._options.sizesAttributes));
               createdElement.append(createdImg);
               mainEventsTarget = createdImg;
             }
@@ -507,13 +482,13 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 
           var finishPromise = function finishPromise(event, resolver) {
             if (isConsistent) {
-              switchAttributes(resource.element, _this4._options.srcAttributes);
-              switchAttributes(resource.element, _this4._options.sizesAttributes);
+              switchAttributes(resource.element, _this3._options.srcAttributes);
+              switchAttributes(resource.element, _this3._options.sizesAttributes);
 
               if (hasSources) {
                 _toConsumableArray(resource.element.querySelectorAll('source')).forEach(function (source) {
-                  switchAttributes(source, _this4._options.srcAttributes);
-                  switchAttributes(source, _this4._options.sizesAttributes);
+                  switchAttributes(source, _this3._options.srcAttributes);
+                  switchAttributes(source, _this3._options.sizesAttributes);
                 });
               }
 
@@ -526,7 +501,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
               }
             }
 
-            _this4._queue["delete"](createdElement);
+            _this3._queue["delete"](createdElement);
 
             resolver({
               event: event,
@@ -536,13 +511,13 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 
           var prepareLoad = function prepareLoad() {
             if (isConsistent) {
-              switchAttributes(createdElement, _this4._options.srcAttributes);
-              switchAttributes(createdElement, _this4._options.sizesAttributes);
+              switchAttributes(createdElement, _this3._options.srcAttributes);
+              switchAttributes(createdElement, _this3._options.sizesAttributes);
 
               if (hasSources) {
                 _toConsumableArray(createdElement.querySelectorAll('source')).forEach(function (source) {
-                  switchAttributes(source, _this4._options.srcAttributes);
-                  switchAttributes(source, _this4._options.sizesAttributes);
+                  switchAttributes(source, _this3._options.srcAttributes);
+                  switchAttributes(source, _this3._options.sizesAttributes);
                 });
               }
             } else {
@@ -577,17 +552,17 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
             element: createdElement
           };
           createdElement.addEventListener("abort__".concat(ID), function () {
-            removeAttributes(createdElement, Object.keys(_this4._options.srcAttributes));
-            removeAttributes(createdElement, Object.values(_this4._options.srcAttributes));
-            removeAttributes(createdElement, Object.keys(_this4._options.sizesAttributes));
-            removeAttributes(createdElement, Object.values(_this4._options.sizesAttributes));
+            removeAttributes(createdElement, Object.keys(_this3._options.srcAttributes));
+            removeAttributes(createdElement, Object.values(_this3._options.srcAttributes));
+            removeAttributes(createdElement, Object.keys(_this3._options.sizesAttributes));
+            removeAttributes(createdElement, Object.values(_this3._options.sizesAttributes));
 
             if (hasSources) {
               _toConsumableArray(createdElement.querySelectorAll('source')).forEach(function (source) {
-                removeAttributes(source, Object.keys(_this4._options.srcAttributes));
-                removeAttributes(source, Object.values(_this4._options.srcAttributes));
-                removeAttributes(source, Object.keys(_this4._options.sizesAttributes));
-                removeAttributes(source, Object.values(_this4._options.sizesAttributes));
+                removeAttributes(source, Object.keys(_this3._options.srcAttributes));
+                removeAttributes(source, Object.values(_this3._options.srcAttributes));
+                removeAttributes(source, Object.keys(_this3._options.sizesAttributes));
+                removeAttributes(source, Object.values(_this3._options.sizesAttributes));
               });
             }
 
@@ -619,7 +594,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
           }
 
           if (resource.type === 'audio' || resource.type === 'video') {
-            mainEventsTarget.addEventListener(_this4._options.playthrough ? 'canplaythrough' : 'loadedmetadata', function (e) {
+            mainEventsTarget.addEventListener(_this3._options.playthrough ? 'canplaythrough' : 'loadedmetadata', function (e) {
               var dispatchedEvent = dispatchEvent('resourceLoad', {
                 type: e.type
               });
@@ -627,7 +602,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
             });
           }
 
-          if (resource.element instanceof HTMLElement && _this4._options.lazy) {
+          if (resource.element instanceof HTMLElement && _this3._options.lazy) {
             if (isIntersectionObserverSupported) {
               queuer.observer = new IntersectionObserver(function (entries, observer) {
                 entries.forEach(function (entry) {
@@ -643,14 +618,12 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
               });
               queuer.observer.observe(resource.element);
             } else {
-              if (isElementInViewport(resource.element)) {
-                prepareLoad();
-              }
+              prepareLoad();
             }
 
-            _this4._queue.set(resource.element, queuer);
+            _this3._queue.set(resource.element, queuer);
           } else {
-            _this4._queue.set(createdElement, queuer);
+            _this3._queue.set(createdElement, queuer);
 
             prepareLoad();
           }
@@ -664,7 +637,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     }, {
       key: "collection",
       set: function set(collection) {
-        var _this5 = this;
+        var _this4 = this;
 
         if (this._state === 0) {
           if (collection instanceof NodeList) {
@@ -690,7 +663,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
             collection.forEach(function (item) {
               var pushCheck = function pushCheck(resource) {
                 if (resource.type === 'image' || resource.type === 'video' || resource.type === 'audio' || resource.type === 'iframe' && resource.consistent) {
-                  _this5._collection.push(resource);
+                  _this4._collection.push(resource);
 
                   return;
                 }
@@ -699,7 +672,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
               };
 
               if (item instanceof HTMLElement) {
-                find(item, _this5._options).forEach(function (resource) {
+                find(item, _this4._options).forEach(function (resource) {
                   return pushCheck(new Resource(resource));
                 });
               }
