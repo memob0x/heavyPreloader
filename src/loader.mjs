@@ -2,7 +2,7 @@ import { Resource } from './loader.resource.mjs';
 import { LoaderPromise } from './loader.promise.mjs';
 import { supportedTags } from './loader.settings.mjs';
 import { find } from './loader.find.mjs';
-import { switchAttributes, copyAttributes, removeAttributes, ID, threshold, isIntersectionObserverSupported, isElementInViewport, LoaderEvent } from './loader.utils.mjs';
+import { switchAttributes, copyAttributes, removeAttributes, ID, isIntersectionObserverSupported, isElementInViewport, LoaderEvent } from './loader.utils.mjs';
 
 export default class Loader {
     constructor(options = {}) {
@@ -16,6 +16,7 @@ export default class Loader {
                     sizes: !!!options.lazy ? 'sizes' : 'data-sizes',
                     media: !!!options.lazy ? 'media' : 'data-media'
                 },
+                root: null,
                 lazy: false,
                 playthrough: false,
                 backgrounds: true,
@@ -402,9 +403,9 @@ export default class Loader {
                             });
                         },
                         {
-                            root: null,
+                            root: this._options.root,
                             rootMargin: '0px',
-                            threshold: threshold
+                            threshold: [0, 1]
                         }
                     );
 

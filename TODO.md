@@ -1,10 +1,7 @@
 -   find a way to get a recap of what Resource items were loaded and what failed in collection list...
 -   check instantly load if IntersectionObserver not supported
 -   instantly load if bots
--   warn about IntersectionObserver polyfill need?
 -   talk about IntersectionObserver polyfill in docs
--   review the thersholds thing... [0, 1] should be enough...
 -   review in-code TODOs
 -   more unit test!
--   expose intersectionobserver IntersectionObserver "root" in options
--   expose an update method (refresh collection and process)
+-   check "collection" method for "refresh"/"update" purposes

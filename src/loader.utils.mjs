@@ -55,18 +55,6 @@ export const ID = (() => {
     return `${s4()}${s4()}-${s4()}-${s4()}-${s4()}-${s4()}${s4()}${s4()}`;
 })();
 
-// TODO: rename
-// TODO: consider exposing it in options maybe?
-export const threshold = (num => {
-    let segments = [];
-
-    for (let i = 0; i < num; i++) {
-        segments.push((2 * i) / 100);
-    }
-
-    return segments;
-})(50);
-
 export const isIntersectionObserverSupported = 'IntersectionObserver' in window;
 
 export const LoaderEvent = (() => {

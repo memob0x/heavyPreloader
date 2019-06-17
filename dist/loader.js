@@ -276,16 +276,6 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     return "".concat(s4()).concat(s4(), "-").concat(s4(), "-").concat(s4(), "-").concat(s4(), "-").concat(s4()).concat(s4()).concat(s4());
   }();
 
-  var threshold = function (num) {
-    var segments = [];
-
-    for (var i = 0; i < num; i++) {
-      segments.push(2 * i / 100);
-    }
-
-    return segments;
-  }(50);
-
   var isIntersectionObserverSupported = 'IntersectionObserver' in window;
 
   var LoaderEvent = function () {
@@ -323,6 +313,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
           sizes: !!!options.lazy ? 'sizes' : 'data-sizes',
           media: !!!options.lazy ? 'media' : 'data-media'
         },
+        root: null,
         lazy: false,
         playthrough: false,
         backgrounds: true,
@@ -612,9 +603,9 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
                   }
                 });
               }, {
-                root: null,
+                root: _this3._options.root,
                 rootMargin: '0px',
-                threshold: threshold
+                threshold: [0, 1]
               });
               queuer.observer.observe(resource.element);
             } else {
