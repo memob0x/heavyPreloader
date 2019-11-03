@@ -12,6 +12,10 @@ const loaders = {
     script: loadScript
 };
 
+/**
+ *
+ * @param resource
+ */
 export const load = resource =>
     new Promise((resolve, reject) => {
         try {

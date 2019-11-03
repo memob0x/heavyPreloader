@@ -1,10 +1,7 @@
-export const loadImage = url =>
-    new Promise((resolve, reject) => {
-        const proxy = document.createElement("img");
+import { loadGeneric } from "./loader.load.generic.mjs";
 
-        proxy.onload = () => resolve(url);
-        proxy.onerror = (message, source, lineno, colno, error) =>
-            reject(error);
-
-        proxy.src = url;
-    });
+/**
+ *
+ * @param url
+ */
+export const loadImage = url => loadGeneric(url, "img");

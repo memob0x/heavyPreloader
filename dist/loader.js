@@ -21,61 +21,47 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     });
   };
 
-  var loadScript = function loadScript(url) {
-    return new Promise(function (resolve, reject) {
-      var proxy = document.createElement("script");
-
-      proxy.onload = function () {
-        return resolve(url);
-      };
-
-      proxy.onerror = function (message, source, lineno, colno, error) {
-        return reject(error);
-      };
-
-      proxy.src = url;
-      document.querySelector("head").appendChild(proxy);
-    });
-  };
-
-  var loadImage = function loadImage(url) {
-    return new Promise(function (resolve, reject) {
-      var proxy = document.createElement("img");
-
-      proxy.onload = function () {
-        return resolve(url);
-      };
-
-      proxy.onerror = function (message, source, lineno, colno, error) {
-        return reject(error);
-      };
-
-      proxy.src = url;
-    });
-  };
-
-  var loadAudioVideo = function loadAudioVideo(url, tag) {
+  var loadGeneric = function loadGeneric(url, tag) {
+    var successMethod = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : "onload";
+    var errorMethod = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : "onerror";
+    var parentTarget = arguments.length > 4 ? arguments[4] : undefined;
     return new Promise(function (resolve, reject) {
       var proxy = document.createElement(tag);
 
-      proxy.onloadedmetadata = function () {
+      proxy[successMethod] = function () {
         return resolve(url);
       };
 
-      proxy.onerror = function (message, source, lineno, colno, error) {
+      proxy[errorMethod] = function (message, source, lineno, colno, error) {
         return reject(error);
       };
 
       proxy.src = url;
+
+      if (parentTarget) {
+        parentTarget.appendChild(proxy);
+      }
     });
   };
 
+  var loadScript = function loadScript(url) {
+    return loadGeneric(url, "script", "onloaded", "onError", document.querySelector(appendTarget));
+  };
+
+  var loadImage = function loadImage(url) {
+    return loadGeneric(url, "img");
+  };
+
+  var loadAudioVideo = function loadAudioVideo(url) {
+    return loadGeneric(url, "audio", "onloadedmetadata");
+  };
+
   var loadAudio = function loadAudio(url) {
-    return loadAudioVideo(url, "audio");
+    return loadAudioVideo(url);
   };
 
   var loadVideo = function loadVideo(url) {
-    return loadAudioVideo(url, "video");
+    return loadAudioVideo(url);
   };
 
   var SupportedFileExtensions = {

@@ -1,3 +1,7 @@
+/**
+ *
+ * @param url
+ */
 export const loadStyle = url =>
     new Promise((resolve, reject) => {
         const proxy = document.createElement("style");

@@ -23,6 +23,10 @@ const SupportedFileExtensions = {
 
 const BASE_64_HEAD = ";base64,";
 
+/**
+ *
+ * @param string
+ */
 const parseStringResource = string => {
     if (!new RegExp(`${BASE_64_HEAD}`).test(string)) {
         string = string
@@ -61,6 +65,10 @@ const parseStringResource = string => {
     throw new Error("Error while parsing the resource string.");
 };
 
+/**
+ *
+ * @param element
+ */
 const parseElementResource = element => {
     if ("currentSrc" in element) {
         return element.currentSrc;
@@ -69,6 +77,10 @@ const parseElementResource = element => {
     throw new Error("Error while parsing the resource element.");
 };
 
+/**
+ *
+ * @param resource
+ */
 export const parseResource = resource => {
     if (resource instanceof HTMLElement) {
         resource = parseElementResource(resource);

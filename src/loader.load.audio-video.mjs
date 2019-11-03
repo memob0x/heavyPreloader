@@ -1,13 +1,18 @@
-const loadAudioVideo = (url, tag) =>
-    new Promise((resolve, reject) => {
-        const proxy = document.createElement(tag);
+import { loadGeneric } from "./loader.load.generic.mjs";
 
-        proxy.onloadedmetadata = () => resolve(url);
-        proxy.onerror = (message, source, lineno, colno, error) =>
-            reject(error);
+/**
+ *
+ * @param url
+ */
+const loadAudioVideo = url => loadGeneric(url, "audio", "onloadedmetadata");
 
-        proxy.src = url;
-    });
-
-export const loadAudio = url => loadAudioVideo(url, "audio");
-export const loadVideo = url => loadAudioVideo(url, "video");
+/**
+ *
+ * @param url
+ */
+export const loadAudio = url => loadAudioVideo(url);
+/**
+ *
+ * @param url
+ */
+export const loadVideo = url => loadAudioVideo(url);
