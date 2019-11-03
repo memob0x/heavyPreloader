@@ -2,12 +2,8 @@ import { Resource } from './loader.resource.mjs';
 import { LoaderPromise } from './loader.promise.mjs';
 import { supportedTags } from './loader.settings.mjs';
 import { find } from './loader.find.mjs';
-import { switchAttributes, copyAttributes, removeAttributes, ID, threshold, isIntersectionObserverSupported, isElementInViewport, LoaderEvent } from './loader.utils.mjs';
+import { switchAttributes, copyAttributes, removeAttributes, ID, isIntersectionObserverSupported, LoaderEvent } from './loader.utils.mjs';
 
-/**
- *
- * TODO: find a way to get a recap of what Resource items were loaded and what failed in collection list...
- */
 export default class Loader {
     constructor(options = {}) {
         this._options = {
@@ -20,6 +16,7 @@ export default class Loader {
                     sizes: !!!options.lazy ? 'sizes' : 'data-sizes',
                     media: !!!options.lazy ? 'media' : 'data-media'
                 },
+                root: null,
                 lazy: false,
                 playthrough: false,
                 backgrounds: true,
@@ -35,24 +32,6 @@ export default class Loader {
 
         this._percentage = 0; // loading percentage
         this._state = 0; // 0: inactive - 1: busy
-
-        if (!isIntersectionObserverSupported) {
-            this.manuallyObservedElements = [];
-
-            const manuallyObserve = () =>
-                this.manuallyObservedElements
-                    .filter(item => !item.intersected)
-                    .forEach(item => {
-                        if (!item.intersected && isElementInViewport(item.element)) {
-                            item.intersected = true;
-                            item.element.dispatchEvent(new LoaderEvent(`intersected__${ID}`));
-                        }
-                    });
-
-            window.addEventListener('scroll', manuallyObserve);
-            window.addEventListener('resize', manuallyObserve);
-            window.addEventListener('load', manuallyObserve);
-        }
     }
 
     /**
@@ -424,24 +403,15 @@ export default class Loader {
                             });
                         },
                         {
-                            root: null,
+                            root: this._options.root,
                             rootMargin: '0px',
-                            threshold: threshold
+                            threshold: [0, 1]
                         }
                     );
 
                     queuer.observer.observe(resource.element);
                 } else {
-                    if (isElementInViewport(resource.element)) {
-                        prepareLoad();
-                    } else {
-                        this.manuallyObservedElements.push({
-                            element: resource.element,
-                            intersected: false
-                        });
-
-                        resource.element.addEventListener(`intersected__${ID}`, () => prepareLoad());
-                    }
+                    prepareLoad();
                 }
 
                 this._queue.set(resource.element, queuer);

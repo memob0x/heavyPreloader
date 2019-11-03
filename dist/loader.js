@@ -1,6 +1,8 @@
 "use strict";
 
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; var ownKeys = Object.keys(source); if (typeof Object.getOwnPropertySymbols === 'function') { ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) { return Object.getOwnPropertyDescriptor(source, sym).enumerable; })); } ownKeys.forEach(function (key) { _defineProperty(target, key, source[key]); }); } return target; }
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(source, true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(source).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
@@ -39,7 +41,7 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 (function (global, factory) {
-  (typeof exports === "undefined" ? "undefined" : _typeof(exports)) === 'object' && typeof module !== 'undefined' ? module.exports = factory() : typeof define === 'function' && define.amd ? define('Loader', factory) : global.Loader = factory();
+  (typeof exports === "undefined" ? "undefined" : _typeof(exports)) === 'object' && typeof module !== 'undefined' ? module.exports = factory() : typeof define === 'function' && define.amd ? define('Loader', factory) : (global = global || self, global.Loader = factory());
 })(void 0, function () {
   'use strict';
 
@@ -172,7 +174,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
         media: !!!options.lazy ? 'media' : 'data-media'
       },
       backgrounds: false
-    }, options);
+    }, {}, options);
 
     var collection = [];
     var tagsSelector = allSupportedTags.join(',');
@@ -268,10 +270,6 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     });
   };
 
-  var isElementInViewport = function isElementInViewport(el) {
-    return true;
-  };
-
   var ID = function () {
     var s4 = function s4() {
       return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
@@ -279,16 +277,6 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 
     return "".concat(s4()).concat(s4(), "-").concat(s4(), "-").concat(s4(), "-").concat(s4(), "-").concat(s4()).concat(s4()).concat(s4());
   }();
-
-  var threshold = function (num) {
-    var segments = [];
-
-    for (var i = 0; i < num; i++) {
-      segments.push(2 * i / 100);
-    }
-
-    return segments;
-  }(50);
 
   var isIntersectionObserverSupported = 'IntersectionObserver' in window;
 
@@ -314,8 +302,6 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 
   var Loader = function () {
     function Loader() {
-      var _this2 = this;
-
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
       _classCallCheck(this, Loader);
@@ -329,35 +315,17 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
           sizes: !!!options.lazy ? 'sizes' : 'data-sizes',
           media: !!!options.lazy ? 'media' : 'data-media'
         },
+        root: null,
         lazy: false,
         playthrough: false,
         backgrounds: true,
         sequential: false
-      }, options);
+      }, {}, options);
       this._collection = [];
       this._queue = new Map();
       this._load = null;
       this._percentage = 0;
       this._state = 0;
-
-      if (!isIntersectionObserverSupported) {
-        this.manuallyObservedElements = [];
-
-        var manuallyObserve = function manuallyObserve() {
-          return _this2.manuallyObservedElements.filter(function (item) {
-            return !item.intersected;
-          }).forEach(function (item) {
-            if (!item.intersected && isElementInViewport(item.element)) {
-              item.intersected = true;
-              item.element.dispatchEvent(new LoaderEvent("intersected__".concat(ID)));
-            }
-          });
-        };
-
-        window.addEventListener('scroll', manuallyObserve);
-        window.addEventListener('resize', manuallyObserve);
-        window.addEventListener('load', manuallyObserve);
-      }
     }
 
     _createClass(Loader, [{
@@ -376,49 +344,49 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     }, {
       key: "load",
       value: function load() {
-        var _this3 = this;
+        var _this2 = this;
 
         this._load = new LoaderPromise(function (resolve, reject, progress) {
-          if (_this3._state === 1) {
+          if (_this2._state === 1) {
             reject('This Loader instance is already in progress');
           }
 
-          if (!_this3._collection.length) {
+          if (!_this2._collection.length) {
             reject('Resources collection is empty');
           }
 
-          _this3._state = 1;
+          _this2._state = 1;
 
-          if (_this3._options.sequential) {
+          if (_this2._options.sequential) {
             var loaded = 0;
 
             var pipeline = function pipeline() {
-              if (_this3._state === 0) {
+              if (_this2._state === 0) {
                 reject('Loader instance aborted');
-                _this3._collection = [];
+                _this2._collection = [];
                 return;
               }
 
-              _this3.fetch(_this3._collection[loaded])["catch"](function (payload) {
+              _this2.fetch(_this2._collection[loaded])["catch"](function (payload) {
                 console.warn("".concat(payload.event.detail.message, ": ").concat(payload.resource.url));
                 return payload;
               }).then(function (payload) {
-                if (_this3._state !== 0) {
+                if (_this2._state !== 0) {
                   loaded++;
                 }
 
-                _this3._percentage = loaded / _this3._collection.length * 100;
+                _this2._percentage = loaded / _this2._collection.length * 100;
 
-                if (_this3._state !== 0) {
+                if (_this2._state !== 0) {
                   progress(payload);
                 }
 
-                if (loaded < _this3._collection.length) {
+                if (loaded < _this2._collection.length) {
                   pipeline();
                   return;
                 }
 
-                _this3._state = 0;
+                _this2._state = 0;
                 resolve(payload);
               });
             };
@@ -428,29 +396,29 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
             (function () {
               var loaded = 0;
 
-              for (var i = 0; i < _this3._collection.length; i++) {
-                if (_this3._state === 0) {
+              for (var i = 0; i < _this2._collection.length; i++) {
+                if (_this2._state === 0) {
                   reject('Loader instance aborted');
-                  _this3._collection = [];
+                  _this2._collection = [];
                   break;
                 }
 
-                _this3.fetch(_this3._collection[i])["catch"](function (payload) {
+                _this2.fetch(_this2._collection[i])["catch"](function (payload) {
                   console.warn("".concat(payload.event.detail.message, ": ").concat(payload.resource.url));
                   return payload;
                 }).then(function (payload) {
-                  if (_this3._state !== 0) {
+                  if (_this2._state !== 0) {
                     loaded++;
                   }
 
-                  _this3._percentage = loaded / _this3._collection.length * 100;
+                  _this2._percentage = loaded / _this2._collection.length * 100;
 
-                  if (_this3._state !== 0) {
+                  if (_this2._state !== 0) {
                     progress(payload);
                   }
 
-                  if (loaded >= _this3._collection.length) {
-                    _this3._state = 0;
+                  if (loaded >= _this2._collection.length) {
+                    _this2._state = 0;
                     resolve();
                   }
                 });
@@ -463,7 +431,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     }, {
       key: "fetch",
       value: function fetch(resource) {
-        var _this4 = this;
+        var _this3 = this;
 
         return new Promise(function (resolve, reject) {
           var isConsistent = resource.consistent && document.body.contains(resource.element);
@@ -483,14 +451,14 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
           }
 
           if (isConsistent) {
-            copyAttributes(createdElement, resource.element, Object.values(_this4._options.srcAttributes));
-            copyAttributes(createdElement, resource.element, Object.values(_this4._options.sizesAttributes));
+            copyAttributes(createdElement, resource.element, Object.values(_this3._options.srcAttributes));
+            copyAttributes(createdElement, resource.element, Object.values(_this3._options.sizesAttributes));
 
             if (hasSources) {
               _toConsumableArray(resource.element.querySelectorAll('source')).forEach(function (source) {
                 var createdSource = document.createElement('source');
-                copyAttributes(createdSource, source, Object.values(_this4._options.srcAttributes));
-                copyAttributes(createdSource, source, Object.values(_this4._options.sizesAttributes));
+                copyAttributes(createdSource, source, Object.values(_this3._options.srcAttributes));
+                copyAttributes(createdSource, source, Object.values(_this3._options.sizesAttributes));
                 createdElement.append(createdSource);
               });
             }
@@ -498,8 +466,8 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
             if (tagName === 'picture') {
               var img = resource.element.querySelector('img');
               var createdImg = document.createElement('img');
-              copyAttributes(createdImg, img, Object.values(_this4._options.srcAttributes));
-              copyAttributes(createdImg, img, Object.values(_this4._options.sizesAttributes));
+              copyAttributes(createdImg, img, Object.values(_this3._options.srcAttributes));
+              copyAttributes(createdImg, img, Object.values(_this3._options.sizesAttributes));
               createdElement.append(createdImg);
               mainEventsTarget = createdImg;
             }
@@ -507,13 +475,13 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 
           var finishPromise = function finishPromise(event, resolver) {
             if (isConsistent) {
-              switchAttributes(resource.element, _this4._options.srcAttributes);
-              switchAttributes(resource.element, _this4._options.sizesAttributes);
+              switchAttributes(resource.element, _this3._options.srcAttributes);
+              switchAttributes(resource.element, _this3._options.sizesAttributes);
 
               if (hasSources) {
                 _toConsumableArray(resource.element.querySelectorAll('source')).forEach(function (source) {
-                  switchAttributes(source, _this4._options.srcAttributes);
-                  switchAttributes(source, _this4._options.sizesAttributes);
+                  switchAttributes(source, _this3._options.srcAttributes);
+                  switchAttributes(source, _this3._options.sizesAttributes);
                 });
               }
 
@@ -526,7 +494,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
               }
             }
 
-            _this4._queue["delete"](createdElement);
+            _this3._queue["delete"](createdElement);
 
             resolver({
               event: event,
@@ -536,13 +504,13 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 
           var prepareLoad = function prepareLoad() {
             if (isConsistent) {
-              switchAttributes(createdElement, _this4._options.srcAttributes);
-              switchAttributes(createdElement, _this4._options.sizesAttributes);
+              switchAttributes(createdElement, _this3._options.srcAttributes);
+              switchAttributes(createdElement, _this3._options.sizesAttributes);
 
               if (hasSources) {
                 _toConsumableArray(createdElement.querySelectorAll('source')).forEach(function (source) {
-                  switchAttributes(source, _this4._options.srcAttributes);
-                  switchAttributes(source, _this4._options.sizesAttributes);
+                  switchAttributes(source, _this3._options.srcAttributes);
+                  switchAttributes(source, _this3._options.sizesAttributes);
                 });
               }
             } else {
@@ -558,7 +526,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
             var eventName = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
             var data = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
             var event = new LoaderEvent(eventName, {
-              detail: _objectSpread({}, data, {
+              detail: _objectSpread({}, data, {}, {
                 resource: resource
               })
             });
@@ -577,17 +545,17 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
             element: createdElement
           };
           createdElement.addEventListener("abort__".concat(ID), function () {
-            removeAttributes(createdElement, Object.keys(_this4._options.srcAttributes));
-            removeAttributes(createdElement, Object.values(_this4._options.srcAttributes));
-            removeAttributes(createdElement, Object.keys(_this4._options.sizesAttributes));
-            removeAttributes(createdElement, Object.values(_this4._options.sizesAttributes));
+            removeAttributes(createdElement, Object.keys(_this3._options.srcAttributes));
+            removeAttributes(createdElement, Object.values(_this3._options.srcAttributes));
+            removeAttributes(createdElement, Object.keys(_this3._options.sizesAttributes));
+            removeAttributes(createdElement, Object.values(_this3._options.sizesAttributes));
 
             if (hasSources) {
               _toConsumableArray(createdElement.querySelectorAll('source')).forEach(function (source) {
-                removeAttributes(source, Object.keys(_this4._options.srcAttributes));
-                removeAttributes(source, Object.values(_this4._options.srcAttributes));
-                removeAttributes(source, Object.keys(_this4._options.sizesAttributes));
-                removeAttributes(source, Object.values(_this4._options.sizesAttributes));
+                removeAttributes(source, Object.keys(_this3._options.srcAttributes));
+                removeAttributes(source, Object.values(_this3._options.srcAttributes));
+                removeAttributes(source, Object.keys(_this3._options.sizesAttributes));
+                removeAttributes(source, Object.values(_this3._options.sizesAttributes));
               });
             }
 
@@ -619,7 +587,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
           }
 
           if (resource.type === 'audio' || resource.type === 'video') {
-            mainEventsTarget.addEventListener(_this4._options.playthrough ? 'canplaythrough' : 'loadedmetadata', function (e) {
+            mainEventsTarget.addEventListener(_this3._options.playthrough ? 'canplaythrough' : 'loadedmetadata', function (e) {
               var dispatchedEvent = dispatchEvent('resourceLoad', {
                 type: e.type
               });
@@ -627,7 +595,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
             });
           }
 
-          if (resource.element instanceof HTMLElement && _this4._options.lazy) {
+          if (resource.element instanceof HTMLElement && _this3._options.lazy) {
             if (isIntersectionObserverSupported) {
               queuer.observer = new IntersectionObserver(function (entries, observer) {
                 entries.forEach(function (entry) {
@@ -637,20 +605,18 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
                   }
                 });
               }, {
-                root: null,
+                root: _this3._options.root,
                 rootMargin: '0px',
-                threshold: threshold
+                threshold: [0, 1]
               });
               queuer.observer.observe(resource.element);
             } else {
-              if (isElementInViewport(resource.element)) {
-                prepareLoad();
-              }
+              prepareLoad();
             }
 
-            _this4._queue.set(resource.element, queuer);
+            _this3._queue.set(resource.element, queuer);
           } else {
-            _this4._queue.set(createdElement, queuer);
+            _this3._queue.set(createdElement, queuer);
 
             prepareLoad();
           }
@@ -664,7 +630,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     }, {
       key: "collection",
       set: function set(collection) {
-        var _this5 = this;
+        var _this4 = this;
 
         if (this._state === 0) {
           if (collection instanceof NodeList) {
@@ -690,7 +656,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
             collection.forEach(function (item) {
               var pushCheck = function pushCheck(resource) {
                 if (resource.type === 'image' || resource.type === 'video' || resource.type === 'audio' || resource.type === 'iframe' && resource.consistent) {
-                  _this5._collection.push(resource);
+                  _this4._collection.push(resource);
 
                   return;
                 }
@@ -699,7 +665,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
               };
 
               if (item instanceof HTMLElement) {
-                find(item, _this5._options).forEach(function (resource) {
+                find(item, _this4._options).forEach(function (resource) {
                   return pushCheck(new Resource(resource));
                 });
               }

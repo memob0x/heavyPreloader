@@ -120,11 +120,13 @@ pre, #console {
 
 html {
   background-color: #434343;
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#434343), to(#282828));
   background-image: linear-gradient(#434343, #282828);
 }
 
 body {
   background-color: transparent;
+  background-image: -webkit-gradient(linear, left bottom, left top, color-stop(24%, transparent), color-stop(25%, rgba(255, 255, 255, 0.05)), color-stop(26%, rgba(255, 255, 255, 0.05)), color-stop(27%, transparent), color-stop(74%, transparent), color-stop(75%, rgba(255, 255, 255, 0.05)), color-stop(76%, rgba(255, 255, 255, 0.05)), color-stop(77%, transparent), to(transparent)), -webkit-gradient(linear, left top, right top, color-stop(24%, transparent), color-stop(25%, rgba(255, 255, 255, 0.05)), color-stop(26%, rgba(255, 255, 255, 0.05)), color-stop(27%, transparent), color-stop(74%, transparent), color-stop(75%, rgba(255, 255, 255, 0.05)), color-stop(76%, rgba(255, 255, 255, 0.05)), color-stop(77%, transparent), to(transparent));
   background-image: linear-gradient(0deg, transparent 24%, rgba(255, 255, 255, 0.05) 25%, rgba(255, 255, 255, 0.05) 26%, transparent 27%, transparent 74%, rgba(255, 255, 255, 0.05) 75%, rgba(255, 255, 255, 0.05) 76%, transparent 77%, transparent), linear-gradient(90deg, transparent 24%, rgba(255, 255, 255, 0.05) 25%, rgba(255, 255, 255, 0.05) 26%, transparent 27%, transparent 74%, rgba(255, 255, 255, 0.05) 75%, rgba(255, 255, 255, 0.05) 76%, transparent 77%, transparent);
   background-size: 50px 50px;
 }
@@ -183,6 +185,7 @@ body {
   box-shadow: 0 0 0 1px #f9f9f9 inset;
   color: #444;
   opacity: 0;
+  -webkit-transition: opacity 0.4s ease;
   transition: opacity 0.4s ease;
 }
 
@@ -207,17 +210,25 @@ body {
   width: 1024px;
   max-width: 100%;
   margin: 0 auto;
+  display: -webkit-box;
   display: flex;
-  flex-direction: row;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+          flex-direction: row;
 }
 
 .playground__area__inner {
   width: 100%;
   min-height: 100vh;
-  align-items: center;
+  -webkit-box-align: center;
+          align-items: center;
+  display: -webkit-box;
   display: flex;
-  justify-content: center;
-  flex-direction: column;
+  -webkit-box-pack: center;
+          justify-content: center;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+          flex-direction: column;
 }
 
 .playground__area__row {
@@ -254,6 +265,7 @@ body {
   border: 1px solid #fff;
   padding: 4px;
   opacity: 0;
+  -webkit-transition: opacity 0.4s ease;
   transition: opacity 0.4s ease;
 }
 
@@ -280,9 +292,12 @@ body {
 }
 
 #preloader {
+  display: -webkit-box;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  -webkit-box-align: center;
+          align-items: center;
+  -webkit-box-pack: center;
+          justify-content: center;
   position: fixed;
   top: 0;
   bottom: 0;
@@ -298,6 +313,7 @@ body {
 body.loaded #preloader {
   opacity: 0;
   visibility: hidden;
+  -webkit-transition: opacity 0.4s ease 0s, visibility 0s ease 0.4s;
   transition: opacity 0.4s ease 0s, visibility 0s ease 0.4s;
 }
 

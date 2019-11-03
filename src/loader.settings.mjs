@@ -7,7 +7,7 @@ export const supportedTags = {
     image: ['img', 'picture'],
     audio: ['audio'],
     video: ['video'],
-    other: ['iframe'] // TODO: ...
+    other: ['iframe']
 };
 
 export const supportedTypes = Object.keys(supportedExtensions);
