@@ -1,44 +1,25 @@
-import { head } from "./loader.client.mjs";
 import { ILoad } from "./loader.load.interface.mjs";
 
 /**
  *
  * @param url
  */
-export const loadStyle = url =>
-    ILoad({
+export const loadStyle = url => {
+    const proxy = document.createElement("link");
+
+    proxy.rel = "stylesheet";
+
+    const promise = ILoad({
         url: url,
-        proxy: (() => {
-            const link = document.createElement("link");
-
-            link.rel = "stylesheet";
-
-            return link;
-        })(),
-        attr: "href",
-        host: head
+        proxy: proxy,
+        attr: "href"
     });
 
-// TODO: check ff?
-/* new Promise((resolve, reject) => {
-        const proxy = document.createElement("style");
+    document.head.appendChild(proxy);
 
-        proxy.textContent = '@import "' + url + '"';
+    proxy.disabled = "disabled";
 
-        const loop = () =>
-            window.requestAnimationFrame(() => {
-                if (proxy.sheet.cssRules) {
-                    resolve(url);
+    promise.then(() => document.head.removeChild(proxy));
 
-                    return;
-                }
-
-                loop();
-            });
-
-        loop();
-
-        // TODO: reject(new Error("?"))
-
-        head.appendChild(proxy);
-    }); */
+    return promise;
+};

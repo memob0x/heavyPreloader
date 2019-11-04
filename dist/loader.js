@@ -19,14 +19,12 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 })(void 0, function () {
   'use strict';
 
-  var head = document.querySelector("head");
   var defaults = {
     url: "",
     proxy: null,
     attr: "src",
     success: "onload",
-    error: "onerror",
-    host: null
+    error: "onerror"
   };
 
   var ILoad = function ILoad() {
@@ -35,11 +33,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
       options = _objectSpread({}, defaults, {}, options);
 
       options.proxy[options.success] = function () {
-        if (options.host) {
-          options.host.removeChild(options.proxy);
-        }
-
-        resolve(options.url);
+        return resolve(options.url);
       };
 
       options.proxy[options.error] = function (message, source, lineno, colno, error) {
@@ -47,38 +41,39 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
       };
 
       options.proxy[options.attr] = options.url;
-
-      if (!options.host) {
-        return;
-      }
-
-      options.host.appendChild(options.proxy);
-      window.requestAnimationFrame(function () {
-        options.proxy.disabled = "disabled";
-        options.proxy.hidden = "hidden";
-      });
     });
   };
 
   var loadStyle = function loadStyle(url) {
-    return ILoad({
+    var proxy = document.createElement("link");
+    proxy.rel = "stylesheet";
+    var promise = ILoad({
       url: url,
-      proxy: function () {
-        var link = document.createElement("link");
-        link.rel = "stylesheet";
-        return link;
-      }(),
-      attr: "href",
-      host: head
+      proxy: proxy,
+      attr: "href"
     });
+    document.head.appendChild(proxy);
+    proxy.disabled = "disabled";
+    promise.then(function () {
+      return document.head.removeChild(proxy);
+    });
+    return promise;
   };
 
   var loadScript = function loadScript(url) {
-    return ILoad({
+    var proxy = document.createElement("object");
+    proxy.width = 0;
+    proxy.height = 0;
+    var promise = ILoad({
       url: url,
-      proxy: document.createElement("script"),
-      host: head
+      proxy: proxy,
+      attr: "data"
     });
+    document.body.appendChild(proxy);
+    promise.then(function () {
+      return document.body.removeChild(proxy);
+    });
+    return promise;
   };
 
   var loadImage = function loadImage(url) {
@@ -95,7 +90,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 
   var IMediaLoad = function IMediaLoad() {
     var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : defaults$1;
-    return ILoad(_objectSpread({}, _objectSpread({}, options, {}, defaults$1), {}, {
+    return ILoad(_objectSpread({}, _objectSpread({}, defaults$1, {}, options), {}, {
       success: "onloadedmetadata"
     }));
   };
@@ -110,7 +105,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
   var loadVideo = function loadVideo(url) {
     return IMediaLoad({
       url: url,
-      tag: document.createElement("video")
+      proxy: document.createElement("video")
     });
   };
 

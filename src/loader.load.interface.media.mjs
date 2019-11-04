@@ -12,6 +12,6 @@ const defaults = {
  */
 export const IMediaLoad = (options = defaults) =>
     ILoad({
-        ...{ ...options, ...defaults },
+        ...{ ...defaults, ...options },
         ...{ success: "onloadedmetadata" }
     });

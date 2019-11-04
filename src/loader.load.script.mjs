@@ -1,13 +1,24 @@
-import { head } from "./loader.client.mjs";
 import { ILoad } from "./loader.load.interface.mjs";
 
 /**
  *
  * @param url
  */
-export const loadScript = url =>
-    ILoad({
+export const loadScript = url => {
+    const proxy = document.createElement("object");
+
+    proxy.width = 0;
+    proxy.height = 0;
+
+    const promise = ILoad({
         url: url,
-        proxy: document.createElement("script"),
-        host: head
+        proxy: proxy,
+        attr: "data"
     });
+
+    document.body.appendChild(proxy);
+
+    promise.then(() => document.body.removeChild(proxy));
+
+    return promise;
+};

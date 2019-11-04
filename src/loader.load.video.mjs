@@ -7,5 +7,5 @@ import { IMediaLoad } from "./loader.load.interface.media.mjs";
 export const loadVideo = url =>
     IMediaLoad({
         url: url,
-        tag: document.createElement("video")
+        proxy: document.createElement("video")
     });
