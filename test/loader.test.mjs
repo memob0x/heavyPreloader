@@ -1,6 +1,6 @@
 import Loader from "../src/loader.mjs";
 
-describe("uhmm", () => {
+describe("Main", () => {
     it("whatev", done => {
         // TODO:
         done();
