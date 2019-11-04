@@ -1,2 +1,3 @@
-- cross browser test for loadStyle and loadScript approach
 - unit tests
+- README.md
+- cross browser test for loadStyle and loadScript approach
