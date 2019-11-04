@@ -16,7 +16,7 @@ export default class Loader {
             for (var key in this._resources) {
                 load(this._resources[key])
                     .then(resolve)
-                    .catch(() => reject(new Error("Woa")));
+                    .catch(reject);
             }
         });
     }

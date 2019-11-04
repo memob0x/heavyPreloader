@@ -1,7 +1,8 @@
 import { loadStyle } from "./loader.load.style.mjs";
 import { loadScript } from "./loader.load.script.mjs";
 import { loadImage } from "./loader.load.image.mjs";
-import { loadAudio, loadVideo } from "./loader.load.audio-video.mjs";
+import { loadAudio } from "./loader.load.audio.mjs";
+import { loadVideo } from "./loader.load.video.mjs";
 import { parseResource } from "./loader.resource-parser.mjs";
 
 const loaders = {

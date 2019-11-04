@@ -39,6 +39,8 @@ const parseStringResource = string => {
     for (let format in SupportedFileExtensions) {
         const extensions = SupportedFileExtensions[format].join("|");
 
+        format = format.toLowerCase();
+
         if (
             new RegExp(
                 `(.(${extensions})$)|data:${format}/(${extensions})${BASE_64_HEAD}`

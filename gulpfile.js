@@ -75,7 +75,7 @@ const library = done => {
                 {},
                 {
                     format: "umd",
-                    name: "loader"
+                    name: "Loader"
                 }
             ).on("error", err => console.log(err)),
 

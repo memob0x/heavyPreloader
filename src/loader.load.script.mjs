@@ -1,14 +1,13 @@
-import { loadGeneric } from "./loader.load.generic.mjs";
+import { head } from "./loader.client.mjs";
+import { ILoad } from "./loader.load.interface.mjs";
 
 /**
  *
  * @param url
  */
 export const loadScript = url =>
-    loadGeneric(
-        url,
-        "script",
-        "onloaded",
-        "onError",
-        document.querySelector(appendTarget)
-    );
+    ILoad({
+        url: url,
+        proxy: document.createElement("script"),
+        host: head
+    });

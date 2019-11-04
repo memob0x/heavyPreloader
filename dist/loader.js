@@ -6,62 +6,112 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(source, true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(source).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 (function (global, factory) {
-  (typeof exports === "undefined" ? "undefined" : _typeof(exports)) === 'object' && typeof module !== 'undefined' ? module.exports = factory() : typeof define === 'function' && define.amd ? define('loader', factory) : (global = global || self, global.loader = factory());
+  (typeof exports === "undefined" ? "undefined" : _typeof(exports)) === 'object' && typeof module !== 'undefined' ? module.exports = factory() : typeof define === 'function' && define.amd ? define('Loader', factory) : (global = global || self, global.Loader = factory());
 })(void 0, function () {
   'use strict';
 
-  var loadStyle = function loadStyle(url) {
-    return new Promise(function (resolve, reject) {
-      var proxy = document.createElement("style");
-      proxy.textContent = '@import "' + url + '"';
-      document.querySelector("head").appendChild(proxy);
-    });
+  var head = document.querySelector("head");
+  var defaults = {
+    url: "",
+    proxy: null,
+    attr: "src",
+    success: "onload",
+    error: "onerror",
+    host: null
   };
 
-  var loadGeneric = function loadGeneric(url, tag) {
-    var successMethod = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : "onload";
-    var errorMethod = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : "onerror";
-    var parentTarget = arguments.length > 4 ? arguments[4] : undefined;
+  var ILoad = function ILoad() {
+    var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : defaults;
     return new Promise(function (resolve, reject) {
-      var proxy = document.createElement(tag);
+      options = _objectSpread({}, defaults, {}, options);
 
-      proxy[successMethod] = function () {
-        return resolve(url);
+      options.proxy[options.success] = function () {
+        if (options.host) {
+          options.host.removeChild(options.proxy);
+        }
+
+        resolve(options.url);
       };
 
-      proxy[errorMethod] = function (message, source, lineno, colno, error) {
+      options.proxy[options.error] = function (message, source, lineno, colno, error) {
         return reject(error);
       };
 
-      proxy.src = url;
+      options.proxy[options.attr] = options.url;
 
-      if (parentTarget) {
-        parentTarget.appendChild(proxy);
+      if (!options.host) {
+        return;
       }
+
+      options.host.appendChild(options.proxy);
+      window.requestAnimationFrame(function () {
+        options.proxy.disabled = "disabled";
+        options.proxy.hidden = "hidden";
+      });
+    });
+  };
+
+  var loadStyle = function loadStyle(url) {
+    return ILoad({
+      url: url,
+      proxy: function () {
+        var link = document.createElement("link");
+        link.rel = "stylesheet";
+        return link;
+      }(),
+      attr: "href",
+      host: head
     });
   };
 
   var loadScript = function loadScript(url) {
-    return loadGeneric(url, "script", "onloaded", "onError", document.querySelector(appendTarget));
+    return ILoad({
+      url: url,
+      proxy: document.createElement("script"),
+      host: head
+    });
   };
 
   var loadImage = function loadImage(url) {
-    return loadGeneric(url, "img");
+    return ILoad({
+      url: url,
+      proxy: document.createElement("img")
+    });
   };
 
-  var loadAudioVideo = function loadAudioVideo(url) {
-    return loadGeneric(url, "audio", "onloadedmetadata");
+  var defaults$1 = {
+    url: "",
+    proxy: null
+  };
+
+  var IMediaLoad = function IMediaLoad() {
+    var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : defaults$1;
+    return ILoad(_objectSpread({}, _objectSpread({}, options, {}, defaults$1), {}, {
+      success: "onloadedmetadata"
+    }));
   };
 
   var loadAudio = function loadAudio(url) {
-    return loadAudioVideo(url);
+    return IMediaLoad({
+      url: url,
+      proxy: document.createElement("audio")
+    });
   };
 
   var loadVideo = function loadVideo(url) {
-    return loadAudioVideo(url);
+    return IMediaLoad({
+      url: url,
+      tag: document.createElement("video")
+    });
   };
 
   var SupportedFileExtensions = {
@@ -82,6 +132,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 
     for (var format in SupportedFileExtensions) {
       var extensions = SupportedFileExtensions[format].join("|");
+      format = format.toLowerCase();
 
       if (new RegExp("(.(".concat(extensions, ")$)|data:").concat(format, "/(").concat(extensions, ")").concat(BASE_64_HEAD)).test(string)) {
         var matches = string.match(new RegExp(".(".concat(extensions, ")$"), "g")) || string.match(new RegExp("^data:".concat(format, "/(").concat(extensions, ")"), "g"));
@@ -154,9 +205,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
 
         return new Promise(function (resolve, reject) {
           for (var key in _this._resources) {
-            _load(_this._resources[key]).then(resolve)["catch"](function () {
-              return reject(new Error("Woa"));
-            });
+            _load(_this._resources[key]).then(resolve)["catch"](reject);
           }
         });
       }

@@ -1,9 +1,26 @@
+import { head } from "./loader.client.mjs";
+import { ILoad } from "./loader.load.interface.mjs";
+
 /**
  *
  * @param url
  */
 export const loadStyle = url =>
-    new Promise((resolve, reject) => {
+    ILoad({
+        url: url,
+        proxy: (() => {
+            const link = document.createElement("link");
+
+            link.rel = "stylesheet";
+
+            return link;
+        })(),
+        attr: "href",
+        host: head
+    });
+
+// TODO: check ff?
+/* new Promise((resolve, reject) => {
         const proxy = document.createElement("style");
 
         proxy.textContent = '@import "' + url + '"';
@@ -19,7 +36,9 @@ export const loadStyle = url =>
                 loop();
             });
 
+        loop();
+
         // TODO: reject(new Error("?"))
 
-        document.querySelector("head").appendChild(proxy);
-    });
+        head.appendChild(proxy);
+    }); */
