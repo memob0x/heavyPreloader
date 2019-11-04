@@ -6,6 +6,24 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
+
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
+
+function _wrapNativeSuper(Class) { var _cache = typeof Map === "function" ? new Map() : undefined; _wrapNativeSuper = function _wrapNativeSuper(Class) { if (Class === null || !_isNativeFunction(Class)) return Class; if (typeof Class !== "function") { throw new TypeError("Super expression must either be null or a function"); } if (typeof _cache !== "undefined") { if (_cache.has(Class)) return _cache.get(Class); _cache.set(Class, Wrapper); } function Wrapper() { return _construct(Class, arguments, _getPrototypeOf(this).constructor); } Wrapper.prototype = Object.create(Class.prototype, { constructor: { value: Wrapper, enumerable: false, writable: true, configurable: true } }); return _setPrototypeOf(Wrapper, Class); }; return _wrapNativeSuper(Class); }
+
+function isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
+
+function _construct(Parent, args, Class) { if (isNativeReflectConstruct()) { _construct = Reflect.construct; } else { _construct = function _construct(Parent, args, Class) { var a = [null]; a.push.apply(a, args); var Constructor = Function.bind.apply(Parent, a); var instance = new Constructor(); if (Class) _setPrototypeOf(instance, Class.prototype); return instance; }; } return _construct.apply(null, arguments); }
+
+function _isNativeFunction(fn) { return Function.toString.call(fn).indexOf("[native code]") !== -1; }
+
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(source, true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(source).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
@@ -36,8 +54,8 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
         return resolve(options.url);
       };
 
-      options.proxy[options.error] = function (message, source, lineno, colno, error) {
-        return reject(error);
+      options.proxy[options.error] = function (message) {
+        return reject(new Error(message));
       };
 
       options.proxy[options.attr] = options.url;
@@ -184,6 +202,43 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     });
   };
 
+  var LoaderPromise = function (_Promise) {
+    _inherits(LoaderPromise, _Promise);
+
+    function LoaderPromise(fn) {
+      var _this;
+
+      _classCallCheck(this, LoaderPromise);
+
+      _this = _possibleConstructorReturn(this, _getPrototypeOf(LoaderPromise).call(this, function (resolve, reject) {
+        fn(resolve, reject, function (value) {
+          try {
+            return _this._progress.forEach(function (listener) {
+              return listener(value);
+            });
+          } catch (error) {
+            reject(error);
+          }
+        });
+      }));
+      _this._progress = [];
+      return _this;
+    }
+
+    _createClass(LoaderPromise, [{
+      key: "progress",
+      value: function progress(handler) {
+        if (typeof handler === 'function') {
+          this._progress.push(handler);
+        }
+
+        return this;
+      }
+    }]);
+
+    return LoaderPromise;
+  }(_wrapNativeSuper(Promise));
+
   var Loader = function () {
     function Loader() {
       var resources = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
@@ -196,11 +251,30 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     _createClass(Loader, [{
       key: "load",
       value: function load() {
-        var _this = this;
+        var _this2 = this;
 
-        return new Promise(function (resolve, reject) {
-          for (var key in _this._resources) {
-            _load(_this._resources[key]).then(resolve)["catch"](reject);
+        return new LoaderPromise(function (resolve, reject, progress) {
+          var loaded = 0;
+          var length = _this2._resources.length;
+          var errors = false;
+
+          for (var key in _this2._resources) {
+            _load(_this2._resources[key])["catch"](function () {
+              errors = true;
+            })["finally"](function () {
+              progress();
+              loaded++;
+
+              if (loaded < length) {
+                return;
+              }
+
+              if (errors) {
+                reject(new Error("One or more resources had troubles loading."));
+              }
+
+              resolve();
+            });
           }
         });
       }

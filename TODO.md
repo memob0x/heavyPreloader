@@ -1,3 +1,5 @@
+- better error handling
+- a way to abort load function calls
 - unit tests
 - README.md
 - cross browser test for loadStyle and loadScript approach
