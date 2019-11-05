@@ -259,10 +259,11 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
           var errors = false;
 
           for (var key in _this2._resources) {
-            _load(_this2._resources[key])["catch"](function () {
+            _load(_this2._resources[key]).then(function (resource) {
+              return progress(resource);
+            })["catch"](function () {
               errors = true;
             })["finally"](function () {
-              progress();
               loaded++;
 
               if (loaded < length) {
@@ -270,10 +271,10 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
               }
 
               if (errors) {
-                reject(new Error("One or more resources had troubles loading."));
+                reject(_this2);
               }
 
-              resolve();
+              resolve(_this2);
             });
           }
         });

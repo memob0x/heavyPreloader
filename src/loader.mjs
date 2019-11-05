@@ -21,12 +21,13 @@ export default class Loader {
 
             for (var key in this._resources) {
                 load(this._resources[key])
+                    .then(resource => progress(resource))
+
                     .catch(() => {
                         errors = true;
                     })
-                    .finally(() => {
-                        progress();
 
+                    .finally(() => {
                         loaded++;
 
                         if (loaded < length) {
@@ -34,14 +35,10 @@ export default class Loader {
                         }
 
                         if (errors) {
-                            reject(
-                                new Error(
-                                    "One or more resources had troubles loading."
-                                )
-                            );
+                            reject(this);
                         }
 
-                        resolve();
+                        resolve(this);
                     });
             }
         });
