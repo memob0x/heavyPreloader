@@ -19,7 +19,7 @@ export const loadStyle = url => {
 
     proxy.disabled = "disabled";
 
-    promise.then(() => document.head.removeChild(proxy));
+    promise.finally(() => document.head.removeChild(proxy));
 
     return promise;
 };

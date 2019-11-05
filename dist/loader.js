@@ -72,7 +72,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
     });
     document.head.appendChild(proxy);
     proxy.disabled = "disabled";
-    promise.then(function () {
+    promise["finally"](function () {
       return document.head.removeChild(proxy);
     });
     return promise;
@@ -88,7 +88,7 @@ function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterat
       attr: "data"
     });
     document.body.appendChild(proxy);
-    promise.then(function () {
+    promise["finally"](function () {
       return document.body.removeChild(proxy);
     });
     return promise;

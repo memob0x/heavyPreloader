@@ -18,7 +18,7 @@ export const loadScript = url => {
 
     document.body.appendChild(proxy);
 
-    promise.then(() => document.body.removeChild(proxy));
+    promise.finally(() => document.body.removeChild(proxy));
 
     return promise;
 };
