@@ -7,7 +7,7 @@ describe("Image loader", () => {
         loadImage(IMAGE_URL).then(url => expect(url).to.equal(IMAGE_URL)));
 
     it("should throw an error when attempting to load an unreachable image", () =>
-        loadImage("https://github.com/404").catch(error =>
+        loadImage("/base/test/resources/404.jpg").catch(error =>
             expect(error).to.be.an.instanceOf(Error)
         ));
 
