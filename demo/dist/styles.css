@@ -1,2 +1,22 @@
-
-/*# sourceMappingURL=styles.css.map */
+html {
+    box-sizing: border-box;
+}
+* {
+    margin: 0;
+    padding: 0;
+}
+body {
+    background: tomato;
+}
+*,
+*::after,
+*::before {
+    box-sizing: inherit;
+}
+img {
+    max-width: 100%;
+}
+ul,
+li {
+    list-style: none;
+}
