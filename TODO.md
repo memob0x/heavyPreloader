@@ -1,5 +1,4 @@
-- better error handling
-- a way to abort load function calls
-- unit tests
-- README.md
-- cross browser test for loadStyle and loadScript approach
+- audio/video handling
+- getLoaderTypeFromUrl func
+- check isCORSUrl
+- check cors scripts preload

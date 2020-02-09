@@ -1,94 +1,11 @@
-const FetchModes = {
-    CORS: "cors",
-    NOCORS: "no-cors"
-};
-
-const defaults = {
-    mode: FetchModes.NOCORS
-};
-
-/**
- *
- * @param data
- */
-const loadStylesheet = data => {
-    const sheet = new CSSStyleSheet();
-
-    const url = data.blob.url ? URL.createObjectURL(data.blob) : data.url;
-
-    const promise = sheet
-        .replace(`@import url("${url}")`)
-        .finally(() => URL.revokeObjectURL(url));
-
-    document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet];
-
-    return promise;
-};
-
-/**
- *
- * @param data
- */
-const loadScript = data =>
-    new Promise((resolve, reject) => {
-        const script = document.createElement("script");
-
-        const url = data.blob.url ? URL.createObjectURL(data.blob) : data.url;
-
-        script.src = url;
-        script.async = true;
-
-        document.head.appendChild(script);
-
-        URL.revokeObjectURL(url);
-
-        resolve(script);
-    });
-
-/**
- *
- * @param target
- * @param data
- */
-const loadImage = data => {
-    /* TODO const targets = [...document.querySelectorAll("img")].filter(target => {
-        const attrs = target.attributes;
-
-        for (var i = attrs.length - 1; i >= 0; i--) {
-            if (attrs[i].value === data.url) {
-                return true;
-            }
-        }
-
-        return false;
-    });
-
-    if (!targets.length) {
-        return Promise.reject();
-    }
-
-    const url = data.blob.url ? URL.createObjectURL(data.blob) : data.url;
-    let i = 0;
-
-    const promise = new Promise((resolve, reject) => {
-        targets.forEach(target => {
-            target.onload = () => i++;
-            target.onerror = () => i++;
-
-            target.src = url;
-        });
-
-        if (i === targets.length) {
-            resolve();
-        }
-
-        // TODO : reject
-    });
-
-    promise.finally(() => URL.revokeObjectURL(url));
-
-    return promise; */
-};
+import {
+    parseUrl,
+    urlFromDataObject,
+    getLoaderTypeFromUrl,
+    isCORSUrl
+} from "./loader.utils.mjs";
+import * as Loaders from "./loader.loaders.mjs";
+import worker from "./loader.worker.mjs";
 
 export class Loader {
     /**
@@ -96,60 +13,71 @@ export class Loader {
      * @param {object} options
      */
     constructor(options = {}) {
-        this._options = {
-            ...options,
-            ...defaults
-        };
+        this.worker = new Worker(
+            URL.createObjectURL(
+                new Blob(["(", worker.toString(), ")()"], {
+                    type: "application/javascript"
+                })
+            )
+        );
+
+        this._options = { ...options, ...{} };
     }
 
     /**
      * @param {string} url
      * @returns {Promise}
      */
-    fetch = url =>
-        new Promise((resolve, reject) => {
-            try {
-                const worker = new Worker("../src/loader.worker.mjs");
+    fetch(url) {
+        const parsedUrl = parseUrl(url);
 
-                worker.postMessage({
-                    url: url,
-                    options: {
-                        mode: (mode =>
-                            mode === FetchModes.CORS ||
-                            mode === FetchModes.NOCORS
-                                ? mode
-                                : defaults.mode)(this._options.mode)
+        url = parsedUrl.href;
+
+        return new Promise((resolve, reject) => {
+            try {
+                if (isCORSUrl(parsedUrl)) {
+                    const type = getLoaderTypeFromUrl(url);
+
+                    const defaultData = {
+                        response: {
+                            url: url,
+                            status: 200
+                        },
+                        blob: {
+                            type: null
+                        }
+                    };
+
+                    if (type in Loaders) {
+                        return Loaders[type](url)
+                            .then(() => resolve(defaultData))
+                            .catch(reject);
                     }
+
+                    resolve(defaultData);
+
+                    return;
+                }
+
+                this.worker.postMessage({
+                    url: url
                 });
 
-                worker.addEventListener("message", event => {
-                    let data = event.data;
+                this.worker.addEventListener("message", event => {
+                    const data = event.data;
 
-                    if (data.status !== 200 && data.responseType !== "opaque") {
-                        reject(new Error(`${data.statusText} ${data.url}`));
-
+                    if (data.url !== url) {
                         return;
                     }
 
-                    switch (data.blobType) {
-                        case "text/css":
-                            data.load = () => loadStylesheet(data);
-                            break;
+                    if (data.response.status !== 200) {
+                        reject(
+                            new Error(
+                                `${data.response.statusText} ${data.response.url}`
+                            )
+                        );
 
-                        case "application/javascript":
-                            data.load = () => loadScript(data);
-                            break;
-
-                        case "image/jpeg":
-                        case "image/png":
-                        case "image/svg+xml":
-                            data.load = () => loadImage(data);
-                            break;
-
-                        default:
-                            data.load = () =>
-                                Promise.reject("Not recognized blabla");
-                            break;
+                        return;
                     }
 
                     resolve(data);
@@ -158,8 +86,47 @@ export class Loader {
                 reject(e);
             }
         });
+    }
 
-    static appendScript() {}
+    /**
+     *
+     * @param data
+     * @param el
+     */
+    static adoptStyleSheet(data) {
+        const url = urlFromDataObject(data);
+
+        return Loaders.style(url, document).finally(() =>
+            URL.revokeObjectURL(url)
+        );
+    }
+
+    /**
+     *
+     * @param data
+     */
+    static insertScript(data) {
+        const url = urlFromDataObject(data);
+
+        return Loaders.script(
+            url,
+            document.createElement("script")
+        ).finally(() => URL.revokeObjectURL(url));
+    }
+
+    /**
+     *
+     * @param data
+     * @param el
+     * @param name
+     */
+    static setImageAttribute(data, el, name = "src") {
+        const url = urlFromDataObject(data);
+
+        return Loaders.image(url, name, el).finally(() =>
+            URL.revokeObjectURL(url)
+        );
+    }
 }
 
 const loader = new Loader();
@@ -167,25 +134,26 @@ const loader = new Loader();
 [...document.querySelectorAll("img[data-src]")].forEach(el =>
     loader
         .fetch(el.dataset.src)
-        .then(x => x.load())
+        .then(x => Loader.setImageAttribute(x, el))
         .catch(e => console.error(e))
 );
 
 loader
-    .fetch("../demo/dist/styles.css")
-    .then(x => x.load())
-    .catch(e => console.error(e));
-loader
-    .fetch("../demo/dist/extra.css")
-    .then(x => x.load())
+    .fetch("dist/styles.css")
+    .then(x => Loader.adoptStyleSheet(x))
     .catch(e => console.error(e));
 
 loader
-    .fetch("../demo/dist/scripts.js")
-    .then(x => x.load())
+    .fetch("dist/extra.css")
+    .then(x => Loader.adoptStyleSheet(x))
     .catch(e => console.error(e));
 
 loader
-    .fetch("../non/existent.js")
-    .then(x => console.log(x))
+    .fetch("dist/scripts.js")
+    .then(x => Loader.insertScript(x))
+    .catch(e => console.error(e));
+
+loader
+    .fetch("dist/not-existent.js")
+    .then(x => Loader.insertScript(x))
     .catch(e => console.error(e));

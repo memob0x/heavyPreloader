@@ -1,0 +1,1 @@
+{"version":3,"sources":["scripts.js"],"names":["console","warn"],"mappings":"aAAAA,OAAO,CAACC,IAAR,CAAa,aAAb","sourcesContent":["console.warn(\"hello there\");\n"],"file":"scripts.js"}

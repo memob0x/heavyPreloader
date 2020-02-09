@@ -1,26 +1,27 @@
-const guessType = url => {
-    if (url.endsWith("jpg")) {
-        return "image/jpeg";
-    }
+export default () => {
+    onmessage = async event => {
+        let data = event.data;
+
+        try {
+            const response = await fetch(data.url);
+            const blob = await response.blob();
+
+            data.response = {
+                url: response.url,
+                status: response.status,
+                statusText: response.statusText
+            };
+
+            data.blob = blob;
+        } catch (e) {
+            data.response = {
+                url: data.url,
+                status: 200
+            };
+
+            data.blob = { type: null };
+        }
+
+        postMessage(data);
+    };
 };
-
-self.addEventListener("message", async event => {
-    const data = event.data;
-
-    const response = await fetch(data.url, data.options);
-
-    const blob = await response.blob();
-
-    self.postMessage({
-        responseType: response.type,
-        status: response.status,
-        statusText: response.statusText,
-        ok: response.ok,
-
-        redirected: response.redirected,
-
-        url: response.url || data.url,
-        blob: blob,
-        blobType: blob.type || guessType(data.url)
-    });
-});
