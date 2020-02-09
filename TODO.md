@@ -2,3 +2,6 @@
 - getLoaderTypeFromUrl func
 - check isCORSUrl
 - check cors scripts preload
+- tests
+- README.md
+- demo page
