@@ -7,24 +7,40 @@ import {
 import * as Loaders from "./loader.loaders.mjs";
 import worker from "./loader.worker.mjs";
 
-export class Loader {
+const loader = function() {
+    let args = [...arguments];
+    const name = args[0];
+
+    args.shift();
+
+    args[0] = urlFromDataObject(args[0]);
+
+    return Loaders[name]
+        .apply(this, args)
+        .finally(() => URL.revokeObjectURL(args[0]));
+};
+
+export default class Loader {
     /**
      *
      * @param {object} options
      */
     constructor(options = {}) {
-        this.worker = new Worker(
-            URL.createObjectURL(
-                new Blob(["(", worker.toString(), ")()"], {
-                    type: "application/javascript"
-                })
-            )
+        this._options = { ...options, ...{} };
+
+        const url = URL.createObjectURL(
+            new Blob(["(", worker.toString(), ")()"], {
+                type: "application/javascript"
+            })
         );
 
-        this._options = { ...options, ...{} };
+        this.worker = new Worker(url);
+
+        URL.revokeObjectURL(url);
     }
 
     /**
+     *
      * @param {string} url
      * @returns {Promise}
      */
@@ -34,57 +50,51 @@ export class Loader {
         url = parsedUrl.href;
 
         return new Promise((resolve, reject) => {
-            try {
-                if (isCORSUrl(parsedUrl)) {
-                    const type = getLoaderTypeFromUrl(url);
+            if (isCORSUrl(parsedUrl)) {
+                const type = getLoaderTypeFromUrl(url);
 
-                    const defaultData = {
-                        response: {
-                            url: url,
-                            status: 200
-                        },
-                        blob: {
-                            type: null
-                        }
-                    };
+                if (type in Loaders) {
+                    return Loaders[type](url)
+                        .then(() =>
+                            resolve({
+                                response: {
+                                    url: url,
+                                    status: 200
+                                },
+                                blob: {
+                                    type: null
+                                }
+                            })
+                        )
+                        .catch(reject);
+                }
 
-                    if (type in Loaders) {
-                        return Loaders[type](url)
-                            .then(() => resolve(defaultData))
-                            .catch(reject);
-                    }
+                reject(new Error("cors whatev"));
 
-                    resolve(defaultData);
+                return;
+            }
+
+            this.worker.postMessage(url);
+
+            this.worker.addEventListener("message", event => {
+                const data = event.data;
+
+                if (data.url !== url) {
+                    return;
+                }
+
+                if (data.response.status === 200) {
+                    resolve(data);
 
                     return;
                 }
 
-                this.worker.postMessage({
-                    url: url
-                });
-
-                this.worker.addEventListener("message", event => {
-                    const data = event.data;
-
-                    if (data.url !== url) {
-                        return;
-                    }
-
-                    if (data.response.status !== 200) {
-                        reject(
-                            new Error(
-                                `${data.response.statusText} ${data.response.url}`
-                            )
-                        );
-
-                        return;
-                    }
-
-                    resolve(data);
-                });
-            } catch (e) {
-                reject(e);
-            }
+                reject(
+                    new Error(
+                        `${data.response.statusText} ${data.response.url}`
+                    )
+                );
+            });
         });
     }
 
@@ -94,11 +104,7 @@ export class Loader {
      * @param el
      */
     static adoptStyleSheet(data) {
-        const url = urlFromDataObject(data);
-
-        return Loaders.style(url, document).finally(() =>
-            URL.revokeObjectURL(url)
-        );
+        return loader("style", data, document);
     }
 
     /**
@@ -106,12 +112,7 @@ export class Loader {
      * @param data
      */
     static insertScript(data) {
-        const url = urlFromDataObject(data);
-
-        return Loaders.script(
-            url,
-            document.createElement("script")
-        ).finally(() => URL.revokeObjectURL(url));
+        return loader("script", data, document.createElement("script"));
     }
 
     /**
@@ -121,39 +122,16 @@ export class Loader {
      * @param name
      */
     static setImageAttribute(data, el, name = "src") {
-        const url = urlFromDataObject(data);
+        return loader("image", data, name, el);
+    }
 
-        return Loaders.image(url, name, el).finally(() =>
-            URL.revokeObjectURL(url)
-        );
+    /**
+     *
+     * @param data
+     * @param el
+     * @param name
+     */
+    static setMediaAttribute(data, el, name = "src") {
+        return loader("media", data, name, el);
     }
 }
-
-const loader = new Loader();
-
-[...document.querySelectorAll("img[data-src]")].forEach(el =>
-    loader
-        .fetch(el.dataset.src)
-        .then(x => Loader.setImageAttribute(x, el))
-        .catch(e => console.error(e))
-);
-
-loader
-    .fetch("dist/styles.css")
-    .then(x => Loader.adoptStyleSheet(x))
-    .catch(e => console.error(e));
-
-loader
-    .fetch("dist/extra.css")
-    .then(x => Loader.adoptStyleSheet(x))
-    .catch(e => console.error(e));
-
-loader
-    .fetch("dist/scripts.js")
-    .then(x => Loader.insertScript(x))
-    .catch(e => console.error(e));
-
-loader
-    .fetch("dist/not-existent.js")
-    .then(x => Loader.insertScript(x))
-    .catch(e => console.error(e));

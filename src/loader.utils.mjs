@@ -22,7 +22,9 @@ export const urlFromDataObject = data =>
 export const getLoaderTypeFromUrl = url => "image";
 
 /**
- * TODO: improve
- * @param url
+ *
+ *  @param url
  */
-export const isCORSUrl = url => url.host !== window.location.host;
+export const isCORSUrl = url =>
+    url.hostname !== window.location.hostname ||
+    url.protocol !== window.location.protocol;

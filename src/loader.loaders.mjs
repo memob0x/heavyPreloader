@@ -6,6 +6,15 @@ export const image = (url, attributeName = "src", el = new Image()) =>
         el.setAttribute(attributeName, url);
     });
 
+export const media = (url, attributeName = "src", el = new Image()) =>
+    // TODO:
+    new Promise((resolve, reject) => {
+        el.onload = resolve;
+        el.onerror = reject;
+
+        el.setAttribute(attributeName, url);
+    });
+
 export const style = (url, el = document.createElement("div")) => {
     const sheet = new CSSStyleSheet();
 
@@ -18,7 +27,7 @@ export const style = (url, el = document.createElement("div")) => {
     return promise;
 };
 
-const object = (url, el) =>
+export const object = (url, el) =>
     new Promise((resolve, reject) => {
         // TODO: check
         el.onload = resolve;
