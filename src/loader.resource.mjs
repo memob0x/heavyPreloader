@@ -1,4 +1,4 @@
-// TODO: refactory
+// TODO: refactor this!!!!!!!!!
 
 import { getURL } from "./loader.utils.mjs";
 
@@ -12,8 +12,10 @@ const _cast = (rawData, structure, interfaze) => {
           };
 };
 
+const collection = {};
+
 export default class LoaderResource {
-    constructor(rawData) {
+    constructor(rawData, existent) {
         this.el =
             rawData instanceof HTMLElement
                 ? rawData
@@ -25,6 +27,14 @@ export default class LoaderResource {
                     _get(["url"], rawData) ||
                     rawData
             ).href || null;
+
+        if (this.url in collection && existent) {
+            this.el = collection[this.url].el;
+            this.url = collection[this.url].url;
+            this.blob = collection[this.url].blob;
+            this.response = collection[this.url].response;
+            return;
+        }
 
         this.blob = _cast(
             _get(["blob"], rawData),
@@ -44,6 +54,8 @@ export default class LoaderResource {
             },
             Response
         );
+
+        collection[this.url] = this;
     }
 
     static isLoaderResource(data) {

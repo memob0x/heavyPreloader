@@ -16,7 +16,13 @@ export default (resource, load) => {
         ? URL.createObjectURL(resource.blob)
         : resource.url;
 
-    return Middlewares[type](url, load, resource).finally(() =>
-        URL.revokeObjectURL(url)
+    return new Promise((resolve, reject) =>
+        Middlewares[type](url, load, resource)
+            .finally(() => URL.revokeObjectURL(url))
+            .then(el => {
+                resource._el = el;
+                resolve(resource);
+            })
+            .catch(reject)
     );
 };

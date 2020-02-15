@@ -8,18 +8,23 @@ export default class Loader {
 
     /**
      *
-     * @param {Array|String|LoaderResource} arg
+     * @param {String|Array|LoaderResource|HTMLElement|NodeList} arg
      * @returns {Array|Promise}
      */
     fetch(arg) {
+        // ...
+        if (arg instanceof NodeList) {
+            return this.fetch([...arg]);
+        }
+
         // ...
         if (Array.isArray(arg)) {
             return arg.map(a => this.fetch(a));
         }
 
         // ...
-        if (typeof arg === "string") {
-            return this.fetch(new LoaderResource(arg));
+        if (arg instanceof HTMLElement || typeof arg === "string") {
+            return this.fetch(new LoaderResource(arg, true));
         }
 
         // ...
@@ -47,7 +52,7 @@ export default class Loader {
 
         // ...
         if (arg instanceof HTMLElement || typeof arg === "string") {
-            return this.load(new LoaderResource(arg));
+            return this.load(new LoaderResource(arg, true));
         }
 
         // ...

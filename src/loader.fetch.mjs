@@ -4,7 +4,7 @@ import LoaderResource from "./loader.resource.mjs";
 import loaderWorker from "./loader.worker.mjs";
 
 // ...
-const collection = {};
+export const collection = {};
 
 /**
  * @param {LoaderResource} resource
@@ -15,7 +15,7 @@ export default resource => {
     }
 
     if (isCORS(resource)) {
-        return (collection[resource.url] = _load.call(this, resource, false));
+        return (collection[resource.url] = _load(resource, false));
     }
 
     return (collection[resource.url] = new Promise((resolve, reject) => {

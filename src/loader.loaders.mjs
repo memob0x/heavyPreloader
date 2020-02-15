@@ -3,7 +3,7 @@ import LoaderResource from "./loader.resource.mjs";
 export const Loaders = {
     image: (url, el = new Image()) =>
         new Promise((resolve, reject) => {
-            el.onload = () => resolve(new LoaderResource(url));
+            el.onload = () => resolve(el);
             el.onerror = reject;
 
             el.src = url;
@@ -12,7 +12,7 @@ export const Loaders = {
     media: (url, el = new Image()) =>
         // TODO:
         new Promise((resolve, reject) => {
-            el.onload = () => resolve(new LoaderResource(url));
+            el.onload = () => resolve(el);
             el.onerror = reject;
 
             el.src = url;
@@ -33,7 +33,7 @@ export const Loaders = {
     object: (url, el = document.createElement("object")) =>
         new Promise((resolve, reject) => {
             // TODO: check
-            el.onload = () => resolve(new LoaderResource(url));
+            el.onload = () => resolve(el);
             el.onerror = reject;
 
             el.data = url;
@@ -47,7 +47,7 @@ export const Loaders = {
     script: (url, el = document.createElement("script")) =>
         new Promise((resolve, reject) => {
             // TODO: check
-            el.onload = () => resolve(new LoaderResource(url));
+            el.onload = () => resolve(el);
             el.onerror = reject;
 
             el.src = url;
@@ -58,8 +58,17 @@ export const Loaders = {
 };
 
 export const Middlewares = {
-    image: (url, bool, resource) =>
-        Loaders.image(url, bool && resource.el ? resource.el : void 0),
+    image: (url, bool, resource) => {
+        const loadOnRealEl = bool && resource.el;
+
+        const load = Loaders.image(url, loadOnRealEl ? resource.el : void 0);
+
+        load.then(img => {
+            // ... some trick to save blob on cors calls? :)
+        });
+
+        return load;
+    },
     media: (url, bool, resource) =>
         Loaders.media(url, bool && resource.el ? resource.el : void 0),
     script: (url, bool) => {

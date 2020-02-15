@@ -4,9 +4,18 @@ const loader = new Loader();
 
 [...document.querySelectorAll("img[data-src]")].forEach(el =>
     loader
-        .load(el)
+        .fetch(el)
         .then(x => console.warn(x))
         .catch(e => console.error(e))
+);
+
+document.querySelector("button").addEventListener("click", () =>
+    [...document.querySelectorAll("img[data-src]")].forEach(el =>
+        loader
+            .load(el)
+            .then(x => console.warn(x))
+            .catch(e => console.error(e))
+    )
 );
 
 loader
