@@ -58,10 +58,10 @@ export const Loaders = {
 };
 
 export const Middlewares = {
-    image: (url, el) =>
-        Loaders.image(url, el instanceof HTMLElement ? el : void 0),
-    media: (url, el) =>
-        Loaders.media(url, el instanceof HTMLElement ? el : void 0),
+    image: (url, bool, resource) =>
+        Loaders.image(url, bool && resource.el ? resource.el : void 0),
+    media: (url, bool, resource) =>
+        Loaders.media(url, bool && resource.el ? resource.el : void 0),
     script: (url, bool) => {
         if (bool) {
             return Loaders.script(url);
@@ -70,12 +70,4 @@ export const Middlewares = {
         return Loaders.object(url);
     },
     style: (url, bool) => Loaders.style(url, bool ? document : void 0)
-};
-
-export const launcher = (type, url, load) => {
-    if (!(type in Loaders)) {
-        return Promise.reject(new Error("invalid type"));
-    }
-
-    return Middlewares[type](url, load);
 };

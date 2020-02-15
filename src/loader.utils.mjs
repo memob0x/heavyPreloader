@@ -7,7 +7,7 @@ import LoaderResource from "./loader.resource.mjs";
  */
 export const getURL = arg => {
     arg = LoaderResource.isLoaderResource(arg) ? arg.url : arg;
-    arg = typeof arg === "object" && "href" in arg ? arg.href : arg;
+    arg = arg && typeof arg === "object" && "href" in arg ? arg.href : arg;
 
     const a = document.createElement("a");
     a.href = arg;
@@ -71,11 +71,3 @@ export const isCORS = arg => {
         arg.protocol !== window.location.protocol
     );
 };
-
-/**
- *
- * @param {LoaderResource} resource
- * @returns {Boolean}
- */
-export const hasBlob = resource =>
-    LoaderResource.isLoaderResource(resource) && !!resource.blob.type;

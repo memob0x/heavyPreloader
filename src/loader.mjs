@@ -1,17 +1,14 @@
+import { isCORS } from "./loader.utils.mjs";
 import LoaderResource from "./loader.resource.mjs";
 import _load from "./loader.load.mjs";
 import _fetch from "./loader.fetch.mjs";
-import _fetchAndLoad from "./loader.fetchload.mjs";
-import loaderWorker from "./loader.worker.mjs";
 
 export default class Loader {
-    constructor() {
-        this.worker = loaderWorker();
-    }
+    constructor() {}
 
     /**
      *
-     * @param {Array|String} arg
+     * @param {Array|String|LoaderResource} arg
      * @returns {Array|Promise}
      */
     fetch(arg) {
@@ -22,7 +19,12 @@ export default class Loader {
 
         // ...
         if (typeof arg === "string") {
-            return _fetch.call(this, arg);
+            return this.fetch(new LoaderResource(arg));
+        }
+
+        // ...
+        if (LoaderResource.isLoaderResource(arg)) {
+            return _fetch(arg, false);
         }
 
         // ...
@@ -30,33 +32,36 @@ export default class Loader {
     }
 
     /**
-     * @param {String|Array|LoaderResource|HTMLElement} arg
+     * @param {String|Array|LoaderResource|HTMLElement|NodeList} arg
      * @returns {Array|Promise}
      */
-    load(arg) {
+    async load(arg) {
+        if (arg instanceof NodeList) {
+            return this.load([...arg]);
+        }
+
         // ...
         if (Array.isArray(arg)) {
             return arg.map(a => this.load(a));
         }
 
         // ...
-        if (arg instanceof HTMLElement) {
-            // TODO: a way to get currentSrc without trigger loads
-            return _fetchAndLoad.call(
-                this,
-                new LoaderResource(arg.dataset.src),
-                arg
-            );
-        }
-
-        // ...
-        if (typeof arg === "string") {
+        if (arg instanceof HTMLElement || typeof arg === "string") {
             return this.load(new LoaderResource(arg));
         }
 
         // ...
+        if (!isCORS(arg)) {
+            try {
+                arg = await this.fetch(arg);
+            } catch (e) {
+                return Promise.reject(e);
+            }
+        }
+
+        // ...
         if (LoaderResource.isLoaderResource(arg)) {
-            return _load.call(this, arg, true);
+            return _load(arg, true);
         }
 
         // ...

@@ -19,4 +19,12 @@ export const work = () => {
     };
 };
 
-export default () => createWorker(work);
+let worker = null;
+
+export default () => {
+    if (worker) {
+        return worker;
+    }
+
+    return (worker = createWorker(work));
+};

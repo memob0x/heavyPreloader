@@ -1,28 +1,32 @@
-import { getURL, isCORS } from "./loader.utils.mjs";
+import { isCORS } from "./loader.utils.mjs";
 import _load from "./loader.load.mjs";
 import LoaderResource from "./loader.resource.mjs";
 import loaderWorker from "./loader.worker.mjs";
 
+// ...
+const collection = {};
+
 /**
- * @param {String} url
+ * @param {LoaderResource} resource
  */
-export default function(url) {
-    this.worker = this.worker || loaderWorker();
-
-    const loc = getURL(url);
-    url = loc.href;
-
-    if (isCORS(loc)) {
-        return _load.call(this, new LoaderResource(url), false);
+export default resource => {
+    if (resource.url in collection) {
+        return collection[resource.url];
     }
 
-    return new Promise((resolve, reject) => {
-        this.worker.postMessage(url);
+    if (isCORS(resource)) {
+        return (collection[resource.url] = _load.call(this, resource, false));
+    }
 
-        this.worker.addEventListener("message", event => {
-            const data = event.data;
+    return (collection[resource.url] = new Promise((resolve, reject) => {
+        const worker = loaderWorker();
 
-            if (data.url !== url) {
+        worker.postMessage(resource.url);
+
+        worker.addEventListener("message", event => {
+            const data = { el: resource.el, ...event.data };
+
+            if (data.url !== resource.url) {
                 return;
             }
 
@@ -36,5 +40,5 @@ export default function(url) {
                 new Error(`${data.response.statusText} ${data.response.url}`)
             );
         });
-    });
-}
+    }));
+};
