@@ -1,124 +1,65 @@
-import {
-    getLoaderType,
-    createWorker,
-    getURL,
-    isCORS
-} from "./loader.utils.mjs";
-import worker from "./loader.worker.mjs";
-import Data from "./loader.data.mjs";
-import * as Loaders from "./loader.loaders.mjs";
+import LoaderResource from "./loader.resource.mjs";
+import _load from "./loader.load.mjs";
+import _fetch from "./loader.fetch.mjs";
+import _fetchAndLoad from "./loader.fetchload.mjs";
+import loaderWorker from "./loader.worker.mjs";
 
 export default class Loader {
     constructor() {
-        this.worker = createWorker(worker);
+        this.worker = loaderWorker();
     }
 
     /**
      *
-     * @param {Array|String} url
+     * @param {Array|String} arg
      * @returns {Array|Promise}
      */
-    fetch(url) {
+    fetch(arg) {
         // ...
-        // --------------------------------------------------------
-        if (Array.isArray(url)) {
-            return url.map(u => this.fetch.call(this, u));
+        if (Array.isArray(arg)) {
+            return arg.map(a => this.fetch(a));
         }
 
         // ...
-        // --------------------------------------------------------
-        const loc = getURL(url);
-        url = loc.href;
-
-        if (isCORS(loc)) {
-            return this.load(getLoaderType(url), url);
+        if (typeof arg === "string") {
+            return _fetch.call(this, arg);
         }
 
-        return new Promise((resolve, reject) => {
-            this.worker.postMessage(url);
-
-            this.worker.addEventListener("message", event => {
-                const data = event.data;
-
-                if (data.url !== url) {
-                    return;
-                }
-
-                if (data.response.status === 200) {
-                    resolve(new Data(data));
-
-                    return;
-                }
-
-                reject(
-                    new Error(
-                        `${data.response.statusText} ${data.response.url}`
-                    )
-                );
-            });
-        });
+        // ...
+        return Promise.reject(new Error("invalid argument"));
     }
 
     /**
-     *
+     * @param {String|Array|LoaderResource|HTMLElement} arg
+     * @returns {Array|Promise}
      */
-    load(...args) {
-        const arg = args[0];
-
+    load(arg) {
         // ...
-        // --------------------------------------------------------
-        if (Data.isData(arg)) {
-            const type = getLoaderType(arg);
-            const url = arg.blob.type
-                ? URL.createObjectURL(arg.blob)
-                : arg.response.url;
-
-            let el = type === "style" ? document : arg;
-            el = type === "script" ? document.createElement("script") : el;
-            el = args[1] instanceof HTMLElement ? args[1] : el;
-
-            return this.load.call(this, type, url, el);
+        if (Array.isArray(arg)) {
+            return arg.map(a => this.load(a));
         }
 
         // ...
-        // --------------------------------------------------------
         if (arg instanceof HTMLElement) {
-            const el = arg;
-
-            let url = el.dataset.src;
-            if (args.length === 1 && !isCORS(url)) {
-                return new Promise((resolve, reject) =>
-                    this.fetch(url)
-                        .then(data =>
-                            this.load
-                                .call(this, data, el)
-                                .then(resolve)
-                                .catch(reject)
-                        )
-                        .catch(reject)
-                );
-            }
-
-            let attrs = args[1] || "src";
-            attrs = typeof attrs === "string" ? [attrs] : attrs;
-
-            attrs.forEach(attr => (el[attr] = el.dataset[attr]));
-
-            url = el.currentSrc || el.src;
-
-            return this.load.call(this, getLoaderType(url), url);
+            // TODO: a way to get currentSrc without trigger loads
+            return _fetchAndLoad.call(
+                this,
+                new LoaderResource(arg.dataset.src),
+                arg
+            );
         }
 
         // ...
-        // --------------------------------------------------------
-        if (!(arg in Loaders)) {
-            return Promise.reject(new Error("not valid"));
+        if (typeof arg === "string") {
+            return this.load(new LoaderResource(arg));
         }
 
-        args.shift();
+        // ...
+        if (LoaderResource.isLoaderResource(arg)) {
+            return _load.call(this, arg, true);
+        }
 
-        return Loaders[arg]
-            .apply(this, args)
-            .finally(() => URL.revokeObjectURL(args[0]));
+        // ...
+        return Promise.reject(new Error("invalid argument"));
     }
 }

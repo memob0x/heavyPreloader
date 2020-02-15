@@ -1,4 +1,6 @@
-export default () => {
+import { createWorker } from "./loader.utils.mjs";
+
+export const work = () => {
     onmessage = async event => {
         const url = event.data;
 
@@ -16,3 +18,5 @@ export default () => {
         });
     };
 };
+
+export default () => createWorker(work);

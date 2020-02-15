@@ -1,58 +1,81 @@
-import Data from "./loader.data.mjs";
+import LoaderResource from "./loader.resource.mjs";
 
-export const image = (url, el = new Image(), attributeName = "src") =>
-    new Promise((resolve, reject) => {
-        el.onload = () => resolve(new Data(url));
-        el.onerror = reject;
+export const Loaders = {
+    image: (url, el = new Image()) =>
+        new Promise((resolve, reject) => {
+            el.onload = () => resolve(new LoaderResource(url));
+            el.onerror = reject;
 
-        el.setAttribute(attributeName, url);
-    });
+            el.src = url;
+        }),
 
-export const media = (url, el = new Image(), attributeName = "src") =>
-    // TODO:
-    new Promise((resolve, reject) => {
-        el.onload = () => resolve(new Data(url));
-        el.onerror = reject;
+    media: (url, el = new Image()) =>
+        // TODO:
+        new Promise((resolve, reject) => {
+            el.onload = () => resolve(new LoaderResource(url));
+            el.onerror = reject;
 
-        el.setAttribute(attributeName, url);
-    });
+            el.src = url;
+        }),
 
-export const style = (url, el = document.createElement("div")) => {
-    const sheet = new CSSStyleSheet();
+    style: (url, el = document.createElement("div")) => {
+        const sheet = new CSSStyleSheet();
 
-    const promise = sheet.replace(`@import url("${url}")`);
+        const promise = sheet.replace(`@import url("${url}")`);
 
-    if ("adoptedStyleSheets" in el) {
-        el.adoptedStyleSheets = [...el.adoptedStyleSheets, sheet];
-    }
+        if ("adoptedStyleSheets" in el) {
+            el.adoptedStyleSheets = [...el.adoptedStyleSheets, sheet];
+        }
 
-    return promise;
+        return promise;
+    },
+
+    object: (url, el = document.createElement("object")) =>
+        new Promise((resolve, reject) => {
+            // TODO: check
+            el.onload = () => resolve(new LoaderResource(url));
+            el.onerror = reject;
+
+            el.data = url;
+
+            el.width = 0;
+            el.height = 0;
+
+            document.body.append(el);
+        }),
+
+    script: (url, el = document.createElement("script")) =>
+        new Promise((resolve, reject) => {
+            // TODO: check
+            el.onload = () => resolve(new LoaderResource(url));
+            el.onerror = reject;
+
+            el.src = url;
+            el.async = true;
+
+            document.head.append(el);
+        })
 };
 
-export const object = (url, el) =>
-    new Promise((resolve, reject) => {
-        // TODO: check
-        el.onload = () => resolve(new Data(url));
-        el.onerror = reject;
+export const Middlewares = {
+    image: (url, el) =>
+        Loaders.image(url, el instanceof HTMLElement ? el : void 0),
+    media: (url, el) =>
+        Loaders.media(url, el instanceof HTMLElement ? el : void 0),
+    script: (url, bool) => {
+        if (bool) {
+            return Loaders.script(url);
+        }
 
-        el.data = url;
+        return Loaders.object(url);
+    },
+    style: (url, bool) => Loaders.style(url, bool ? document : void 0)
+};
 
-        el.width = 0;
-        el.height = 0;
+export const launcher = (type, url, load) => {
+    if (!(type in Loaders)) {
+        return Promise.reject(new Error("invalid type"));
+    }
 
-        document.body.append(el);
-    });
-
-export const script = (url, el = document.createElement("object")) =>
-    el.tagName === "OBJECT"
-        ? object(url, el)
-        : new Promise((resolve, reject) => {
-              // TODO: check
-              el.onload = () => resolve(new Data(url));
-              el.onerror = reject;
-
-              el.src = url;
-              el.async = true;
-
-              document.head.append(el);
-          });
+    return Middlewares[type](url, load);
+};

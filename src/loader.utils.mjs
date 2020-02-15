@@ -1,16 +1,16 @@
-import Data from "./loader.data.mjs";
+import LoaderResource from "./loader.resource.mjs";
 
 /**
  *
- * @param {String|Data} url
+ * @param {String|LoaderResource} url
  * @returns {URL}
  */
-export const getURL = url => {
-    url = Data.isData(url) ? url.url : url;
-    url = typeof url === "object" && "href" in url ? url.href : url;
+export const getURL = arg => {
+    arg = LoaderResource.isLoaderResource(arg) ? arg.url : arg;
+    arg = typeof arg === "object" && "href" in arg ? arg.href : arg;
 
     const a = document.createElement("a");
-    a.href = url;
+    a.href = arg;
 
     return new URL(a);
 };
@@ -38,13 +38,14 @@ export const createWorker = work => {
 
 /**
  * TODO: do it
- * @param {String|Data} url
+ * @param {String|LoaderResource} arg
  */
-export const getLoaderType = url => {
-    url = getURL(url).href;
+export const getLoaderType = arg => {
+    arg = getURL(arg).href;
 
-    let ext = url.split(".");
+    let ext = arg.split(".");
     ext = ext[ext.length - 1];
+
     switch (ext) {
         case "jpg":
             return "image";
@@ -52,19 +53,29 @@ export const getLoaderType = url => {
             return "style";
         case "js":
             return "script";
+        default:
+            return "noop";
     }
 };
 
 /**
  *
- * @param {URL|String|Data} location
+ * @param {URL|String|LoaderResource} arg
  * @returns {Boolean}
  */
-export const isCORS = url => {
-    url = getURL(url);
+export const isCORS = arg => {
+    arg = getURL(arg);
 
     return (
-        url.hostname !== window.location.hostname ||
-        url.protocol !== window.location.protocol
+        arg.hostname !== window.location.hostname ||
+        arg.protocol !== window.location.protocol
     );
 };
+
+/**
+ *
+ * @param {LoaderResource} resource
+ * @returns {Boolean}
+ */
+export const hasBlob = resource =>
+    LoaderResource.isLoaderResource(resource) && !!resource.blob.type;

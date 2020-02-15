@@ -1,3 +1,5 @@
+import { getURL } from "./loader.utils.mjs";
+
 const _cast = (rawData, structure, interfaze) => {
     return rawData instanceof interfaze
         ? rawData
@@ -7,7 +9,7 @@ const _cast = (rawData, structure, interfaze) => {
           };
 };
 
-export default class Data {
+export default class LoaderResource {
     constructor(rawData) {
         if (!rawData || typeof rawData !== "object") {
             rawData = {
@@ -15,7 +17,7 @@ export default class Data {
             };
         }
 
-        this.url = rawData.url || "";
+        this.url = getURL(rawData.url || "").href;
 
         this.blob = _cast(
             rawData.blob,
@@ -37,7 +39,7 @@ export default class Data {
         );
     }
 
-    static isData(data) {
+    static isLoaderResource(data) {
         return data instanceof this;
     }
 }
