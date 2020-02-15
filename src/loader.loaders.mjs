@@ -1,15 +1,17 @@
-export const image = (url, attributeName = "src", el = new Image()) =>
+import Data from "./loader.data.mjs";
+
+export const image = (url, el = new Image(), attributeName = "src") =>
     new Promise((resolve, reject) => {
-        el.onload = resolve;
+        el.onload = () => resolve(new Data(url));
         el.onerror = reject;
 
         el.setAttribute(attributeName, url);
     });
 
-export const media = (url, attributeName = "src", el = new Image()) =>
+export const media = (url, el = new Image(), attributeName = "src") =>
     // TODO:
     new Promise((resolve, reject) => {
-        el.onload = resolve;
+        el.onload = () => resolve(new Data(url));
         el.onerror = reject;
 
         el.setAttribute(attributeName, url);
@@ -30,7 +32,7 @@ export const style = (url, el = document.createElement("div")) => {
 export const object = (url, el) =>
     new Promise((resolve, reject) => {
         // TODO: check
-        el.onload = resolve;
+        el.onload = () => resolve(new Data(url));
         el.onerror = reject;
 
         el.data = url;
@@ -46,7 +48,7 @@ export const script = (url, el = document.createElement("object")) =>
         ? object(url, el)
         : new Promise((resolve, reject) => {
               // TODO: check
-              el.onload = resolve;
+              el.onload = () => resolve(new Data(url));
               el.onerror = reject;
 
               el.src = url;

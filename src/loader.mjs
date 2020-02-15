@@ -1,79 +1,40 @@
 import {
-    parseUrl,
-    urlFromDataObject,
-    getLoaderTypeFromUrl,
-    isCORSUrl
+    getLoaderType,
+    createWorker,
+    getURL,
+    isCORS
 } from "./loader.utils.mjs";
-import * as Loaders from "./loader.loaders.mjs";
 import worker from "./loader.worker.mjs";
-
-const loader = function() {
-    let args = [...arguments];
-    const name = args[0];
-
-    args.shift();
-
-    args[0] = urlFromDataObject(args[0]);
-
-    return Loaders[name]
-        .apply(this, args)
-        .finally(() => URL.revokeObjectURL(args[0]));
-};
+import Data from "./loader.data.mjs";
+import * as Loaders from "./loader.loaders.mjs";
 
 export default class Loader {
-    /**
-     *
-     * @param {object} options
-     */
-    constructor(options = {}) {
-        this._options = { ...options, ...{} };
-
-        const url = URL.createObjectURL(
-            new Blob(["(", worker.toString(), ")()"], {
-                type: "application/javascript"
-            })
-        );
-
-        this.worker = new Worker(url);
-
-        URL.revokeObjectURL(url);
+    constructor() {
+        this.worker = createWorker(worker);
     }
 
     /**
      *
-     * @param {string} url
-     * @returns {Promise}
+     * @param {Array|String} url
+     * @returns {Array|Promise}
      */
     fetch(url) {
-        const parsedUrl = parseUrl(url);
+        // ...
+        // --------------------------------------------------------
+        if (Array.isArray(url)) {
+            return url.map(u => this.fetch.call(this, u));
+        }
 
-        url = parsedUrl.href;
+        // ...
+        // --------------------------------------------------------
+        const loc = getURL(url);
+        url = loc.href;
+
+        if (isCORS(loc)) {
+            return this.load(getLoaderType(url), url);
+        }
 
         return new Promise((resolve, reject) => {
-            if (isCORSUrl(parsedUrl)) {
-                const type = getLoaderTypeFromUrl(url);
-
-                if (type in Loaders) {
-                    return Loaders[type](url)
-                        .then(() =>
-                            resolve({
-                                response: {
-                                    url: url,
-                                    status: 200
-                                },
-                                blob: {
-                                    type: null
-                                }
-                            })
-                        )
-                        .catch(reject);
-                }
-
-                reject(new Error("cors whatev"));
-
-                return;
-            }
-
             this.worker.postMessage(url);
 
             this.worker.addEventListener("message", event => {
@@ -84,7 +45,7 @@ export default class Loader {
                 }
 
                 if (data.response.status === 200) {
-                    resolve(data);
+                    resolve(new Data(data));
 
                     return;
                 }
@@ -100,38 +61,64 @@ export default class Loader {
 
     /**
      *
-     * @param data
-     * @param el
      */
-    static adoptStyleSheet(data) {
-        return loader("style", data, document);
-    }
+    load(...args) {
+        const arg = args[0];
 
-    /**
-     *
-     * @param data
-     */
-    static insertScript(data) {
-        return loader("script", data, document.createElement("script"));
-    }
+        // ...
+        // --------------------------------------------------------
+        if (Data.isData(arg)) {
+            const type = getLoaderType(arg);
+            const url = arg.blob.type
+                ? URL.createObjectURL(arg.blob)
+                : arg.response.url;
 
-    /**
-     *
-     * @param data
-     * @param el
-     * @param name
-     */
-    static setImageAttribute(data, el, name = "src") {
-        return loader("image", data, name, el);
-    }
+            let el = type === "style" ? document : arg;
+            el = type === "script" ? document.createElement("script") : el;
+            el = args[1] instanceof HTMLElement ? args[1] : el;
 
-    /**
-     *
-     * @param data
-     * @param el
-     * @param name
-     */
-    static setMediaAttribute(data, el, name = "src") {
-        return loader("media", data, name, el);
+            return this.load.call(this, type, url, el);
+        }
+
+        // ...
+        // --------------------------------------------------------
+        if (arg instanceof HTMLElement) {
+            const el = arg;
+
+            let url = el.dataset.src;
+            if (args.length === 1 && !isCORS(url)) {
+                return new Promise((resolve, reject) =>
+                    this.fetch(url)
+                        .then(data =>
+                            this.load
+                                .call(this, data, el)
+                                .then(resolve)
+                                .catch(reject)
+                        )
+                        .catch(reject)
+                );
+            }
+
+            let attrs = args[1] || "src";
+            attrs = typeof attrs === "string" ? [attrs] : attrs;
+
+            attrs.forEach(attr => (el[attr] = el.dataset[attr]));
+
+            url = el.currentSrc || el.src;
+
+            return this.load.call(this, getLoaderType(url), url);
+        }
+
+        // ...
+        // --------------------------------------------------------
+        if (!(arg in Loaders)) {
+            return Promise.reject(new Error("not valid"));
+        }
+
+        args.shift();
+
+        return Loaders[arg]
+            .apply(this, args)
+            .finally(() => URL.revokeObjectURL(args[0]));
     }
 }

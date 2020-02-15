@@ -4,27 +4,16 @@ const loader = new Loader();
 
 [...document.querySelectorAll("img[data-src]")].forEach(el =>
     loader
-        .fetch(el.dataset.src)
-        .then(x => Loader.setImageAttribute(x, el))
+        .load(el)
+        .then(x => console.warn(x))
         .catch(e => console.error(e))
 );
 
 loader
-    .fetch("dist/styles.css")
-    .then(x => Loader.adoptStyleSheet(x))
-    .catch(e => console.error(e));
-
-loader
-    .fetch("dist/extra.css")
-    .then(x => Loader.adoptStyleSheet(x))
-    .catch(e => console.error(e));
-
-loader
-    .fetch("dist/scripts.js")
-    .then(x => Loader.insertScript(x))
-    .catch(e => console.error(e));
-
-loader
-    .fetch("dist/not-existent.js")
-    .then(x => Loader.insertScript(x))
-    .catch(e => console.error(e));
+    .fetch([
+        "dist/styles.css",
+        "dist/extra.css",
+        "dist/scripts.js",
+        "dist/not-existent.js"
+    ])
+    .forEach(p => p.then(x => loader.load(x)).catch(e => console.error(e)));
