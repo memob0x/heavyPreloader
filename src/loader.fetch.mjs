@@ -14,7 +14,22 @@ export const collection = {};
 export default async (resource, options = {}) => {
     // ...
     if (resource.url.href in collection) {
-        return collection[resource.url.href];
+        return new Promise((resolve, reject) => {
+            collection[resource.url.href]
+                .then(r =>
+                    resolve(
+                        new LoaderResource(
+                            {
+                                el: resource.el,
+                                blob: r.blob,
+                                url: r.url
+                            },
+                            true
+                        )
+                    )
+                )
+                .catch(reject);
+        });
     }
 
     // ...
