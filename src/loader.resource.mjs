@@ -1,7 +1,7 @@
 import { getURL, prop, isSupportedElement } from "./loader.utils.mjs";
 
 // ...
-const collection = {};
+const collection = new WeakMap();
 
 // ...
 const build = data => {
@@ -26,15 +26,19 @@ export default class LoaderResource {
     constructor(data, override) {
         let o = build(data);
 
-        if (o.url.href in collection && !override) {
-            o = collection[o.url.href];
+        if (collection.has(o.url) && !override) {
+            o = collection.get(o.url);
+        }
+
+        if (collection.has(o.el) && !override) {
+            o = collection.get(o.el);
         }
 
         this.el = o.el;
         this.url = o.url;
         this.blob = o.blob;
 
-        collection[this.url.href] = this;
+        collection.set(o.el || o.url, this);
     }
 
     static isLoaderResource(data) {

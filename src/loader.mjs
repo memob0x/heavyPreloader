@@ -1,4 +1,4 @@
-import { isCORS, getURL, isSupportedElement } from "./loader.utils.mjs";
+import { getURL, isSupportedElement } from "./loader.utils.mjs";
 import LoaderResource from "./loader.resource.mjs";
 import _load from "./loader.load.mjs";
 import _fetch from "./loader.fetch.mjs";
@@ -36,7 +36,7 @@ export default class Loader {
 
         // ...
         if (LoaderResource.isLoaderResource(arg)) {
-            return _fetch(arg, this.options.fetch);
+            return _fetch(arg, this.options);
         }
 
         // ...
@@ -47,7 +47,7 @@ export default class Loader {
      * @param {String|Array|LoaderResource|HTMLElement|NodeList|URL} arg
      * @returns {Array|Promise}
      */
-    async load(arg) {
+    load(arg) {
         if (arg instanceof NodeList) {
             return this.load([...arg]);
         }
@@ -68,17 +68,8 @@ export default class Loader {
         }
 
         // ...
-        if (!isCORS(arg) || this.options.fetch.cors === "no-cors") {
-            try {
-                arg = await this.fetch(arg);
-            } catch (e) {
-                console.warn(e);
-            }
-        }
-
-        // ...
         if (LoaderResource.isLoaderResource(arg)) {
-            return _load(arg, true);
+            return _load(arg, this.options, true);
         }
 
         // ...

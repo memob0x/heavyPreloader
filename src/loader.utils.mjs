@@ -58,7 +58,7 @@ export const createWorker = work => {
 };
 
 /**
- * TODO: do it
+ * TODO: check
  * @param {String|LoaderResource} arg
  */
 export const getLoaderType = arg => {
@@ -69,11 +69,38 @@ export const getLoaderType = arg => {
 
     switch (ext) {
         case "jpg":
+        case "jpe":
+        case "jpeg":
+        case "jif":
+        case "jfi":
+        case "jfif":
+        case "gif":
+        case "tif":
+        case "tiff":
+        case "bmp":
+        case "dib":
+        case "webp":
+        case "ico":
+        case "cur":
+        case "svg":
+        case "png":
             return "image";
         case "css":
             return "style";
         case "js":
+        case "mjs":
             return "script";
+        case "mp3":
+        case "ogg":
+        case "oga":
+        case "spx":
+        case "ogg":
+        case "wav":
+        case "mp4":
+        case "ogg":
+        case "ogv":
+        case "webm":
+            return "media";
         default:
             return "noop";
     }

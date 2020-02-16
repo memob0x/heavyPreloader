@@ -4,6 +4,7 @@ export const work = () => {
     onmessage = async event => {
         const data = event.data;
 
+        // ...
         let message;
         try {
             const response = await fetch(data.href, data.options);
@@ -21,17 +22,19 @@ export const work = () => {
             };
         }
 
+        // ...
         message.href = data.href;
         postMessage(message);
     };
 };
 
 let worker = null;
-
 export default () => {
+    // ...
     if (worker) {
         return worker;
     }
 
+    // ...
     return (worker = createWorker(work));
 };

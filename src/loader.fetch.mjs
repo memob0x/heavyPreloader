@@ -11,15 +11,19 @@ export const collection = {};
  * @param {LoaderResource} resource
  * @param {Object} options
  */
-export default (resource, options = {}) => {
+export default async (resource, options = {}) => {
     // ...
     if (resource.url.href in collection) {
         return collection[resource.url.href];
     }
 
     // ...
-    if (isCORS(resource) && options.cors !== "no-cors") {
-        return (collection[resource.url.href] = _load(resource, false));
+    if (isCORS(resource) && options.fetch.cors !== "no-cors") {
+        return (collection[resource.url.href] = _load(
+            resource,
+            options,
+            false
+        ));
     }
 
     // ...
@@ -29,7 +33,7 @@ export default (resource, options = {}) => {
         // ...
         worker.postMessage({
             href: resource.url.href,
-            options: options
+            options: options.fetch
         });
 
         // ...
