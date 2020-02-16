@@ -1,47 +1,164 @@
 (function (global, factory) {
-    typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
-    typeof define === 'function' && define.amd ? define('Loader', ['exports'], factory) :
-    (global = global || self, factory(global.Loader = {}));
-}(this, (function (exports) { 'use strict';
+    typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
+    typeof define === 'function' && define.amd ? define('Loader', factory) :
+    (global = global || self, global.Loader = factory());
+}(this, (function () { 'use strict';
 
     /**
      *
-     * @param url
+     * @param {Object} o
+     * @param {String} p
      */
-    const parseUrl = url => {
+    const prop = (o, p) =>
+        p.split(".").reduce((xs, x) => (xs && xs[x] ? xs[x] : null), o);
+
+    /**
+     *
+     * @param {String|LoaderResource} url
+     * @returns {URL}
+     */
+    const getURL = arg => {
+        arg = prop(arg, "url") || arg;
+        arg = prop(arg, "href") || arg;
+
         const a = document.createElement("a");
-        a.href = url;
-        return a;
+        a.href = arg;
+
+        return new URL(a);
     };
 
     /**
      *
-     * @param data
+     * @param {HTMLElement} el
+     * @returns {Boolean}
      */
-    const urlFromDataObject = data =>
-        data.blob.type ? URL.createObjectURL(data.blob) : data.response.url;
-
-    /**
-     * TODO: do it
-     * @param url
-     */
-    const getLoaderTypeFromUrl = url => "image";
+    const isSupportedElement = el => {
+        return (
+            el instanceof HTMLImageElement ||
+            el instanceof HTMLPictureElement ||
+            el instanceof HTMLSourceElement ||
+            el instanceof HTMLVideoElement ||
+            el instanceof HTMLAudioElement
+        );
+    };
 
     /**
      *
-     * @param url
+     * @param {Function} work
+     * @returns {Worker}
      */
-    const isCORSUrl = url => url.host !== window.location.host;
+    const createWorker = work => {
+        work = typeof work !== "function" ? () => {} : work;
 
-    const image = (url, attributeName = "src", el = new Image()) =>
+        const url = URL.createObjectURL(
+            new Blob(["(", work.toString(), ")()"], {
+                type: "application/javascript"
+            })
+        );
+
+        const worker = new Worker(url);
+
+        URL.revokeObjectURL(url);
+
+        return worker;
+    };
+
+    /**
+     * TODO: do it
+     * @param {String|LoaderResource} arg
+     */
+    const getLoaderType = arg => {
+        arg = getURL(arg).href;
+
+        let ext = arg.split(".");
+        ext = ext[ext.length - 1];
+
+        switch (ext) {
+            case "jpg":
+                return "image";
+            case "css":
+                return "style";
+            case "js":
+                return "script";
+            default:
+                return "noop";
+        }
+    };
+
+    /**
+     *
+     * @param {URL|String|LoaderResource} arg
+     * @returns {Boolean}
+     */
+    const isCORS = arg => {
+        arg = getURL(arg);
+
+        return (
+            arg.hostname !== window.location.hostname ||
+            arg.protocol !== window.location.protocol
+        );
+    };
+
+    // ...
+    const collection = {};
+
+    // ...
+    const build = data => {
+        let o = {};
+
+        if (isSupportedElement(data)) {
+            o.el = data;
+            o.url = getURL(prop(o.el, "dataset.src")); // TODO: find a way to get currentSrc without triggering load
+        } else {
+            o.el = prop(data, "el");
+            o.url = data instanceof URL ? data : prop(data, "url");
+        }
+
+        o.blob = prop(data, "blob");
+
+        return o;
+    };
+
+    // ...
+    // TODO: refactor to avoid "override" param
+    class LoaderResource {
+        constructor(data, override) {
+            let o = build(data);
+
+            if (o.url.href in collection && !override) {
+                o = collection[o.url.href];
+            }
+
+            this.el = o.el;
+            this.url = o.url;
+            this.blob = o.blob;
+
+            collection[this.url.href] = this;
+        }
+
+        static isLoaderResource(data) {
+            return data instanceof this;
+        }
+    }
+
+    const loadImage = (url, el = new Image()) =>
         new Promise((resolve, reject) => {
-            el.onload = resolve;
+            el.onload = () => resolve(el);
             el.onerror = reject;
 
-            el.setAttribute(attributeName, url);
+            el.src = url;
         });
 
-    const style = (url, el = document.createElement("div")) => {
+    const loadMedia = (url, el = new Image()) =>
+        // TODO:
+        new Promise((resolve, reject) => {
+            el.onload = () => resolve(el);
+            el.onerror = reject;
+
+            el.src = url;
+        });
+
+    const loadStyle = (url, el = document.createElement("div")) => {
         const sheet = new CSSStyleSheet();
 
         const promise = sheet.replace(`@import url("${url}")`);
@@ -53,12 +170,13 @@
         return promise;
     };
 
-    const object = (url, el) =>
+    const loadObject = (url, el = document.createElement("object")) =>
         new Promise((resolve, reject) => {
-            el.onload = resolve;
+            // TODO: check
+            el.onload = () => resolve(el);
             el.onerror = reject;
 
-            el.data = preload[i];
+            el.data = url;
 
             el.width = 0;
             el.height = 0;
@@ -66,208 +184,229 @@
             document.body.append(el);
         });
 
-    const script = (url, el = document.createElement("object")) =>
-        el.tagName === "OBJECT"
-            ? object(url, el)
-            : new Promise((resolve, reject) => {
-                  el.onload = resolve;
-                  el.onerror = reject;
+    const loadScript = (url, el = document.createElement("script")) =>
+        new Promise((resolve, reject) => {
+            // TODO: check
+            el.onload = () => resolve(el);
+            el.onerror = reject;
 
-                  el.src = url;
-                  el.async = true;
+            el.src = url;
+            el.async = true;
 
-                  document.head.append(el);
-              });
+            document.head.append(el);
+        });
 
-    var Loaders = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        image: image,
-        style: style,
-        script: script
-    });
+    var Loaders = {
+        image: (url, bool, el) => loadImage(url, bool ? el : void 0),
+        media: (url, bool, el) => loadMedia(url, bool ? el : void 0),
+        script: (url, bool) => (bool ? loadScript(url) : loadObject(url)),
+        style: (url, bool) => loadStyle(url, bool ? document : void 0)
+    };
 
-    var worker = () => {
+    /**
+     *
+     * @param {LoaderResource} resource
+     */
+    var _load = (resource, bool) => {
+        const type = getLoaderType(resource);
+
+        if (!(type in Loaders)) {
+            return Promise.reject(new Error("invalid type"));
+        }
+
+        const url = !!resource.blob
+            ? URL.createObjectURL(resource.blob)
+            : resource.url.href;
+
+        return new Promise((resolve, reject) =>
+            Loaders[type](url, bool, resource.el)
+                .finally(() => URL.revokeObjectURL(url))
+                .then(() => resolve(resource))
+                .catch(reject)
+        );
+    };
+
+    const work = () => {
         onmessage = async event => {
-            let data = event.data;
+            const data = event.data;
 
+            let message;
             try {
-                const response = await fetch(data.url);
+                const response = await fetch(data.href, data.options);
                 const blob = await response.blob();
 
-                data.response = {
-                    url: response.url,
+                message = {
                     status: response.status,
-                    statusText: response.statusText
+                    statusText: response.statusText,
+                    blob: blob
                 };
-
-                data.blob = blob;
             } catch (e) {
-                data.response = {
-                    url: data.url,
-                    status: 200
+                message = {
+                    status: 0,
+                    statusText: e
                 };
-
-                data.blob = { type: null };
             }
 
-            postMessage(data);
+            message.href = data.href;
+            postMessage(message);
         };
     };
 
-    class Loader {
-        /**
-         *
-         * @param {object} options
-         */
-        constructor(options = {}) {
-            this.worker = new Worker(
-                URL.createObjectURL(
-                    new Blob(["(", worker.toString(), ")()"], {
-                        type: "application/javascript"
-                    })
-                )
-            );
+    let worker = null;
 
-            this._options = { ...options, ...{} };
+    var loaderWorker = () => {
+        if (worker) {
+            return worker;
         }
 
-        /**
-         * @param {string} url
-         * @returns {Promise}
-         */
-        fetch(url) {
-            const parsedUrl = parseUrl(url);
+        return (worker = createWorker(work));
+    };
 
-            url = parsedUrl.href;
+    // ...
+    const collection$1 = {};
 
-            return new Promise((resolve, reject) => {
-                try {
-                    if (isCORSUrl(parsedUrl)) {
-                        const type = getLoaderTypeFromUrl(url);
+    /**
+     *
+     * @param {LoaderResource} resource
+     * @param {Object} options
+     */
+    var _fetch = (resource, options = {}) => {
+        // ...
+        if (resource.url.href in collection$1) {
+            return collection$1[resource.url.href];
+        }
 
-                        const defaultData = {
-                            response: {
-                                url: url,
-                                status: 200
-                            },
-                            blob: {
-                                type: null
-                            }
-                        };
+        // ...
+        if (isCORS(resource) && options.cors !== "no-cors") {
+            return (collection$1[resource.url.href] = _load(resource, false));
+        }
 
-                        if (type in Loaders) {
-                            return Loaders[type](url)
-                                .then(() => resolve(defaultData))
-                                .catch(reject);
-                        }
+        // ...
+        return (collection$1[resource.url.href] = new Promise((resolve, reject) => {
+            const worker = loaderWorker();
 
-                        resolve(defaultData);
-
-                        return;
-                    }
-
-                    this.worker.postMessage({
-                        url: url
-                    });
-
-                    this.worker.addEventListener("message", event => {
-                        const data = event.data;
-
-                        if (data.url !== url) {
-                            return;
-                        }
-
-                        if (data.response.status !== 200) {
-                            reject(
-                                new Error(
-                                    `${data.response.statusText} ${data.response.url}`
-                                )
-                            );
-
-                            return;
-                        }
-
-                        resolve(data);
-                    });
-                } catch (e) {
-                    reject(e);
-                }
+            // ...
+            worker.postMessage({
+                href: resource.url.href,
+                options: options
             });
+
+            // ...
+            worker.addEventListener("message", event => {
+                const data = event.data;
+
+                // ...
+                if (data.href !== resource.url.href) {
+                    return;
+                }
+
+                // ...
+                if (data.status === 200) {
+                    resolve(
+                        new LoaderResource(
+                            {
+                                ...resource,
+                                ...{
+                                    blob: data.blob
+                                }
+                            },
+                            true
+                        )
+                    );
+
+                    return;
+                }
+
+                // ...
+                reject(new Error(`${data.statusText} ${data.href}`));
+            });
+        }));
+    };
+
+    class Loader {
+        constructor(options) {
+            this.options = { ...{ fetch: {} }, ...options };
         }
 
         /**
          *
-         * @param data
-         * @param el
+         * @param {String|Array|LoaderResource|HTMLElement|NodeList} arg
+         * @returns {Array|Promise}
          */
-        static adoptStyleSheet(data) {
-            const url = urlFromDataObject(data);
+        fetch(arg) {
+            // ...
+            if (arg instanceof NodeList) {
+                return this.fetch([...arg]);
+            }
 
-            return style(url, document).finally(() =>
-                URL.revokeObjectURL(url)
-            );
+            // ...
+            if (Array.isArray(arg)) {
+                return arg.map(a => this.fetch(a));
+            }
+
+            // ...
+            if (typeof arg === "string") {
+                return this.fetch(getURL(arg));
+            }
+
+            // ...
+            if (isSupportedElement(arg) || arg instanceof URL) {
+                return this.fetch(new LoaderResource(arg));
+            }
+
+            // ...
+            if (LoaderResource.isLoaderResource(arg)) {
+                return _fetch(arg, this.options.fetch);
+            }
+
+            // ...
+            return Promise.reject(new Error("invalid argument"));
         }
 
         /**
-         *
-         * @param data
+         * @param {String|Array|LoaderResource|HTMLElement|NodeList|URL} arg
+         * @returns {Array|Promise}
          */
-        static insertScript(data) {
-            const url = urlFromDataObject(data);
+        async load(arg) {
+            if (arg instanceof NodeList) {
+                return this.load([...arg]);
+            }
 
-            return script(
-                url,
-                document.createElement("script")
-            ).finally(() => URL.revokeObjectURL(url));
-        }
+            // ...
+            if (Array.isArray(arg)) {
+                return arg.map(a => this.load(a));
+            }
 
-        /**
-         *
-         * @param data
-         * @param el
-         * @param name
-         */
-        static setImageAttribute(data, el, name = "src") {
-            const url = urlFromDataObject(data);
+            // ...
+            if (typeof arg === "string") {
+                return this.load(getURL(arg));
+            }
 
-            return image(url, name, el).finally(() =>
-                URL.revokeObjectURL(url)
-            );
+            // ...
+            if (isSupportedElement(arg) || arg instanceof URL) {
+                return this.load(new LoaderResource(arg));
+            }
+
+            // ...
+            if (!isCORS(arg) || this.options.fetch.cors === "no-cors") {
+                try {
+                    arg = await this.fetch(arg);
+                } catch (e) {
+                    console.warn(e);
+                }
+            }
+
+            // ...
+            if (LoaderResource.isLoaderResource(arg)) {
+                return _load(arg, true);
+            }
+
+            // ...
+            return Promise.reject(new Error("invalid argument"));
         }
     }
 
-    const loader = new Loader();
-
-    [...document.querySelectorAll("img[data-src]")].forEach(el =>
-        loader
-            .fetch(el.dataset.src)
-            .then(x => Loader.setImageAttribute(x, el))
-            .catch(e => console.error(e))
-    );
-
-    loader
-        .fetch("dist/styles.css")
-        .then(x => Loader.adoptStyleSheet(x))
-        .catch(e => console.error(e));
-
-    loader
-        .fetch("dist/extra.css")
-        .then(x => Loader.adoptStyleSheet(x))
-        .catch(e => console.error(e));
-
-    loader
-        .fetch("dist/scripts.js")
-        .then(x => Loader.insertScript(x))
-        .catch(e => console.error(e));
-
-    loader
-        .fetch("dist/not-existent.js")
-        .then(x => Loader.insertScript(x))
-        .catch(e => console.error(e));
-
-    exports.Loader = Loader;
-
-    Object.defineProperty(exports, '__esModule', { value: true });
+    return Loader;
 
 })));
 
