@@ -96,7 +96,7 @@
             case "js":
             case "mjs":
                 return "script";
-            case "mp3":
+            /*case "mp3":
             case "ogg":
             case "oga":
             case "spx":
@@ -106,9 +106,9 @@
             case "ogg":
             case "ogv":
             case "webm":
-                return "media";
+                return "media";*/
             default:
-                return "noop";
+                return null;
         }
     };
 
@@ -180,14 +180,14 @@
             el.src = url;
         });
 
-    const loadMedia = (url, el = new Image()) =>
+    /* export const loadMedia = (url, el = new Image()) =>
         // TODO:
         new Promise((resolve, reject) => {
             el.onload = () => resolve(el);
             el.onerror = reject;
 
             el.src = url;
-        });
+        }); */
 
     const loadStyle = (url, el = document.createElement("div")) => {
         const sheet = new CSSStyleSheet();
@@ -229,7 +229,7 @@
 
     var Loaders = {
         image: (url, bool, el) => loadImage(url, bool ? el : void 0),
-        media: (url, bool, el) => loadMedia(url, bool ? el : void 0),
+        // media: (url, bool, el) => loadMedia(url, bool ? el : void 0),
         script: (url, bool) => (bool ? loadScript(url) : loadObject(url)),
         style: (url, bool) => loadStyle(url, bool ? document : void 0)
     };
@@ -284,22 +284,11 @@
     var _fetch = async (resource, options = {}) => {
         // ...
         if (resource.url.href in collection$1) {
-            return new Promise((resolve, reject) => {
-                collection$1[resource.url.href]
-                    .then(r =>
-                        resolve(
-                            new LoaderResource(
-                                {
-                                    el: resource.el,
-                                    blob: r.blob,
-                                    url: r.url
-                                },
-                                true
-                            )
-                        )
-                    )
-                    .catch(reject);
-            });
+            const el = resource.el;
+
+            resource = await collection$1[resource.url.href];
+
+            return new LoaderResource({ ...resource, ...{ el: el } }, true);
         }
 
         // ...
@@ -332,17 +321,12 @@
 
                 // ...
                 if (data.status === 200) {
-                    resolve(
-                        new LoaderResource(
-                            {
-                                ...resource,
-                                ...{
-                                    blob: data.blob
-                                }
-                            },
-                            true
-                        )
+                    resource = new LoaderResource(
+                        { ...resource, ...{ blob: data.blob } },
+                        true
                     );
+
+                    resolve(resource);
 
                     return;
                 }
@@ -361,17 +345,17 @@
     var _load = async (resource, options, bool) => {
         // ...
         if (!isCORS(resource) || options.fetch.cors === "no-cors") {
-            try {
-                const el = resource.el;
-                resource = await _fetch(resource, options);
-                resource.el = el;
-            } catch (e) {}
+            const el = resource.el;
+
+            resource = await _fetch(resource, options);
+
+            resource.el = el;
         }
 
         // ...
         const type = getLoaderType(resource);
         if (!(type in Loaders)) {
-            return Promise.reject(new Error("invalid type"));
+            throw new Error("invalid type");
         }
 
         // ...
@@ -380,12 +364,11 @@
             : resource.url.href;
 
         // ...
-        return new Promise((resolve, reject) =>
-            Loaders[type](url, bool, resource.el)
-                .finally(() => URL.revokeObjectURL(url))
-                .then(() => resolve(resource))
-                .catch(reject)
+        await Loaders[type](url, bool, resource.el).finally(() =>
+            URL.revokeObjectURL(url)
         );
+
+        return resource;
     };
 
     class Loader {

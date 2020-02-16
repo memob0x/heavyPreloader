@@ -90,7 +90,7 @@ export const getLoaderType = arg => {
         case "js":
         case "mjs":
             return "script";
-        case "mp3":
+        /*case "mp3":
         case "ogg":
         case "oga":
         case "spx":
@@ -100,9 +100,9 @@ export const getLoaderType = arg => {
         case "ogg":
         case "ogv":
         case "webm":
-            return "media";
+            return "media";*/
         default:
-            return "noop";
+            return null;
     }
 };
 

@@ -6,14 +6,14 @@ export const loadImage = (url, el = new Image()) =>
         el.src = url;
     });
 
-export const loadMedia = (url, el = new Image()) =>
+/* export const loadMedia = (url, el = new Image()) =>
     // TODO:
     new Promise((resolve, reject) => {
         el.onload = () => resolve(el);
         el.onerror = reject;
 
         el.src = url;
-    });
+    }); */
 
 export const loadStyle = (url, el = document.createElement("div")) => {
     const sheet = new CSSStyleSheet();
@@ -55,7 +55,7 @@ export const loadScript = (url, el = document.createElement("script")) =>
 
 export default {
     image: (url, bool, el) => loadImage(url, bool ? el : void 0),
-    media: (url, bool, el) => loadMedia(url, bool ? el : void 0),
+    // media: (url, bool, el) => loadMedia(url, bool ? el : void 0),
     script: (url, bool) => (bool ? loadScript(url) : loadObject(url)),
     style: (url, bool) => loadStyle(url, bool ? document : void 0)
 };

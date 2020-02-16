@@ -14,22 +14,11 @@ export const collection = {};
 export default async (resource, options = {}) => {
     // ...
     if (resource.url.href in collection) {
-        return new Promise((resolve, reject) => {
-            collection[resource.url.href]
-                .then(r =>
-                    resolve(
-                        new LoaderResource(
-                            {
-                                el: resource.el,
-                                blob: r.blob,
-                                url: r.url
-                            },
-                            true
-                        )
-                    )
-                )
-                .catch(reject);
-        });
+        const el = resource.el;
+
+        resource = await collection[resource.url.href];
+
+        return new LoaderResource({ ...resource, ...{ el: el } }, true);
     }
 
     // ...
@@ -62,17 +51,12 @@ export default async (resource, options = {}) => {
 
             // ...
             if (data.status === 200) {
-                resolve(
-                    new LoaderResource(
-                        {
-                            ...resource,
-                            ...{
-                                blob: data.blob
-                            }
-                        },
-                        true
-                    )
+                resource = new LoaderResource(
+                    { ...resource, ...{ blob: data.blob } },
+                    true
                 );
+
+                resolve(resource);
 
                 return;
             }
