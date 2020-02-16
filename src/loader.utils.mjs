@@ -58,16 +58,17 @@ export const createWorker = work => {
 };
 
 /**
- * TODO: check
+ *
  * @param {String|LoaderResource} arg
  */
 export const getLoaderType = arg => {
-    arg = getURL(arg).href;
+    arg = getURL(arg)
+        .href.split(/\#|\?/)[0]
+        .split(".")
+        .pop()
+        .trim();
 
-    let ext = arg.split(".");
-    ext = ext[ext.length - 1];
-
-    switch (ext) {
+    switch (arg) {
         case "jpg":
         case "jpe":
         case "jpeg":

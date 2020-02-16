@@ -60,11 +60,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
   };
 
   var getLoaderType = function getLoaderType(arg) {
-    arg = getURL(arg).href;
-    var ext = arg.split(".");
-    ext = ext[ext.length - 1];
+    arg = getURL(arg).href.split(/\#|\?/)[0].split(".").pop().trim();
 
-    switch (ext) {
+    switch (arg) {
       case "jpg":
       case "jpe":
       case "jpeg":
