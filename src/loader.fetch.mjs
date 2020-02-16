@@ -4,7 +4,7 @@ import loaderWorker from "./loader.worker.mjs";
 import LoaderResource from "./loader.resource.mjs";
 
 // ...
-export const collection = {};
+const collection = {};
 
 /**
  *
