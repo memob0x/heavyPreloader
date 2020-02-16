@@ -1,20 +1,20 @@
 import Loader from "../../src/loader.mjs";
 
-const loader = new Loader();
+const loader = new Loader({ fetch: { cors: "no-cors" } });
 
 [...document.querySelectorAll("img[data-src]")].forEach(el =>
     loader
         .fetch(el)
-        .then(x => console.warn(x))
-        .catch(e => console.error(e))
+        .then(x => console.log(x))
+        .catch(e => console.warn(e))
 );
 
 document.querySelector("button").addEventListener("click", () =>
     [...document.querySelectorAll("img[data-src]")].forEach(el =>
         loader
             .load(el)
-            .then(x => console.warn(x))
-            .catch(e => console.error(e))
+            .then(x => console.log(x))
+            .catch(e => console.warn(e))
     )
 );
 

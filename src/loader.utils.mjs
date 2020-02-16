@@ -1,4 +1,10 @@
-import LoaderResource from "./loader.resource.mjs";
+/**
+ *
+ * @param {Object} o
+ * @param {String} p
+ */
+export const prop = (o, p) =>
+    p.split(".").reduce((xs, x) => (xs && xs[x] ? xs[x] : null), o);
 
 /**
  *
@@ -6,13 +12,28 @@ import LoaderResource from "./loader.resource.mjs";
  * @returns {URL}
  */
 export const getURL = arg => {
-    arg = LoaderResource.isLoaderResource(arg) ? arg.url : arg;
-    arg = arg && typeof arg === "object" && "href" in arg ? arg.href : arg;
+    arg = prop(arg, "url") || arg;
+    arg = prop(arg, "href") || arg;
 
     const a = document.createElement("a");
     a.href = arg;
 
     return new URL(a);
+};
+
+/**
+ *
+ * @param {HTMLElement} el
+ * @returns {Boolean}
+ */
+export const isSupportedElement = el => {
+    return (
+        el instanceof HTMLImageElement ||
+        el instanceof HTMLPictureElement ||
+        el instanceof HTMLSourceElement ||
+        el instanceof HTMLVideoElement ||
+        el instanceof HTMLAudioElement
+    );
 };
 
 /**

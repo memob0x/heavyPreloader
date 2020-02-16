@@ -1,28 +1,25 @@
-import { Middlewares } from "./loader.loaders.mjs";
+import Loaders from "./loader.loaders.mjs";
 import { getLoaderType } from "./loader.utils.mjs";
 
 /**
  *
  * @param {LoaderResource} resource
  */
-export default (resource, load) => {
+export default (resource, bool) => {
     const type = getLoaderType(resource);
 
-    if (!(type in Middlewares)) {
+    if (!(type in Loaders)) {
         return Promise.reject(new Error("invalid type"));
     }
 
-    const url = !!resource.blob.type
+    const url = !!resource.blob
         ? URL.createObjectURL(resource.blob)
-        : resource.url;
+        : resource.url.href;
 
     return new Promise((resolve, reject) =>
-        Middlewares[type](url, load, resource)
+        Loaders[type](url, bool, resource.el)
             .finally(() => URL.revokeObjectURL(url))
-            .then(el => {
-                resource._el = el;
-                resolve(resource);
-            })
+            .then(() => resolve(resource))
             .catch(reject)
     );
 };

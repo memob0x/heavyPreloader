@@ -1,10 +1,12 @@
-import { isCORS } from "./loader.utils.mjs";
+import { isCORS, getURL, isSupportedElement } from "./loader.utils.mjs";
 import LoaderResource from "./loader.resource.mjs";
 import _load from "./loader.load.mjs";
 import _fetch from "./loader.fetch.mjs";
 
 export default class Loader {
-    constructor() {}
+    constructor(options) {
+        this.options = { ...{ fetch: {} }, ...options };
+    }
 
     /**
      *
@@ -23,13 +25,18 @@ export default class Loader {
         }
 
         // ...
-        if (arg instanceof HTMLElement || typeof arg === "string") {
-            return this.fetch(new LoaderResource(arg, true));
+        if (typeof arg === "string") {
+            return this.fetch(getURL(arg));
+        }
+
+        // ...
+        if (isSupportedElement(arg) || arg instanceof URL) {
+            return this.fetch(new LoaderResource(arg));
         }
 
         // ...
         if (LoaderResource.isLoaderResource(arg)) {
-            return _fetch(arg, false);
+            return _fetch(arg, this.options.fetch);
         }
 
         // ...
@@ -37,7 +44,7 @@ export default class Loader {
     }
 
     /**
-     * @param {String|Array|LoaderResource|HTMLElement|NodeList} arg
+     * @param {String|Array|LoaderResource|HTMLElement|NodeList|URL} arg
      * @returns {Array|Promise}
      */
     async load(arg) {
@@ -51,16 +58,21 @@ export default class Loader {
         }
 
         // ...
-        if (arg instanceof HTMLElement || typeof arg === "string") {
-            return this.load(new LoaderResource(arg, true));
+        if (typeof arg === "string") {
+            return this.load(getURL(arg));
         }
 
         // ...
-        if (!isCORS(arg)) {
+        if (isSupportedElement(arg) || arg instanceof URL) {
+            return this.load(new LoaderResource(arg));
+        }
+
+        // ...
+        if (!isCORS(arg) || this.options.fetch.cors === "no-cors") {
             try {
                 arg = await this.fetch(arg);
             } catch (e) {
-                return Promise.reject(e);
+                console.warn(e);
             }
         }
 

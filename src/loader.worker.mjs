@@ -2,20 +2,27 @@ import { createWorker } from "./loader.utils.mjs";
 
 export const work = () => {
     onmessage = async event => {
-        const url = event.data;
+        const data = event.data;
 
-        const response = await fetch(url);
-        const blob = await response.blob();
+        let message;
+        try {
+            const response = await fetch(data.href, data.options);
+            const blob = await response.blob();
 
-        postMessage({
-            url: url,
-            response: {
-                url: response.url,
+            message = {
                 status: response.status,
-                statusText: response.statusText
-            },
-            blob: blob
-        });
+                statusText: response.statusText,
+                blob: blob
+            };
+        } catch (e) {
+            message = {
+                status: 0,
+                statusText: e
+            };
+        }
+
+        message.href = data.href;
+        postMessage(message);
     };
 };
 

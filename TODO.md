@@ -1,7 +1,6 @@
 - audio/video handling
 - getLoaderTypeFromUrl func
-- check isCORSUrl
-- check cors scripts preload
+- check cors
 - tests
 - README.md
 - demo page

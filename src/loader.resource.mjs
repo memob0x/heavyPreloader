@@ -1,61 +1,40 @@
-// TODO: refactor this!!!!!!!!!
+import { getURL, prop, isSupportedElement } from "./loader.utils.mjs";
 
-import { getURL } from "./loader.utils.mjs";
-
-const _get = (p, o) => p.reduce((xs, x) => (xs && xs[x] ? xs[x] : null), o);
-const _cast = (rawData, structure, interfaze) => {
-    return rawData instanceof interfaze
-        ? rawData
-        : {
-              ...structure,
-              ...(rawData || {})
-          };
-};
-
+// ...
 const collection = {};
 
+// ...
+const build = data => {
+    let o = {};
+
+    if (isSupportedElement(data)) {
+        o.el = data;
+        o.url = getURL(prop(o.el, "dataset.src")); // TODO: find a way to get currentSrc without triggering load
+    } else {
+        o.el = prop(data, "el");
+        o.url = data instanceof URL ? data : prop(data, "url");
+    }
+
+    o.blob = prop(data, "blob");
+
+    return o;
+};
+
+// ...
+// TODO: refactor to avoid "override" param
 export default class LoaderResource {
-    constructor(rawData, existent) {
-        this.el =
-            rawData instanceof HTMLElement
-                ? rawData
-                : _get(["el"], rawData) || null;
+    constructor(data, override) {
+        let o = build(data);
 
-        this.url =
-            getURL(
-                _get(["dataset", "src"], this.el) ||
-                    _get(["url"], rawData) ||
-                    rawData
-            ).href || null;
-
-        if (this.url in collection && existent) {
-            this.el = collection[this.url].el;
-            this.url = collection[this.url].url;
-            this.blob = collection[this.url].blob;
-            this.response = collection[this.url].response;
-            return;
+        if (o.url.href in collection && !override) {
+            o = collection[o.url.href];
         }
 
-        this.blob = _cast(
-            _get(["blob"], rawData),
-            {
-                size: 0,
-                type: ""
-            },
-            Blob
-        );
+        this.el = o.el;
+        this.url = o.url;
+        this.blob = o.blob;
 
-        this.response = _cast(
-            _get(["response"], rawData),
-            {
-                url: this.url,
-                status: 200,
-                statusText: ""
-            },
-            Response
-        );
-
-        collection[this.url] = this;
+        collection[this.url.href] = this;
     }
 
     static isLoaderResource(data) {
