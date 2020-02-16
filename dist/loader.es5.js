@@ -320,7 +320,15 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
                 break;
               }
 
-              return _context2.abrupt("return", collection$1[resource.url.href]);
+              return _context2.abrupt("return", new Promise(function (resolve, reject) {
+                collection$1[resource.url.href].then(function (r) {
+                  return resolve(new LoaderResource({
+                    el: resource.el,
+                    blob: r.blob,
+                    url: r.url
+                  }, true));
+                })["catch"](reject);
+              }));
 
             case 3:
               if (!(isCORS(resource) && options.fetch.cors !== "no-cors")) {

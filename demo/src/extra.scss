@@ -4,6 +4,7 @@ button {
 }
 
 .image {
+    background: blue;
     display: none;
     margin: 10px;
     position: relative;
@@ -16,6 +17,7 @@ button {
     }
 
     img {
+        opacity: 0;
         transition: opacity 0.4s ease;
         position: absolute;
         top: 0;
@@ -27,16 +29,12 @@ button {
     }
 }
 
+.image.loaded,
 .image.fetched {
     display: block;
-    background: blue;
-
-    img {
-        opacity: 0;
-    }
 }
 
-.image.fetched.loaded {
+.image.loaded {
     background: yellow;
 
     img {

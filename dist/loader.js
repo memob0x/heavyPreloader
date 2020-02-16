@@ -284,7 +284,22 @@
     var _fetch = async (resource, options = {}) => {
         // ...
         if (resource.url.href in collection$1) {
-            return collection$1[resource.url.href];
+            return new Promise((resolve, reject) => {
+                collection$1[resource.url.href]
+                    .then(r =>
+                        resolve(
+                            new LoaderResource(
+                                {
+                                    el: resource.el,
+                                    blob: r.blob,
+                                    url: r.url
+                                },
+                                true
+                            )
+                        )
+                    )
+                    .catch(reject);
+            });
         }
 
         // ...
