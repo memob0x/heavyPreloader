@@ -5,7 +5,16 @@ import _fetch from "./loader.fetch.mjs";
 
 export default class Loader {
     constructor(options) {
-        this.options = { ...{ fetch: {} }, ...options };
+        this.options = {
+            ...{
+                fetch: {
+                    // this way fetch throws but you don't get double download
+                    // TODO: check if opt makes sense
+                    cors: "no-cors"
+                }
+            },
+            ...options
+        };
     }
 
     /**

@@ -66,13 +66,41 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
     switch (ext) {
       case "jpg":
+      case "jpe":
+      case "jpeg":
+      case "jif":
+      case "jfi":
+      case "jfif":
+      case "gif":
+      case "tif":
+      case "tiff":
+      case "bmp":
+      case "dib":
+      case "webp":
+      case "ico":
+      case "cur":
+      case "svg":
+      case "png":
         return "image";
 
       case "css":
         return "style";
 
       case "js":
+      case "mjs":
         return "script";
+
+      case "mp3":
+      case "ogg":
+      case "oga":
+      case "spx":
+      case "ogg":
+      case "wav":
+      case "mp4":
+      case "ogg":
+      case "ogv":
+      case "webm":
+        return "media";
 
       default:
         return "noop";
@@ -84,7 +112,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     return arg.hostname !== window.location.hostname || arg.protocol !== window.location.protocol;
   };
 
-  var collection = {};
+  var collection = new WeakMap();
 
   var build = function build(data) {
     var o = {};
@@ -107,14 +135,18 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
       var o = build(data);
 
-      if (o.url.href in collection && !override) {
-        o = collection[o.url.href];
+      if (collection.has(o.url) && !override) {
+        o = collection.get(o.url);
+      }
+
+      if (collection.has(o.el) && !override) {
+        o = collection.get(o.el);
       }
 
       this.el = o.el;
       this.url = o.url;
       this.blob = o.blob;
-      collection[this.url.href] = this;
+      collection.set(o.el || o.url, this);
     }
 
     _createClass(LoaderResource, null, [{
@@ -207,23 +239,6 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }
   };
 
-  var _load = function _load(resource, bool) {
-    var type = getLoaderType(resource);
-
-    if (!(type in Loaders)) {
-      return Promise.reject(new Error("invalid type"));
-    }
-
-    var url = !!resource.blob ? URL.createObjectURL(resource.blob) : resource.url.href;
-    return new Promise(function (resolve, reject) {
-      return Loaders[type](url, bool, resource.el)["finally"](function () {
-        return URL.revokeObjectURL(url);
-      }).then(function () {
-        return resolve(resource);
-      })["catch"](reject);
-    });
-  };
-
   var work = function work() {
     onmessage = function () {
       var _ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee(event) {
@@ -290,48 +305,137 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
   var collection$1 = {};
 
-  var _fetch = function _fetch(resource) {
-    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  var _fetch = function () {
+    var _ref2 = _asyncToGenerator(regeneratorRuntime.mark(function _callee2(resource) {
+      var options,
+          _args2 = arguments;
+      return regeneratorRuntime.wrap(function _callee2$(_context2) {
+        while (1) {
+          switch (_context2.prev = _context2.next) {
+            case 0:
+              options = _args2.length > 1 && _args2[1] !== undefined ? _args2[1] : {};
 
-    if (resource.url.href in collection$1) {
-      return collection$1[resource.url.href];
-    }
+              if (!(resource.url.href in collection$1)) {
+                _context2.next = 3;
+                break;
+              }
 
-    if (isCORS(resource) && options.cors !== "no-cors") {
-      return collection$1[resource.url.href] = _load(resource, false);
-    }
+              return _context2.abrupt("return", collection$1[resource.url.href]);
 
-    return collection$1[resource.url.href] = new Promise(function (resolve, reject) {
-      var worker = loaderWorker();
-      worker.postMessage({
-        href: resource.url.href,
-        options: options
-      });
-      worker.addEventListener("message", function (event) {
-        var data = event.data;
+            case 3:
+              if (!(isCORS(resource) && options.fetch.cors !== "no-cors")) {
+                _context2.next = 5;
+                break;
+              }
 
-        if (data.href !== resource.url.href) {
-          return;
+              return _context2.abrupt("return", collection$1[resource.url.href] = _load(resource, options, false));
+
+            case 5:
+              return _context2.abrupt("return", collection$1[resource.url.href] = new Promise(function (resolve, reject) {
+                var worker = loaderWorker();
+                worker.postMessage({
+                  href: resource.url.href,
+                  options: options.fetch
+                });
+                worker.addEventListener("message", function (event) {
+                  var data = event.data;
+
+                  if (data.href !== resource.url.href) {
+                    return;
+                  }
+
+                  if (data.status === 200) {
+                    resolve(new LoaderResource(_objectSpread({}, resource, {}, {
+                      blob: data.blob
+                    }), true));
+                    return;
+                  }
+
+                  reject(new Error("".concat(data.statusText, " ").concat(data.href)));
+                });
+              }));
+
+            case 6:
+            case "end":
+              return _context2.stop();
+          }
         }
+      }, _callee2);
+    }));
 
-        if (data.status === 200) {
-          resolve(new LoaderResource(_objectSpread({}, resource, {}, {
-            blob: data.blob
-          }), true));
-          return;
+    return function _fetch(_x2) {
+      return _ref2.apply(this, arguments);
+    };
+  }();
+
+  var _load = function () {
+    var _ref3 = _asyncToGenerator(regeneratorRuntime.mark(function _callee3(resource, options, bool) {
+      var el, type, url;
+      return regeneratorRuntime.wrap(function _callee3$(_context3) {
+        while (1) {
+          switch (_context3.prev = _context3.next) {
+            case 0:
+              if (!(!isCORS(resource) || options.fetch.cors === "no-cors")) {
+                _context3.next = 11;
+                break;
+              }
+
+              _context3.prev = 1;
+              el = resource.el;
+              _context3.next = 5;
+              return _fetch(resource, options);
+
+            case 5:
+              resource = _context3.sent;
+              resource.el = el;
+              _context3.next = 11;
+              break;
+
+            case 9:
+              _context3.prev = 9;
+              _context3.t0 = _context3["catch"](1);
+
+            case 11:
+              type = getLoaderType(resource);
+
+              if (type in Loaders) {
+                _context3.next = 14;
+                break;
+              }
+
+              return _context3.abrupt("return", Promise.reject(new Error("invalid type")));
+
+            case 14:
+              url = !!resource.blob ? URL.createObjectURL(resource.blob) : resource.url.href;
+              return _context3.abrupt("return", new Promise(function (resolve, reject) {
+                return Loaders[type](url, bool, resource.el)["finally"](function () {
+                  return URL.revokeObjectURL(url);
+                }).then(function () {
+                  return resolve(resource);
+                })["catch"](reject);
+              }));
+
+            case 16:
+            case "end":
+              return _context3.stop();
+          }
         }
+      }, _callee3, null, [[1, 9]]);
+    }));
 
-        reject(new Error("".concat(data.statusText, " ").concat(data.href)));
-      });
-    });
-  };
+    return function _load(_x3, _x4, _x5) {
+      return _ref3.apply(this, arguments);
+    };
+  }();
 
   var Loader = function () {
     function Loader(options) {
       _classCallCheck(this, Loader);
 
       this.options = _objectSpread({}, {
-        fetch: {}
+        fetch: {
+          cors: "no-cors"
+        }
       }, {}, options);
     }
 
@@ -359,99 +463,40 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         }
 
         if (LoaderResource.isLoaderResource(arg)) {
-          return _fetch(arg, this.options.fetch);
+          return _fetch(arg, this.options);
         }
 
         return Promise.reject(new Error("invalid argument"));
       }
     }, {
       key: "load",
-      value: function () {
-        var _load2 = _asyncToGenerator(regeneratorRuntime.mark(function _callee2(arg) {
-          var _this2 = this;
+      value: function load(arg) {
+        var _this2 = this;
 
-          return regeneratorRuntime.wrap(function _callee2$(_context2) {
-            while (1) {
-              switch (_context2.prev = _context2.next) {
-                case 0:
-                  if (!(arg instanceof NodeList)) {
-                    _context2.next = 2;
-                    break;
-                  }
-
-                  return _context2.abrupt("return", this.load(_toConsumableArray(arg)));
-
-                case 2:
-                  if (!Array.isArray(arg)) {
-                    _context2.next = 4;
-                    break;
-                  }
-
-                  return _context2.abrupt("return", arg.map(function (a) {
-                    return _this2.load(a);
-                  }));
-
-                case 4:
-                  if (!(typeof arg === "string")) {
-                    _context2.next = 6;
-                    break;
-                  }
-
-                  return _context2.abrupt("return", this.load(getURL(arg)));
-
-                case 6:
-                  if (!(isSupportedElement(arg) || arg instanceof URL)) {
-                    _context2.next = 8;
-                    break;
-                  }
-
-                  return _context2.abrupt("return", this.load(new LoaderResource(arg)));
-
-                case 8:
-                  if (!(!isCORS(arg) || this.options.fetch.cors === "no-cors")) {
-                    _context2.next = 18;
-                    break;
-                  }
-
-                  _context2.prev = 9;
-                  _context2.next = 12;
-                  return this.fetch(arg);
-
-                case 12:
-                  arg = _context2.sent;
-                  _context2.next = 18;
-                  break;
-
-                case 15:
-                  _context2.prev = 15;
-                  _context2.t0 = _context2["catch"](9);
-                  console.warn(_context2.t0);
-
-                case 18:
-                  if (!LoaderResource.isLoaderResource(arg)) {
-                    _context2.next = 20;
-                    break;
-                  }
-
-                  return _context2.abrupt("return", _load(arg, true));
-
-                case 20:
-                  return _context2.abrupt("return", Promise.reject(new Error("invalid argument")));
-
-                case 21:
-                case "end":
-                  return _context2.stop();
-              }
-            }
-          }, _callee2, this, [[9, 15]]);
-        }));
-
-        function load(_x2) {
-          return _load2.apply(this, arguments);
+        if (arg instanceof NodeList) {
+          return this.load(_toConsumableArray(arg));
         }
 
-        return load;
-      }()
+        if (Array.isArray(arg)) {
+          return arg.map(function (a) {
+            return _this2.load(a);
+          });
+        }
+
+        if (typeof arg === "string") {
+          return this.load(getURL(arg));
+        }
+
+        if (isSupportedElement(arg) || arg instanceof URL) {
+          return this.load(new LoaderResource(arg));
+        }
+
+        if (LoaderResource.isLoaderResource(arg)) {
+          return _load(arg, this.options, true);
+        }
+
+        return Promise.reject(new Error("invalid argument"));
+      }
     }]);
 
     return Loader;

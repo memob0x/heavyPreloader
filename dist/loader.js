@@ -64,7 +64,7 @@
     };
 
     /**
-     * TODO: do it
+     * TODO: check
      * @param {String|LoaderResource} arg
      */
     const getLoaderType = arg => {
@@ -75,11 +75,38 @@
 
         switch (ext) {
             case "jpg":
+            case "jpe":
+            case "jpeg":
+            case "jif":
+            case "jfi":
+            case "jfif":
+            case "gif":
+            case "tif":
+            case "tiff":
+            case "bmp":
+            case "dib":
+            case "webp":
+            case "ico":
+            case "cur":
+            case "svg":
+            case "png":
                 return "image";
             case "css":
                 return "style";
             case "js":
+            case "mjs":
                 return "script";
+            case "mp3":
+            case "ogg":
+            case "oga":
+            case "spx":
+            case "ogg":
+            case "wav":
+            case "mp4":
+            case "ogg":
+            case "ogv":
+            case "webm":
+                return "media";
             default:
                 return "noop";
         }
@@ -100,7 +127,7 @@
     };
 
     // ...
-    const collection = {};
+    const collection = new WeakMap();
 
     // ...
     const build = data => {
@@ -125,15 +152,19 @@
         constructor(data, override) {
             let o = build(data);
 
-            if (o.url.href in collection && !override) {
-                o = collection[o.url.href];
+            if (collection.has(o.url) && !override) {
+                o = collection.get(o.url);
+            }
+
+            if (collection.has(o.el) && !override) {
+                o = collection.get(o.el);
             }
 
             this.el = o.el;
             this.url = o.url;
             this.blob = o.blob;
 
-            collection[this.url.href] = this;
+            collection.set(o.el || o.url, this);
         }
 
         static isLoaderResource(data) {
@@ -203,33 +234,11 @@
         style: (url, bool) => loadStyle(url, bool ? document : void 0)
     };
 
-    /**
-     *
-     * @param {LoaderResource} resource
-     */
-    var _load = (resource, bool) => {
-        const type = getLoaderType(resource);
-
-        if (!(type in Loaders)) {
-            return Promise.reject(new Error("invalid type"));
-        }
-
-        const url = !!resource.blob
-            ? URL.createObjectURL(resource.blob)
-            : resource.url.href;
-
-        return new Promise((resolve, reject) =>
-            Loaders[type](url, bool, resource.el)
-                .finally(() => URL.revokeObjectURL(url))
-                .then(() => resolve(resource))
-                .catch(reject)
-        );
-    };
-
     const work = () => {
         onmessage = async event => {
             const data = event.data;
 
+            // ...
             let message;
             try {
                 const response = await fetch(data.href, data.options);
@@ -247,18 +256,20 @@
                 };
             }
 
+            // ...
             message.href = data.href;
             postMessage(message);
         };
     };
 
     let worker = null;
-
     var loaderWorker = () => {
+        // ...
         if (worker) {
             return worker;
         }
 
+        // ...
         return (worker = createWorker(work));
     };
 
@@ -270,15 +281,19 @@
      * @param {LoaderResource} resource
      * @param {Object} options
      */
-    var _fetch = (resource, options = {}) => {
+    var _fetch = async (resource, options = {}) => {
         // ...
         if (resource.url.href in collection$1) {
             return collection$1[resource.url.href];
         }
 
         // ...
-        if (isCORS(resource) && options.cors !== "no-cors") {
-            return (collection$1[resource.url.href] = _load(resource, false));
+        if (isCORS(resource) && options.fetch.cors !== "no-cors") {
+            return (collection$1[resource.url.href] = _load(
+                resource,
+                options,
+                false
+            ));
         }
 
         // ...
@@ -288,7 +303,7 @@
             // ...
             worker.postMessage({
                 href: resource.url.href,
-                options: options
+                options: options.fetch
             });
 
             // ...
@@ -323,9 +338,53 @@
         }));
     };
 
+    /**
+     *
+     * @param {LoaderResource} resource
+     * @param {Object} options
+     */
+    var _load = async (resource, options, bool) => {
+        // ...
+        if (!isCORS(resource) || options.fetch.cors === "no-cors") {
+            try {
+                const el = resource.el;
+                resource = await _fetch(resource, options);
+                resource.el = el;
+            } catch (e) {}
+        }
+
+        // ...
+        const type = getLoaderType(resource);
+        if (!(type in Loaders)) {
+            return Promise.reject(new Error("invalid type"));
+        }
+
+        // ...
+        const url = !!resource.blob
+            ? URL.createObjectURL(resource.blob)
+            : resource.url.href;
+
+        // ...
+        return new Promise((resolve, reject) =>
+            Loaders[type](url, bool, resource.el)
+                .finally(() => URL.revokeObjectURL(url))
+                .then(() => resolve(resource))
+                .catch(reject)
+        );
+    };
+
     class Loader {
         constructor(options) {
-            this.options = { ...{ fetch: {} }, ...options };
+            this.options = {
+                ...{
+                    fetch: {
+                        // this way fetch throws but you don't get double download
+                        // TODO: check if opt makes sense
+                        cors: "no-cors"
+                    }
+                },
+                ...options
+            };
         }
 
         /**
@@ -356,7 +415,7 @@
 
             // ...
             if (LoaderResource.isLoaderResource(arg)) {
-                return _fetch(arg, this.options.fetch);
+                return _fetch(arg, this.options);
             }
 
             // ...
@@ -367,7 +426,7 @@
          * @param {String|Array|LoaderResource|HTMLElement|NodeList|URL} arg
          * @returns {Array|Promise}
          */
-        async load(arg) {
+        load(arg) {
             if (arg instanceof NodeList) {
                 return this.load([...arg]);
             }
@@ -388,17 +447,8 @@
             }
 
             // ...
-            if (!isCORS(arg) || this.options.fetch.cors === "no-cors") {
-                try {
-                    arg = await this.fetch(arg);
-                } catch (e) {
-                    console.warn(e);
-                }
-            }
-
-            // ...
             if (LoaderResource.isLoaderResource(arg)) {
-                return _load(arg, true);
+                return _load(arg, this.options, true);
             }
 
             // ...

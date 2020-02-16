@@ -1,6 +1,6 @@
 import Loader from "../../src/loader.mjs";
 
-const loader = new Loader({ fetch: { cors: "no-cors" } });
+const loader = new Loader();
 
 const images = document.querySelectorAll("img[data-src]");
 
