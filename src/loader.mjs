@@ -74,7 +74,7 @@ export default class Loader {
 
         // ...
         if (LoaderResource.isLoaderResource(arg)) {
-            return _load(arg, this.options, true);
+            return _load(arg, this.options /*, true*/);
         }
 
         // ...

@@ -1,21 +1,21 @@
 import Loaders from "./loader.loaders.mjs";
 import _fetch from "./loader.fetch.mjs";
-import { getLoaderType, isCORS } from "./loader.utils.mjs";
+import { getLoaderType /*, isCORS */ } from "./loader.utils.mjs";
 
 /**
  *
  * @param {LoaderResource} resource
  * @param {Object} options
  */
-export default async (resource, options, bool) => {
+export default async (resource, options /*, bool*/) => {
     // ...
-    if (!isCORS(resource) || options.fetch.cors === "no-cors") {
-        const el = resource.el;
+    const el = resource.el;
 
+    // ...
+    try {
         resource = await _fetch(resource, options);
-
         resource.el = el;
-    }
+    } catch (e) {}
 
     // ...
     const type = getLoaderType(resource);
@@ -29,7 +29,7 @@ export default async (resource, options, bool) => {
         : resource.url.href;
 
     // ...
-    await Loaders[type](url, bool, resource.el).finally(() =>
+    await Loaders[type](url, /* bool,*/ resource.el).finally(() =>
         URL.revokeObjectURL(url)
     );
 

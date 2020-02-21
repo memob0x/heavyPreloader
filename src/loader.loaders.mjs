@@ -27,7 +27,7 @@ export const loadStyle = (url, el = document.createElement("div")) => {
     return promise;
 };
 
-export const loadObject = (url, el = document.createElement("object")) =>
+/*export const loadObject = (url, el = document.createElement("object")) =>
     new Promise((resolve, reject) => {
         // TODO: check
         el.onload = () => resolve(el);
@@ -39,7 +39,7 @@ export const loadObject = (url, el = document.createElement("object")) =>
         el.height = 0;
 
         document.body.append(el);
-    });
+    });*/
 
 export const loadScript = (url, el = document.createElement("script")) =>
     new Promise((resolve, reject) => {
@@ -54,8 +54,9 @@ export const loadScript = (url, el = document.createElement("script")) =>
     });
 
 export default {
-    image: (url, bool, el) => loadImage(url, bool ? el : void 0),
+    image: (url, /*bool,*/ el) => loadImage(url, /*bool ?*/ el /*: void 0*/),
     // media: (url, bool, el) => loadMedia(url, bool ? el : void 0),
-    script: (url, bool) => (bool ? loadScript(url) : loadObject(url)),
-    style: (url, bool) => loadStyle(url, bool ? document : void 0)
+    script: (url /*, bool*/) =>
+        /*(bool ?*/ loadScript(url) /*: loadObject(url))*/,
+    style: (url /*, bool*/) => loadStyle(url, /*bool ?*/ document /*: void 0*/)
 };

@@ -38,5 +38,7 @@
         "gulp-rename": "^2.0.0",
         "pump": "^3.0.0"
     },
-    "dependencies": {}
+    "dependencies": {
+        "gulp-strip-comments": "^2.5.2"
+    }
 }

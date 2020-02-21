@@ -93,11 +93,6 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }
   };
 
-  var isCORS = function isCORS(arg) {
-    arg = getURL(arg);
-    return arg.hostname !== window.location.hostname || arg.protocol !== window.location.protocol;
-  };
-
   var collection = new WeakMap();
 
   var build = function build(data) {
@@ -169,21 +164,6 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     return promise;
   };
 
-  var loadObject = function loadObject(url) {
-    var el = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : document.createElement("object");
-    return new Promise(function (resolve, reject) {
-      el.onload = function () {
-        return resolve(el);
-      };
-
-      el.onerror = reject;
-      el.data = url;
-      el.width = 0;
-      el.height = 0;
-      document.body.append(el);
-    });
-  };
-
   var loadScript = function loadScript(url) {
     var el = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : document.createElement("script");
     return new Promise(function (resolve, reject) {
@@ -199,14 +179,14 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
   };
 
   var Loaders = {
-    image: function image(url, bool, el) {
-      return loadImage(url, bool ? el : void 0);
+    image: function image(url, el) {
+      return loadImage(url, el);
     },
-    script: function script(url, bool) {
-      return bool ? loadScript(url) : loadObject(url);
+    script: function script(url) {
+      return loadScript(url);
     },
-    style: function style(url, bool) {
-      return loadStyle(url, bool ? document : void 0);
+    style: function style(url) {
+      return loadStyle(url, document);
     }
   };
 
@@ -303,14 +283,6 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
               }), true));
 
             case 7:
-              if (!(isCORS(resource) && options.fetch.cors !== "no-cors")) {
-                _context2.next = 9;
-                break;
-              }
-
-              return _context2.abrupt("return", collection$1[resource.url.href] = _load(resource, options, false));
-
-            case 9:
               return _context2.abrupt("return", collection$1[resource.url.href] = new Promise(function (resolve, reject) {
                 var worker = loaderWorker();
                 worker.postMessage({
@@ -336,7 +308,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
                 });
               }));
 
-            case 10:
+            case 8:
             case "end":
               return _context2.stop();
           }
@@ -350,54 +322,56 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
   }();
 
   var _load = function () {
-    var _ref3 = _asyncToGenerator(regeneratorRuntime.mark(function _callee3(resource, options, bool) {
+    var _ref3 = _asyncToGenerator(regeneratorRuntime.mark(function _callee3(resource, options) {
       var el, type, url;
       return regeneratorRuntime.wrap(function _callee3$(_context3) {
         while (1) {
           switch (_context3.prev = _context3.next) {
             case 0:
-              if (!(!isCORS(resource) || options.fetch.cors === "no-cors")) {
-                _context3.next = 6;
-                break;
-              }
-
               el = resource.el;
+              _context3.prev = 1;
               _context3.next = 4;
               return _fetch(resource, options);
 
             case 4:
               resource = _context3.sent;
               resource.el = el;
+              _context3.next = 10;
+              break;
 
-            case 6:
+            case 8:
+              _context3.prev = 8;
+              _context3.t0 = _context3["catch"](1);
+
+            case 10:
               type = getLoaderType(resource);
 
               if (type in Loaders) {
-                _context3.next = 9;
+                _context3.next = 13;
                 break;
               }
 
               throw new Error("invalid type");
 
-            case 9:
+            case 13:
               url = !!resource.blob ? URL.createObjectURL(resource.blob) : resource.url.href;
-              _context3.next = 12;
-              return Loaders[type](url, bool, resource.el)["finally"](function () {
+              _context3.next = 16;
+              return Loaders[type](url, resource.el)["finally"](function () {
                 return URL.revokeObjectURL(url);
               });
 
-            case 12:
+            case 16:
               return _context3.abrupt("return", resource);
 
-            case 13:
+            case 17:
             case "end":
               return _context3.stop();
           }
         }
-      }, _callee3);
+      }, _callee3, null, [[1, 8]]);
     }));
 
-    return function _load(_x3, _x4, _x5) {
+    return function _load(_x3, _x4) {
       return _ref3.apply(this, arguments);
     };
   }();
@@ -466,7 +440,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         }
 
         if (LoaderResource.isLoaderResource(arg)) {
-          return _load(arg, this.options, true);
+          return _load(arg, this.options);
         }
 
         return Promise.reject(new Error("invalid argument"));

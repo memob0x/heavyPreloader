@@ -2,6 +2,7 @@
 
 const gulp = require("gulp");
 const pump = require("pump");
+const strip = require("gulp-strip-comments");
 const rollup = require("gulp-better-rollup");
 const sourcemaps = require("gulp-sourcemaps");
 const babel = require("gulp-babel");
@@ -71,7 +72,7 @@ const libEs5 = done =>
             //
             _rollupLibJs(),
             //
-            babel(),
+            babel({ comments: false }),
             //
             rename({ extname: ".es5.js" }),
             //
@@ -89,6 +90,8 @@ const libEs6 = done =>
             ..._src(".mjs"),
             //
             _rollupLibJs(),
+            //
+            strip(),
             //
             rename({ extname: ".js" }),
             //

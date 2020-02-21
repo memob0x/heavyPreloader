@@ -1,5 +1,3 @@
-import { isCORS } from "./loader.utils.mjs";
-import _load from "./loader.load.mjs";
 import loaderWorker from "./loader.worker.mjs";
 import LoaderResource from "./loader.resource.mjs";
 
@@ -19,15 +17,6 @@ export default async (resource, options = {}) => {
         resource = await collection[resource.url.href];
 
         return new LoaderResource({ ...resource, ...{ el: el } }, true);
-    }
-
-    // ...
-    if (isCORS(resource) && options.fetch.cors !== "no-cors") {
-        return (collection[resource.url.href] = _load(
-            resource,
-            options,
-            false
-        ));
     }
 
     // ...
