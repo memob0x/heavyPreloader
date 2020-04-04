@@ -1,5 +1,21 @@
 "use strict";
 
+function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function _getRequireWildcardCache() { return cache; }; return cache; }
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || _typeof(obj) !== "object" && typeof obj !== "function") { return { "default": obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj["default"] = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
+function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
+
+function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(n); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+
+function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && Symbol.iterator in Object(iter)) return Array.from(iter); }
+
+function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToArray(arr); }
+
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
@@ -175,25 +191,170 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
     _createClass(Loader, [{
       key: "fetch",
-      value: function fetch(arg) {
-        var _this = this;
+      value: function () {
+        var _fetch = _asyncToGenerator(regeneratorRuntime.mark(function _callee3(arg) {
+          var _this = this;
 
-        if (Array.isArray(arg)) {
-          return arg.map(function (a) {
-            return _this.fetch(a);
-          });
+          return regeneratorRuntime.wrap(function _callee3$(_context3) {
+            while (1) {
+              switch (_context3.prev = _context3.next) {
+                case 0:
+                  if (!Array.isArray(arg)) {
+                    _context3.next = 4;
+                    break;
+                  }
+
+                  _context3.next = 3;
+                  return arg.map(function (a) {
+                    return _this.fetch(a);
+                  });
+
+                case 3:
+                  return _context3.abrupt("return", _context3.sent);
+
+                case 4:
+                  if (!(typeof arg === "string")) {
+                    _context3.next = 8;
+                    break;
+                  }
+
+                  _context3.next = 7;
+                  return this.fetch(getURL(arg));
+
+                case 7:
+                  return _context3.abrupt("return", _context3.sent);
+
+                case 8:
+                  if (!(arg instanceof URL)) {
+                    _context3.next = 12;
+                    break;
+                  }
+
+                  _context3.next = 11;
+                  return fetch$1(arg.href, this.options);
+
+                case 11:
+                  return _context3.abrupt("return", _context3.sent);
+
+                case 12:
+                  throw new TypeError("Invalid argment of type ".concat(_typeof(arg), " passed to Loader class \"fetch\" method."));
+
+                case 13:
+                case "end":
+                  return _context3.stop();
+              }
+            }
+          }, _callee3, this);
+        }));
+
+        function fetch(_x3) {
+          return _fetch.apply(this, arguments);
         }
 
-        if (typeof arg === "string") {
-          return this.fetch(getURL(arg));
+        return fetch;
+      }()
+    }, {
+      key: "load",
+      value: function () {
+        var _load = _asyncToGenerator(regeneratorRuntime.mark(function _callee4(arg, el) {
+          var _this2 = this;
+
+          var blob, imageUrl, styleUrl, sheet, jsUrl, result;
+          return regeneratorRuntime.wrap(function _callee4$(_context4) {
+            while (1) {
+              switch (_context4.prev = _context4.next) {
+                case 0:
+                  if (!Array.isArray(arg)) {
+                    _context4.next = 4;
+                    break;
+                  }
+
+                  _context4.next = 3;
+                  return arg.map(function (a) {
+                    return _this2.load(a);
+                  });
+
+                case 3:
+                  return _context4.abrupt("return", _context4.sent);
+
+                case 4:
+                  _context4.next = 6;
+                  return this.fetch(arg);
+
+                case 6:
+                  blob = _context4.sent;
+                  _context4.t0 = blob.type;
+                  _context4.next = _context4.t0 === "image/png" ? 10 : _context4.t0 === "image/jpeg" ? 10 : _context4.t0 === "text/html" ? 16 : _context4.t0 === "text/css" ? 17 : _context4.t0 === "text/javascript" ? 25 : 31;
+                  break;
+
+                case 10:
+                  el = undefined === el ? new Image() : el;
+                  imageUrl = URL.createObjectURL(blob);
+                  _context4.next = 14;
+                  return new Promise(function (resolve, reject) {
+                    el.onload = resolve;
+                    el.onerror = reject;
+                    el.src = imageUrl;
+                  });
+
+                case 14:
+                  URL.revokeObjectURL(imageUrl);
+                  return _context4.abrupt("return", el);
+
+                case 16:
+                  return _context4.abrupt("return", new Promise(function (resolve, reject) {
+                    var reader = new FileReader();
+                    reader.addEventListener("loadend", function (load) {
+                      return resolve(load.srcElement.result);
+                    });
+                    reader.readAsText(blob);
+                  }));
+
+                case 17:
+                  el = undefined === el ? document : el;
+                  styleUrl = URL.createObjectURL(blob);
+                  sheet = new CSSStyleSheet();
+                  _context4.next = 22;
+                  return sheet.replace("@import url(\"".concat(styleUrl, "\")"));
+
+                case 22:
+                  URL.revokeObjectURL(styleUrl);
+
+                  if ("adoptedStyleSheets" in el) {
+                    el.adoptedStyleSheets = [].concat(_toConsumableArray(el.adoptedStyleSheets), [sheet]);
+                  }
+
+                  return _context4.abrupt("return", sheet);
+
+                case 25:
+                  jsUrl = URL.createObjectURL(blob);
+                  _context4.next = 28;
+                  return Promise.resolve().then(function () {
+                    return _interopRequireWildcard(require("".concat(jsUrl)));
+                  });
+
+                case 28:
+                  result = _context4.sent;
+                  URL.revokeObjectURL(jsUrl);
+                  return _context4.abrupt("return", result);
+
+                case 31:
+                  throw new TypeError("Invalid argment of type ".concat(_typeof(arg), " passed to Loader class \"fetch\" method."));
+
+                case 32:
+                case "end":
+                  return _context4.stop();
+              }
+            }
+          }, _callee4, this);
+        }));
+
+        function load(_x4, _x5) {
+          return _load.apply(this, arguments);
         }
 
-        if (arg instanceof URL) {
-          return fetch$1(arg.href, this.options);
-        }
-
-        return Promise.reject(new TypeError("Invalid argment of type ".concat(_typeof(arg), " passed to Loader class \"fetch\" method.")));
-      }
+        return load;
+      }()
     }]);
 
     return Loader;

@@ -10,81 +10,51 @@ Under the hood this script uses `Worker` and `fetch` API to retrieve a `Blob` ob
 ```javascript
 //
 const loader = new Loader();
-const observer = new IntersectionObserver(callback);
 
 //
-const images = document.querySelectorAll("img[data-src]");
-//
-[...images].forEach(image => observer.observe(image));
-
-/**
- * 
- */
-function observerCallback(entries){
-    const visibleImages = entries.filter(entry => entry.isIntersecting)
-    
-    visibleImages.forEach(onEntryIntersection);
-}
-
-/**
- * 
- */
-function onEntryIntersection(image){
+const observer = new IntersectionObserver(entries => entries.filter(entry => entry.isIntersecting).forEach(entry => {
     const image = entry.target;
 
+    //
     observer.unobserve(image);
 
-    const blob = await loader.fetch(image.dataset.src);
-    const url = URL.createObjectURL(blob);
-    const dispose = () => URL.revokeObjectURL(url);
+    //
+    loader.load(image.dataset.src, image);
+}));
 
-    x.onload = dispose;
-    x.onerror = dispose;
-
-    x.src = url;
-}
+//
+[...document.querySelectorAll("img[data-src]")].forEach(image => observer.observe(image));
 ```
 
 ## [Stylesheets Loader](https://memob0x.github.io/loader/demos/async-styles/)
 This can be used to achieve a proper asynchronous stylesheets load callback (wich is a quite ancient cross-browser [problem](https://www.phpied.com/when-is-a-stylesheet-really-loaded/)).
 
 ```javascript
-//
-const loader = new Loader();
-
-//
-const stylesheetsLoad = loader.fetch([
-    "dist/header.css",
-    "dist/footer.css",
-    "dist/menu.css",
-    "dist/account.css"
-]);
-
-//
-Promise.allSettled(stylesheetsLoad).then() => document.body.classList.remove("page-loading-spinner"));
-
-//
-stylesheetsLoad.forEach(async (stylesheetLoad) => {
+(async () => {
     //
-    const blob = await stylesheetLoad;
-    const url = URL.createObjectURL(blob);
+    await Promise.allSettled(new Loader().load([
+        "theme.blue.css",
+        "area.account.css"
+    ], document));
 
     //
-    const sheet = new CSSStyleSheet();
-    const promise = sheet.replace(`@import url("${url}")`);
-    if ("adoptedStyleSheets" in document) {
-        document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet];
-    }
-
-    //
-    promise.finally(() => URL.revokeObjectURL(url));
-});
+    document.body.classList.remove("page-loading-spinner");
+})();
 ```
 
 ## [Scripts Loader](https://memob0x.github.io/loader/demos/import/)
 In large applications the list of asynchronous scripts to be loaded may become quite long, give em to another thread, keeping the script loader of your choice.
 
-### [requirejs](https://memob0x.github.io/loader/demos/require/)
+```javascript
+//
+void new Loader().load("product.js").then(Cart => {
+    const cart = new Cart();
+
+    cart.add("product-foo-12345678-bar");
+});
+```
+
+### [RequireJS (or other script loaders)](https://memob0x.github.io/loader/demos/require/)
 
 ```javascript
 //
@@ -96,13 +66,15 @@ const loader = new Loader();
 const include = async (path) => {
     //
     const blob = await loader.fetch(path);
+
+    //
     const url = URL.createObjectURL(blob);
 
     //
-    const result = new Promise((resolve, reject) => require(url, resolve, reject));
+    const result = await new Promise((resolve, reject) => require(url, resolve, reject));
 
     //
-    result.finally(() => URL.revokeObjectURL(url));
+    URL.revokeObjectURL(url);
 
     //
     return result;
@@ -116,43 +88,19 @@ include("cart.js").then(Cart => {
 });
 ```
 
-### [Native imports](https://memob0x.github.io/loader/demos/import/)
+## [HTML](https://memob0x.github.io/loader/demos/html/)
+This can be used to retrieve views.
 
 ```javascript
 //
-const loader = new Loader();
-
-/**
- * 
- */
-const include = async (path) => {
-    //
-    const blob = await loader.fetch(path);
-    const url = URL.createObjectURL(blob);
-
-    //
-    const result = await import(url)
-
-    //
-    URL.revokeObjectURL(url);
-
-    //
-    return result;
-}
-
-//
-include("product.js").then(Cart => {
-    const product = new Product("product-foo-12345678-bar");
-
-    console.log(product.color, product.sizes);
-});
+void new Loader().load("/Messages/Inbox").then(result => (document.body.innerHTML = result));
 ```
 
 # Fetch settings
 The class constructor accepts an only `Object` parameter that is internally passed to the `fetch` API to provide [options](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch#Supplying_request_options).
 
 ```javascript
-const instance = new Loader({
+const loader = new Loader({
     method: 'POST',
     mode: 'cors'
     // ...

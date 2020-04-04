@@ -5,52 +5,40 @@ const images = document.querySelectorAll("img[data-src]");
 const observer = new IntersectionObserver((entries) =>
     entries
         .filter((x) => x.isIntersecting)
-        .forEach((x) => {
-            laodImage(x.target);
+        .forEach(async (x) => {
+            const image = x.target;
 
-            x.target.parentElement.classList.add("loaded");
+            observer.unobserve(image);
 
-            observer.unobserve(x.target);
+            await loader.fetch(image.dataset.src);
+            image.parentElement.classList.add("fetched");
+
+            await loader.load(image.dataset.src, image);
+            image.parentElement.classList.add("loaded");
         })
 );
 
 const btnPageLoad = document.querySelector("button#page-load");
-btnPageLoad.addEventListener("click", () => {
+btnPageLoad.addEventListener("click", async () => {
     btnPageLoad.remove();
 
     document.querySelector("#page").style = "";
 
-    loader
-        .fetch(["dist/styles.css", "dist/extra.css"])
-        .forEach(async (preload) => {
-            const blob = await preload;
+    loader.load(["dist/styles.css", "dist/extra.css"], document);
 
-            const url = URL.createObjectURL(blob);
+    loader.load(["dist/scripts.js", "dist/not-existent.js"]);
 
-            const sheet = new CSSStyleSheet();
-
-            const promise = sheet.replace(`@import url("${url}")`);
-
-            if ("adoptedStyleSheets" in document) {
-                document.adoptedStyleSheets = [
-                    ...document.adoptedStyleSheets,
-                    sheet,
-                ];
-            }
-
-            promise.finally(() => URL.revokeObjectURL(url));
-        });
-
-    loader
-        .fetch(["dist/scripts.js", "dist/not-existent.js"])
-        .forEach((x) => x.then((y) => loadScript(y)));
+    console.warn(await loader.load("/"));
 });
 
 const btnFetch = document.querySelector("button#images-fetch");
 btnFetch.addEventListener("click", () => {
     btnFetch.remove();
 
-    [...images].forEach((x) => laodImage(x));
+    [...images].forEach(async (x) => {
+        await loader.fetch(x.dataset.src);
+        x.parentElement.classList.add("fetched");
+    });
 });
 
 const btnObserve = document.querySelector("button#images-observe");
@@ -63,50 +51,3 @@ btnObserve.addEventListener("click", () => {
 
     images.forEach((i) => observer.observe(i));
 });
-
-function laodImage(x) {
-    loader
-        .fetch(x.dataset.src)
-        .then((e) => {
-            const url = URL.createObjectURL(e);
-            const dispose = () => URL.revokeObjectURL(url);
-
-            x.onload = dispose;
-            x.onerror = dispose;
-
-            x.src = url;
-
-            x.parentElement.classList.add("fetched");
-        })
-        .catch((e) => console.warn(e));
-}
-
-function loadStyle(blob) {
-    const url = URL.createObjectURL(blob);
-
-    const sheet = new CSSStyleSheet();
-
-    const promise = sheet.replace(`@import url("${url}")`);
-    const el = document;
-    if ("adoptedStyleSheets" in el) {
-        el.adoptedStyleSheets = [...el.adoptedStyleSheets, sheet];
-    }
-
-    promise.finally((x) => URL.revokeObjectURL(url));
-}
-
-function loadScript(blob) {
-    return new Promise((resolve, reject) => {
-        const url = URL.createObjectURL(blob);
-        const dispose = () => URL.revokeObjectURL(url);
-
-        const el = document.createElement("script");
-        el.onload = dispose;
-        el.onerror = dispose;
-
-        el.src = url;
-        el.async = true;
-
-        document.head.append(el);
-    });
-}
