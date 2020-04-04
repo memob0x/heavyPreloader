@@ -22,7 +22,24 @@ btnPageLoad.addEventListener("click", () => {
 
     loader
         .fetch(["dist/styles.css", "dist/extra.css"])
-        .forEach((x) => x.then((y) => loadStyle(y)));
+        .forEach(async (preload) => {
+            const blob = await preload;
+
+            const url = URL.createObjectURL(blob);
+
+            const sheet = new CSSStyleSheet();
+
+            const promise = sheet.replace(`@import url("${url}")`);
+
+            if ("adoptedStyleSheets" in document) {
+                document.adoptedStyleSheets = [
+                    ...document.adoptedStyleSheets,
+                    sheet,
+                ];
+            }
+
+            promise.finally(() => URL.revokeObjectURL(url));
+        });
 
     loader
         .fetch(["dist/scripts.js", "dist/not-existent.js"])
