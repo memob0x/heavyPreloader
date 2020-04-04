@@ -1,10 +1,10 @@
-# loader.js
+# [loader.js](https://memob0x.github.io/loader/demos/)
 ![Node.js CI](https://github.com/memob0x/loader/workflows/Node.js%20CI/badge.svg?branch=new-aim)
 
-💤 [**loader.js**](https://memob0x.github.io/loader/demos/) is a small script that lets you programmatically fetch whatever resource type you want in a separate thread leaving the main one free to "concentrate" on animations and other visually noticeable changes in order to enhance the perceived performance to the end user.
+💤 **loader.js** is a small script that lets you programmatically fetch whatever resource type you want in a separate thread leaving the main one free to "concentrate" on animations and other visually noticeable changes in order to enhance the perceived performance to the end user.
 
 # Recipees
-It uses `Worker` and `fetch` API to retrieve a `Blob` object to the main thread in order to be consumed by `URL` API.
+Under the hood this script uses `Worker` and `fetch` API to retrieve a `Blob` object to the main thread in order to be consumed by `URL` API.
 
 ## [Lazyload Images](https://memob0x.github.io/loader/demos/lazy-load-images/)
 ```javascript
@@ -81,7 +81,7 @@ stylesheetsLoad.forEach(async (stylesheetLoad) => {
 });
 ```
 
-## Scripts Loader
+## [Scripts Loader](https://memob0x.github.io/loader/demos/import/)
 In large applications the list of asynchronous scripts to be loaded may become quite long, give em to another thread, keeping the script loader of your choice.
 
 ### [requirejs](https://memob0x.github.io/loader/demos/require/)
