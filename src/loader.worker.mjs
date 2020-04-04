@@ -1,7 +1,12 @@
 import { createWorker } from "./loader.utils.mjs";
 
+/**
+ *
+ * @private
+ * @static
+ */
 export const work = () => {
-    onmessage = async event => {
+    onmessage = async (event) => {
         const data = event.data;
 
         // ...
@@ -13,12 +18,12 @@ export const work = () => {
             message = {
                 status: response.status,
                 statusText: response.statusText,
-                blob: blob
+                blob: blob,
             };
         } catch (e) {
             message = {
                 status: 0,
-                statusText: e
+                statusText: e,
             };
         }
 
@@ -28,13 +33,22 @@ export const work = () => {
     };
 };
 
+// ...
 let worker = null;
-export default () => {
-    // ...
-    if (worker) {
-        return worker;
-    }
 
-    // ...
-    return (worker = createWorker(work));
+/**
+ *
+ * @private
+ */
+export const getOrCreateWorker = () =>
+    worker ? worker : (worker = createWorker(work));
+
+/**
+ *
+ * @private
+ */
+export const possiblyTerminateWorker = () => {
+    // TODO: check if no longer in use
+    // worker.terminate();
+    // worker = null;
 };

@@ -1,7 +1,8 @@
 1.
 - tests
 - README.md
-- demo page
+- demo page, better styles etc...
+- demo page, better script etc...
 2.
 - check cors
-- audio/video handling
+- maybe provide createObjectURL disposable helper

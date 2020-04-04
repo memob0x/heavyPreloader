@@ -1,57 +1,48 @@
-import loaderWorker from "./loader.worker.mjs";
-import LoaderResource from "./loader.resource.mjs";
+import { getOrCreateWorker } from "./loader.worker.mjs";
 
 // ...
-const collection = {};
+const cache = {};
 
 /**
  *
- * @param {LoaderResource} resource
+ * @private
+ * @param {String} href
  * @param {Object} options
  */
-export default async (resource, options = {}) => {
+export default async (href, options = {}) => {
     // ...
-    if (resource.url.href in collection) {
-        const el = resource.el;
-
-        resource = await collection[resource.url.href];
-
-        return new LoaderResource({ ...resource, ...{ el: el } }, true);
+    if (href in cache) {
+        return await cache[href];
     }
 
     // ...
-    return (collection[resource.url.href] = new Promise((resolve, reject) => {
-        const worker = loaderWorker();
+    return (cache[href] = new Promise((resolve, reject) => {
+        const worker = getOrCreateWorker();
 
         // ...
         worker.postMessage({
-            href: resource.url.href,
-            options: options.fetch
+            href: href,
+            options: options.fetch,
         });
 
         // ...
-        worker.addEventListener("message", event => {
+        worker.addEventListener("message", (event) => {
             const data = event.data;
 
             // ...
-            if (data.href !== resource.url.href) {
+            if (data.href !== href) {
                 return;
             }
 
             // ...
             if (data.status === 200) {
-                resource = new LoaderResource(
-                    { ...resource, ...{ blob: data.blob } },
-                    true
-                );
-
-                resolve(resource);
+                resolve(data.blob);
 
                 return;
             }
 
             // ...
-            reject(new Error(`${data.statusText} ${data.href}`));
+            reject(new Error(`${data.statusText} for ${data.href} resource.`));
         });
     }));
 };
