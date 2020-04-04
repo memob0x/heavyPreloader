@@ -6,6 +6,41 @@
 # Recipees
 Under the hood this script uses `Worker` and `fetch` API to retrieve a `Blob` object to the main thread in order to be consumed by `URL` API.
 
+## [HTML](https://memob0x.github.io/loader/demos/html/)
+This can be used to retrieve views.
+
+```javascript
+//
+void new Loader().load("/Messages/Inbox").then(result => (document.body.innerHTML = result));
+```
+
+## [Stylesheets Loader](https://memob0x.github.io/loader/demos/async-styles/)
+This can be used to achieve a proper asynchronous stylesheets load callback (wich is a quite ancient cross-browser [problem](https://www.phpied.com/when-is-a-stylesheet-really-loaded/)).
+
+```javascript
+(async () => {
+    //
+    await Promise.allSettled(new Loader().load([
+        "theme.blue.css",
+        "area.account.css"
+    ], document));
+
+    //
+    document.body.classList.remove("page-loading-spinner");
+})();
+```
+## [Scripts Loader](https://memob0x.github.io/loader/demos/import/)
+In large applications the list of asynchronous scripts to be loaded may become quite long, give em to another thread, keeping the script loader of your choice.
+
+```javascript
+//
+void new Loader().load("cart.js").then(Cart => {
+    const cart = new Cart();
+
+    cart.add("product-foo-12345678-bar");
+});
+```
+
 ## [Lazyload Images](https://memob0x.github.io/loader/demos/lazy-load-images/)
 ```javascript
 //
@@ -26,35 +61,7 @@ const observer = new IntersectionObserver(entries => entries.filter(entry => ent
 [...document.querySelectorAll("img[data-src]")].forEach(image => observer.observe(image));
 ```
 
-## [Stylesheets Loader](https://memob0x.github.io/loader/demos/async-styles/)
-This can be used to achieve a proper asynchronous stylesheets load callback (wich is a quite ancient cross-browser [problem](https://www.phpied.com/when-is-a-stylesheet-really-loaded/)).
-
-```javascript
-(async () => {
-    //
-    await Promise.allSettled(new Loader().load([
-        "theme.blue.css",
-        "area.account.css"
-    ], document));
-
-    //
-    document.body.classList.remove("page-loading-spinner");
-})();
-```
-
-## [Scripts Loader](https://memob0x.github.io/loader/demos/import/)
-In large applications the list of asynchronous scripts to be loaded may become quite long, give em to another thread, keeping the script loader of your choice.
-
-```javascript
-//
-void new Loader().load("product.js").then(Cart => {
-    const cart = new Cart();
-
-    cart.add("product-foo-12345678-bar");
-});
-```
-
-### [RequireJS (or other script loaders)](https://memob0x.github.io/loader/demos/require/)
+## [Manual Handling: RequireJS](https://memob0x.github.io/loader/demos/require/)
 
 ```javascript
 //
@@ -86,14 +93,6 @@ include("cart.js").then(Cart => {
     
     cart.add("product-foo-12345678-bar");
 });
-```
-
-## [HTML](https://memob0x.github.io/loader/demos/html/)
-This can be used to retrieve views.
-
-```javascript
-//
-void new Loader().load("/Messages/Inbox").then(result => (document.body.innerHTML = result));
 ```
 
 # Fetch settings
