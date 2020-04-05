@@ -125,7 +125,7 @@
 
         async load(arg, el) {
             if (Array.isArray(arg)) {
-                return await arg.map((a) => this.load(a));
+                return await arg.map((a) => this.load(a, el));
             }
 
             const blob = await this.fetch(arg);

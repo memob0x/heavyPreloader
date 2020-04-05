@@ -271,7 +271,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
                   _context4.next = 3;
                   return arg.map(function (a) {
-                    return _this2.load(a);
+                    return _this2.load(a, el);
                   });
 
                 case 3:

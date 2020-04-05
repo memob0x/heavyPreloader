@@ -12,7 +12,7 @@ const autoprefixer = require("autoprefixer");
 const minify = require("gulp-minify");
 const rename = require("gulp-rename");
 
-const BASE_DEMO = "./demo/";
+const BASE_DEMO = "./demo/**/";
 
 const _glob = (ext = "", base = "./") =>
     `${base}src/+([a-z])?(\-+([a-z]))${ext}`;
@@ -22,21 +22,17 @@ const _src = (ext = "", base = "./") => [
 
     sourcemaps.init({
         loadMaps: false,
-        largeFile: false
-    })
+        largeFile: false,
+    }),
 ];
 
 const _dest = (base = "./") => [
     sourcemaps.write("."),
 
-    gulp.dest(`${base}dist/`)
+    gulp.dest(`${base}dist/`),
 ];
 
-const _rollupLibJs = () => rollup({}, { format: "umd", name: "Loader" });
-
-const _minJs = () => minify({ ext: { min: ".min.js" } });
-
-const demoCss = done =>
+const demoCss = (done) =>
     pump(
         [
             //
@@ -46,25 +42,16 @@ const demoCss = done =>
             //
             postcss([autoprefixer()]),
             //
-            ..._dest(BASE_DEMO)
+            ..._dest(BASE_DEMO),
         ],
         done
     );
 
-const demoJs = done =>
-    pump(
-        [
-            //
-            ..._src(".js", BASE_DEMO),
-            //
-            babel({ compact: true }),
-            //
-            ..._dest(BASE_DEMO)
-        ],
-        done
-    );
+const _rollupLibJs = () => rollup({}, { format: "umd", name: "Loader" });
 
-const libEs5 = done =>
+const _minJs = () => minify({ ext: { min: ".min.js" } });
+
+const libEs5 = (done) =>
     pump(
         [
             //
@@ -78,12 +65,12 @@ const libEs5 = done =>
             //
             _minJs(),
             //
-            ..._dest()
+            ..._dest(),
         ],
         done
     );
 
-const libEs6 = done =>
+const libEs6 = (done) =>
     pump(
         [
             //
@@ -97,16 +84,16 @@ const libEs6 = done =>
             //
             _minJs(),
             //
-            ..._dest()
+            ..._dest(),
         ],
         done
     );
 
-gulp.task("default", gulp.parallel(libEs5, libEs6, demoJs, demoCss));
+gulp.task("default", gulp.parallel(libEs5, libEs6, /* demoJs,*/ demoCss));
 
 const watch = () => {
     gulp.watch(_glob(".mjs"), gulp.parallel(libEs5, libEs6));
-    gulp.watch(_glob(".js", BASE_DEMO), demoJs);
+    // gulp.watch(_glob(".js", BASE_DEMO), demoJs);
     gulp.watch(_glob(".scss", BASE_DEMO), demoCss);
 };
 
