@@ -1,4 +1,2 @@
--   tests
--   demo page, better styles etc...
--   demo page, better script etc...
--   check cors
+-   unit tests
+-   demo pages
