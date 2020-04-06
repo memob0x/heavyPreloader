@@ -189,14 +189,9 @@
     };
 
     class Loader {
-        constructor(options) {
-            this.options = {
-                ...{ fetch: { cors: "no-cors" } },
-                ...options,
-            };
-        }
+        constructor() {}
 
-        async fetch(arg) {
+        async fetch(arg, options) {
             if (Array.isArray(arg)) {
                 return await arg.map((a) => this.fetch(a));
             }
@@ -210,7 +205,7 @@
             }
 
             if (arg instanceof URL) {
-                return await lfetch(arg.href, this.options);
+                return await lfetch(arg.href, (options && options.fetch) || {});
             }
 
             throw new TypeError(
@@ -218,14 +213,14 @@
             );
         }
 
-        async load(arg, el) {
+        async load(arg, options) {
             if (Array.isArray(arg)) {
-                return await arg.map((a) => this.load(a, el));
+                return await arg.map((a) => this.load(a, options));
             }
 
-            const blob = await this.fetch(arg);
+            const blob = arg instanceof Blob ? arg : await this.fetch(arg, options);
 
-            return await lload(blob, el);
+            return await lload(blob, options);
         }
     }
 

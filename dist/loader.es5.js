@@ -383,20 +383,14 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
   }();
 
   var Loader = function () {
-    function Loader(options) {
+    function Loader() {
       _classCallCheck(this, Loader);
-
-      this.options = _objectSpread({}, {
-        fetch: {
-          cors: "no-cors"
-        }
-      }, {}, options);
     }
 
     _createClass(Loader, [{
       key: "fetch",
       value: function () {
-        var _fetch = _asyncToGenerator(regeneratorRuntime.mark(function _callee8(arg) {
+        var _fetch = _asyncToGenerator(regeneratorRuntime.mark(function _callee8(arg, options) {
           var _this = this;
 
           var a;
@@ -438,7 +432,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
                   }
 
                   _context8.next = 13;
-                  return lfetch(arg.href, this.options);
+                  return lfetch(arg.href, options && options.fetch || {});
 
                 case 13:
                   return _context8.abrupt("return", _context8.sent);
@@ -454,7 +448,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           }, _callee8, this);
         }));
 
-        function fetch(_x12) {
+        function fetch(_x12, _x13) {
           return _fetch.apply(this, arguments);
         }
 
@@ -463,7 +457,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "load",
       value: function () {
-        var _load = _asyncToGenerator(regeneratorRuntime.mark(function _callee9(arg, el) {
+        var _load = _asyncToGenerator(regeneratorRuntime.mark(function _callee9(arg, options) {
           var _this2 = this;
 
           var blob;
@@ -478,25 +472,38 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
                   _context9.next = 3;
                   return arg.map(function (a) {
-                    return _this2.load(a, el);
+                    return _this2.load(a, options);
                   });
 
                 case 3:
                   return _context9.abrupt("return", _context9.sent);
 
                 case 4:
-                  _context9.next = 6;
-                  return this.fetch(arg);
+                  if (!(arg instanceof Blob)) {
+                    _context9.next = 8;
+                    break;
+                  }
 
-                case 6:
-                  blob = _context9.sent;
-                  _context9.next = 9;
-                  return lload(blob, el);
+                  _context9.t0 = arg;
+                  _context9.next = 11;
+                  break;
 
-                case 9:
-                  return _context9.abrupt("return", _context9.sent);
+                case 8:
+                  _context9.next = 10;
+                  return this.fetch(arg, options);
 
                 case 10:
+                  _context9.t0 = _context9.sent;
+
+                case 11:
+                  blob = _context9.t0;
+                  _context9.next = 14;
+                  return lload(blob, options);
+
+                case 14:
+                  return _context9.abrupt("return", _context9.sent);
+
+                case 15:
                 case "end":
                   return _context9.stop();
               }
@@ -504,7 +511,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           }, _callee9, this);
         }));
 
-        function load(_x13, _x14) {
+        function load(_x14, _x15) {
           return _load.apply(this, arguments);
         }
 

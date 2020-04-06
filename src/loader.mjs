@@ -4,21 +4,16 @@ import lload from "./loader.load.mjs";
 export default class Loader {
     /**
      *
-     * @param {Object} options
      */
-    constructor(options) {
-        this.options = {
-            ...{ fetch: { cors: "no-cors" } },
-            ...options,
-        };
-    }
+    constructor() {}
 
     /**
      *
      * @param {Array.<String>|Array.<URL>|String|URL} arg
+     * @param {Object} options
      * @returns {Array.<Promise>|Promise}
      */
-    async fetch(arg) {
+    async fetch(arg, options) {
         // ...
         if (Array.isArray(arg)) {
             return await arg.map((a) => this.fetch(a));
@@ -35,7 +30,7 @@ export default class Loader {
 
         // ...
         if (arg instanceof URL) {
-            return await lfetch(arg.href, this.options);
+            return await lfetch(arg.href, (options && options.fetch) || {});
         }
 
         // ...
@@ -46,19 +41,20 @@ export default class Loader {
 
     /**
      *
-     * @param {Array.<String>|Array.<URL>|String|URL} arg
+     * @param {Array.<String>|Array.<URL>|Array.<Blob>|String|URL|Blob} arg
+     * @param {Object} options
      * @returns {Array.<Promise>|Promise}
      */
-    async load(arg, el) {
+    async load(arg, options) {
         // ...
         if (Array.isArray(arg)) {
-            return await arg.map((a) => this.load(a, el));
+            return await arg.map((a) => this.load(a, options));
         }
 
         // ...
-        const blob = await this.fetch(arg);
+        const blob = arg instanceof Blob ? arg : await this.fetch(arg, options);
 
         // ...
-        return await lload(blob, el);
+        return await lload(blob, options);
     }
 }
