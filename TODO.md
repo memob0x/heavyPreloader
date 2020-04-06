@@ -1,2 +1,3 @@
+-   readme
 -   unit tests
 -   demo pages
