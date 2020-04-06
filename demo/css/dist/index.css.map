@@ -1,0 +1,1 @@
+{"version":3,"sources":["index.scss"],"names":[],"mappings":"AAAA,KACI,qBAAsB,CACzB,KAGG,eAAgB","file":"index.css","sourcesContent":["html {\n    box-sizing: border-box;\n}\n\nbody {\n    background: blue;\n}\n"]}

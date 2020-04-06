@@ -9,10 +9,7 @@
     btnPageLoad.addEventListener("click", async () => {
         btnPageLoad.remove();
 
-        await loader.load([
-            "/demo/overview/dist/index.css",
-            "/demo/images/dist/index.css",
-        ]);
+        await loader.load(["/demo/images/dist/index.css"]);
 
         await loader.load("/demo/images/index.html", document.documentElement);
 
