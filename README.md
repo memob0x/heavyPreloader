@@ -51,7 +51,7 @@ Loader supports `text/html` mimetype so it can be used to retrieve new contents,
 ```javascript
 // updating #root with new contents
 void new Loader().load("/Messages/Inbox", {
-    // fetch options 
+    // fetch options
     fetch: {
         method: "GET",
         body: JSON.stringify({
@@ -61,7 +61,7 @@ void new Loader().load("/Messages/Inbox", {
     },
     // injection target
     element: document.querySelector("#root"),
-    // result filter selector 
+    // result filter selector
     filter: "#root .messages",
 });
 ```
@@ -97,6 +97,7 @@ void new Loader().load("cart.js").then((module) => {
 ```
 
 ## [Lazyload Images](https://memob0x.github.io/loader/demos/images/index.html)
+Loader can be used with `IntersectionObserver` to get provide a lazy load functionality.
 
 ```javascript
 // instance construction
@@ -108,14 +109,17 @@ const observer = new IntersectionObserver((entries) =>
         // filtering the visible images
         .filter((entry) => entry.isIntersecting)
         // looping through visible images
-        .forEach((entry) => {
+        .forEach(async (entry) => {
             const image = entry.target;
 
             // detaching observer to the visible image
             observer.unobserve(image);
 
             // waking up the lazy image
-            loader.load(image.dataset.src, { element: image });
+            await loader.load(image.dataset.src, { element: image });
+
+            // image is loaded, setting a css class
+            image.classList.add("loaded");
         })
 );
 
@@ -125,8 +129,7 @@ const observer = new IntersectionObserver((entries) =>
 );
 ```
 
-## [Manual Handling: RequireJS](https://memob0x.github.io/loader/demos/require/index.html)
-
+## [Manual Handling: RequireJS](https://memob0x.github.io/loader/demos/requirejs/index.html)
 
 ```javascript
 //
