@@ -9,14 +9,12 @@
     btnPageLoad.addEventListener("click", async () => {
         btnPageLoad.remove();
 
-        await loader.load(
-            ["index.css", "/demo/images/dist/index.css"],
-            document
-        );
+        await loader.load([
+            "/demo/overview/dist/index.css",
+            "/demo/images/dist/index.css",
+        ]);
 
-        const view = await loader.load("/demo/images");
-
-        document.documentElement.innerHTML = view;
+        await loader.load("/demo/images/index.html", document.documentElement);
 
         await loader.load("/demo/images/src/index.mjs");
     });

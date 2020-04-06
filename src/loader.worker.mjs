@@ -1,54 +1,72 @@
-import { createWorker } from "./loader.utils.mjs";
-
 /**
  *
  * @private
  * @static
  */
-export const work = () => {
-    onmessage = async (event) => {
-        const data = event.data;
-
-        // ...
-        let message;
+const body = () =>
+    (onmessage = async (event) => {
+        //
         try {
-            const response = await fetch(data.href, data.options);
+            const response = await fetch(event.data.href, event.data.options);
             const blob = await response.blob();
 
-            message = {
-                status: response.status,
-                statusText: response.statusText,
-                blob: blob,
-            };
+            event.data.status = response.status;
+            event.data.statusText = response.statusText;
+            event.data.blob = blob;
         } catch (e) {
-            message = {
-                status: 0,
-                statusText: e,
-            };
+            event.data.statusText = e;
         }
 
         // ...
-        message.href = data.href;
-        postMessage(message);
-    };
-};
+        postMessage(event.data);
+    });
 
 // ...
-let worker = null;
+let lworker = null;
+let requests = 0;
 
 /**
  *
  * @private
  */
-export const getOrCreateWorker = () =>
-    worker ? worker : (worker = createWorker(work));
+export const get = () => {
+    // ...
+    requests++;
+
+    // ...
+    if (lworker) {
+        return lworker;
+    }
+
+    // ...
+    const url = URL.createObjectURL(
+        new Blob(["(", body.toString(), ")()"], {
+            type: "application/javascript",
+        })
+    );
+
+    // ...
+    lworker = new Worker(url);
+
+    // ...
+    URL.revokeObjectURL(url);
+
+    //
+    return lworker;
+};
 
 /**
  *
  * @private
  */
-export const possiblyTerminateWorker = () => {
-    // TODO: check if no longer in use
-    // worker.terminate();
-    // worker = null;
+export const terminate = () => {
+    //
+    requests--;
+
+    //
+    if (requests <= 0) {
+        lworker.terminate();
+
+        lworker = null;
+    }
 };

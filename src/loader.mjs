@@ -1,5 +1,5 @@
-import { getURL } from "./loader.utils.mjs";
-import fetch from "./loader.fetch.mjs";
+import lfetch from "./loader.fetch.mjs";
+import lload from "./loader.load.mjs";
 
 export default class Loader {
     /**
@@ -26,12 +26,16 @@ export default class Loader {
 
         // ...
         if (typeof arg === "string") {
-            return await this.fetch(getURL(arg));
+            const a = document.createElement("a");
+
+            a.href = arg;
+
+            return await this.fetch(new URL(a));
         }
 
         // ...
         if (arg instanceof URL) {
-            return await fetch(arg.href, this.options);
+            return await lfetch(arg.href, this.options);
         }
 
         // ...
@@ -54,91 +58,7 @@ export default class Loader {
         // ...
         const blob = await this.fetch(arg);
 
-        //...
-        switch (blob.type) {
-            //...
-            case "image/png":
-            case "image/jpeg":
-                //
-                el = undefined === el ? new Image() : el;
-
-                //
-                const imageUrl = URL.createObjectURL(blob);
-
-                //
-                await new Promise((resolve, reject) => {
-                    el.onload = resolve;
-                    el.onerror = reject;
-
-                    el.src = imageUrl;
-                });
-
-                //
-                URL.revokeObjectURL(imageUrl);
-
-                //
-                return el;
-
-            //...
-            case "text/html":
-                return new Promise((resolve, reject) => {
-                    //
-                    const reader = new FileReader();
-
-                    //
-                    reader.addEventListener("loadend", (load) =>
-                        resolve(load.srcElement.result)
-                    );
-
-                    // TODO: error?
-
-                    //
-                    reader.readAsText(blob);
-                });
-
-            //...
-            case "text/css":
-                //
-                el = undefined === el ? document : el;
-
-                //
-                const styleUrl = URL.createObjectURL(blob);
-
-                //
-                const sheet = new CSSStyleSheet();
-
-                //
-                await sheet.replace(`@import url("${styleUrl}")`);
-
-                //
-                URL.revokeObjectURL(styleUrl);
-
-                //
-                if ("adoptedStyleSheets" in el) {
-                    el.adoptedStyleSheets = [...el.adoptedStyleSheets, sheet];
-                }
-
-                //
-                return sheet;
-
-            //...
-            case "text/javascript":
-                //
-                const jsUrl = URL.createObjectURL(blob);
-
-                //
-                const result = await import(jsUrl);
-
-                //
-                URL.revokeObjectURL(jsUrl);
-
-                //
-                return result;
-        }
-
         // ...
-        throw new TypeError(
-            `Invalid argment of type ${typeof arg} passed to Loader class "fetch" method.`
-        );
+        return await lload(blob, el);
     }
 }

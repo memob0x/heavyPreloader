@@ -1,4 +1,4 @@
-import { getOrCreateWorker } from "./loader.worker.mjs";
+import * as lworker from "./loader.worker.mjs";
 
 // ...
 const cache = {};
@@ -17,7 +17,8 @@ export default async (href, options = {}) => {
 
     // ...
     return (cache[href] = new Promise((resolve, reject) => {
-        const worker = getOrCreateWorker();
+        //
+        const worker = lworker.get();
 
         // ...
         worker.postMessage({
@@ -26,6 +27,7 @@ export default async (href, options = {}) => {
         });
 
         // ...
+        // TODO: possibly use messageerror for reject?
         worker.addEventListener("message", (event) => {
             const data = event.data;
 
@@ -33,6 +35,9 @@ export default async (href, options = {}) => {
             if (data.href !== href) {
                 return;
             }
+
+            //
+            lworker.terminate();
 
             // ...
             if (data.status === 200) {

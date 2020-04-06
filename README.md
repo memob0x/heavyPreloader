@@ -27,7 +27,7 @@ This can be used to achieve a proper asynchronous stylesheets load callback (wic
 (async () => {
     //
     await Promise.allSettled(
-        new Loader().load(["theme.blue.css", "area.account.css"], document)
+        new Loader().load(["theme.blue.css", "area.account.css"])
     );
 
     //

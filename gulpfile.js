@@ -1,5 +1,7 @@
 "use strict";
 
+const fs = require("fs");
+const path = require("path");
 const gulp = require("gulp");
 const pump = require("pump");
 const strip = require("gulp-strip-comments");
@@ -12,13 +14,12 @@ const autoprefixer = require("autoprefixer");
 const minify = require("gulp-minify");
 const rename = require("gulp-rename");
 
-const BASE_DEMO = "./demo/**/";
+const BASE_DEMO = "./demo/";
 
-const _glob = (ext = "", base = "./") =>
-    `${base}src/+([a-z])?(\-+([a-z]))${ext}`;
+const _file = (ext = "", base = "./") => `${base}+([a-z])?(\-+([a-z]))${ext}`;
 
 const _src = (ext = "", base = "./") => [
-    gulp.src(_glob(ext, base)),
+    gulp.src(_file(ext, `${base}src/`)),
 
     sourcemaps.init({
         loadMaps: false,
@@ -32,20 +33,27 @@ const _dest = (base = "./") => [
     gulp.dest(`${base}dist/`),
 ];
 
-const demoCss = (done) =>
-    pump(
-        [
-            //
-            ..._src(".scss", BASE_DEMO),
-            //
-            sass({ outputStyle: "compressed" }),
-            //
-            postcss([autoprefixer()]),
-            //
-            ..._dest(BASE_DEMO),
-        ],
-        done
-    );
+// TODO: fix <anonymouse> tasks
+const demoCss = gulp.series(
+    ...fs
+        .readdirSync(BASE_DEMO)
+        .filter((file) => fs.statSync(path.join(BASE_DEMO, file)).isDirectory())
+        .map((folder) => (done) =>
+            pump(
+                [
+                    //
+                    ..._src(".scss", `${BASE_DEMO}/${folder}/`),
+                    //
+                    sass({ outputStyle: "compressed" }),
+                    //
+                    postcss([autoprefixer()]),
+                    //
+                    ..._dest(`${BASE_DEMO}/${folder}/`),
+                ],
+                done
+            )
+        )
+);
 
 const _rollupLibJs = () => rollup({}, { format: "umd", name: "Loader" });
 
