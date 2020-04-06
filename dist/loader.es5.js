@@ -1,11 +1,5 @@
 "use strict";
 
-function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
-
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
@@ -27,6 +21,12 @@ function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && Symbol.it
 function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToArray(arr); }
 
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
 
@@ -175,16 +175,17 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
   }();
 
   var css = function () {
-    var _ref3 = _asyncToGenerator(regeneratorRuntime.mark(function _callee3(blob) {
-      var el,
-          url,
-          sheet,
-          _args3 = arguments;
+    var _ref3 = _asyncToGenerator(regeneratorRuntime.mark(function _callee3(blob, options) {
+      var url, sheet;
       return regeneratorRuntime.wrap(function _callee3$(_context3) {
         while (1) {
           switch (_context3.prev = _context3.next) {
             case 0:
-              el = _args3.length > 1 && _args3[1] !== undefined ? _args3[1] : document;
+              options = _objectSpread({}, {
+                element: document
+              }, {
+                options: options
+              });
               url = URL.createObjectURL(blob);
               sheet = new CSSStyleSheet();
               _context3.next = 5;
@@ -193,8 +194,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
             case 5:
               URL.revokeObjectURL(url);
 
-              if ("adoptedStyleSheets" in el) {
-                el.adoptedStyleSheets = [].concat(_toConsumableArray(el.adoptedStyleSheets), [sheet]);
+              if ("adoptedStyleSheets" in options.element) {
+                options.element.adoptedStyleSheets = [].concat(_toConsumableArray(options.element.adoptedStyleSheets), [sheet]);
               }
 
               return _context3.abrupt("return", sheet);
@@ -207,13 +208,13 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }, _callee3);
     }));
 
-    return function css(_x3) {
+    return function css(_x3, _x4) {
       return _ref3.apply(this, arguments);
     };
   }();
 
   var html = function () {
-    var _ref4 = _asyncToGenerator(regeneratorRuntime.mark(function _callee4(blob, el) {
+    var _ref4 = _asyncToGenerator(regeneratorRuntime.mark(function _callee4(blob, options) {
       var reader, promise, result;
       return regeneratorRuntime.wrap(function _callee4$(_context4) {
         while (1) {
@@ -232,13 +233,23 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
             case 5:
               result = _context4.sent;
 
-              if (el && _typeof(el) === "object" && "innerHTML" in el) {
-                el.innerHTML = result;
+              if (typeof options.filter === "string" && options.filter.length) {
+                result = new DOMParser().parseFromString(result, "text/html").body;
+                result = _toConsumableArray(result.querySelectorAll(options.filter));
+                result = result.map(function (x) {
+                  return x.outerHTML;
+                }).reduce(function (x, y) {
+                  return x + y;
+                });
+              }
+
+              if (options.element && options.element instanceof HTMLElement) {
+                options.element.innerHTML = result;
               }
 
               return _context4.abrupt("return", promise);
 
-            case 8:
+            case 9:
             case "end":
               return _context4.stop();
           }
@@ -246,29 +257,25 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }, _callee4);
     }));
 
-    return function html(_x4, _x5) {
+    return function html(_x5, _x6) {
       return _ref4.apply(this, arguments);
     };
   }();
 
   var image = function () {
-    var _ref5 = _asyncToGenerator(regeneratorRuntime.mark(function _callee5(blob) {
-      var el,
-          url,
-          promise,
-          result,
-          _args5 = arguments;
+    var _ref5 = _asyncToGenerator(regeneratorRuntime.mark(function _callee5(blob, options) {
+      var image, url, promise, result;
       return regeneratorRuntime.wrap(function _callee5$(_context5) {
         while (1) {
           switch (_context5.prev = _context5.next) {
             case 0:
-              el = _args5.length > 1 && _args5[1] !== undefined ? _args5[1] : new Image();
+              image = options.element instanceof HTMLImageElement ? options.element : new Image();
               url = URL.createObjectURL(blob);
               promise = new Promise(function (resolve, reject) {
-                el.onload = resolve;
-                el.onerror = reject;
+                image.onload = resolve;
+                image.onerror = reject;
               });
-              el.src = url;
+              image.src = url;
               _context5.next = 6;
               return promise;
 
@@ -285,7 +292,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }, _callee5);
     }));
 
-    return function image(_x6) {
+    return function image(_x7, _x8) {
       return _ref5.apply(this, arguments);
     };
   }();
@@ -316,13 +323,13 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }, _callee6);
     }));
 
-    return function javascript(_x7) {
+    return function javascript(_x9) {
       return _ref6.apply(this, arguments);
     };
   }();
 
   var lload = function () {
-    var _ref7 = _asyncToGenerator(regeneratorRuntime.mark(function _callee7(blob, el) {
+    var _ref7 = _asyncToGenerator(regeneratorRuntime.mark(function _callee7(blob, options) {
       return regeneratorRuntime.wrap(function _callee7$(_context7) {
         while (1) {
           switch (_context7.prev = _context7.next) {
@@ -333,21 +340,21 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
             case 3:
               _context7.next = 5;
-              return image(blob, el);
+              return image(blob, options);
 
             case 5:
               return _context7.abrupt("return", _context7.sent);
 
             case 6:
               _context7.next = 8;
-              return html(blob, el);
+              return html(blob, options);
 
             case 8:
               return _context7.abrupt("return", _context7.sent);
 
             case 9:
               _context7.next = 11;
-              return css(blob, el);
+              return css(blob, options);
 
             case 11:
               return _context7.abrupt("return", _context7.sent);
@@ -370,7 +377,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       }, _callee7);
     }));
 
-    return function lload(_x8, _x9) {
+    return function lload(_x10, _x11) {
       return _ref7.apply(this, arguments);
     };
   }();
@@ -447,7 +454,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           }, _callee8, this);
         }));
 
-        function fetch(_x10) {
+        function fetch(_x12) {
           return _fetch.apply(this, arguments);
         }
 
@@ -497,7 +504,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           }, _callee9, this);
         }));
 
-        function load(_x11, _x12) {
+        function load(_x13, _x14) {
           return _load.apply(this, arguments);
         }
 

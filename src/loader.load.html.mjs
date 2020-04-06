@@ -1,4 +1,4 @@
-export default async (blob, el) => {
+export default async (blob, options) => {
     //
     const reader = new FileReader();
 
@@ -13,11 +13,21 @@ export default async (blob, el) => {
     reader.readAsText(blob);
 
     //
-    const result = await promise;
+    let result = await promise;
 
     //
-    if (el && typeof el === "object" && "innerHTML" in el) {
-        el.innerHTML = result;
+    if (typeof options.filter === "string" && options.filter.length) {
+        //
+        result = new DOMParser().parseFromString(result, "text/html").body;
+        //
+        result = [...result.querySelectorAll(options.filter)];
+        //
+        result = result.map((x) => x.outerHTML).reduce((x, y) => x + y);
+    }
+
+    //
+    if (options.element && options.element instanceof HTMLElement) {
+        options.element.innerHTML = result;
     }
 
     //

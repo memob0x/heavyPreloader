@@ -6,23 +6,23 @@ import javascript from "./loader.load.javascript.mjs";
 /**
  *
  * @param {Blob} blob
- * @param {HTMLElement} el
+ * @param {Object} options
  */
-export default async (blob, el) => {
+export default async (blob, options) => {
     //...
     switch (blob.type) {
         //...
         case "image/png":
         case "image/jpeg":
-            return await image(blob, el);
+            return await image(blob, options);
 
         //...
         case "text/html":
-            return await html(blob, el);
+            return await html(blob, options);
 
         //...
         case "text/css":
-            return await css(blob, el);
+            return await css(blob, options);
 
         //...
         case "text/javascript":

@@ -1,15 +1,21 @@
-export default async (blob, el = new Image()) => {
+export default async (blob, options) => {
+    //
+    const image =
+        options.element instanceof HTMLImageElement
+            ? options.element
+            : new Image();
+
     //
     const url = URL.createObjectURL(blob);
 
     //
     const promise = new Promise((resolve, reject) => {
-        el.onload = resolve;
-        el.onerror = reject;
+        image.onload = resolve;
+        image.onerror = reject;
     });
 
     //
-    el.src = url;
+    image.src = url;
 
     //
     const result = await promise;

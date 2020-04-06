@@ -11,7 +11,10 @@
 
         await loader.load(["/demo/images/dist/index.css"]);
 
-        await loader.load("/demo/images/index.html", document.documentElement);
+        await loader.load("/demo/images/index.html", {
+            element: document.body,
+            filter: "#root",
+        });
 
         await loader.load("/demo/images/src/index.mjs");
     });

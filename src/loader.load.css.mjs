@@ -1,4 +1,7 @@
-export default async (blob, el = document) => {
+export default async (blob, options) => {
+    //
+    options = { ...{ element: document }, options };
+
     //
     const url = URL.createObjectURL(blob);
 
@@ -12,8 +15,11 @@ export default async (blob, el = document) => {
     URL.revokeObjectURL(url);
 
     //
-    if ("adoptedStyleSheets" in el) {
-        el.adoptedStyleSheets = [...el.adoptedStyleSheets, sheet];
+    if ("adoptedStyleSheets" in options.element) {
+        options.element.adoptedStyleSheets = [
+            ...options.element.adoptedStyleSheets,
+            sheet,
+        ];
     }
 
     //

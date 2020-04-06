@@ -88,7 +88,9 @@
         }));
     };
 
-    var css = async (blob, el = document) => {
+    var css = async (blob, options) => {
+        options = { ...{ element: document }, options };
+
         const url = URL.createObjectURL(blob);
 
         const sheet = new CSSStyleSheet();
@@ -97,14 +99,17 @@
 
         URL.revokeObjectURL(url);
 
-        if ("adoptedStyleSheets" in el) {
-            el.adoptedStyleSheets = [...el.adoptedStyleSheets, sheet];
+        if ("adoptedStyleSheets" in options.element) {
+            options.element.adoptedStyleSheets = [
+                ...options.element.adoptedStyleSheets,
+                sheet,
+            ];
         }
 
         return sheet;
     };
 
-    var html = async (blob, el) => {
+    var html = async (blob, options) => {
         const reader = new FileReader();
 
         const promise = new Promise((resolve) =>
@@ -115,24 +120,35 @@
 
         reader.readAsText(blob);
 
-        const result = await promise;
+        let result = await promise;
 
-        if (el && typeof el === "object" && "innerHTML" in el) {
-            el.innerHTML = result;
+        if (typeof options.filter === "string" && options.filter.length) {
+            result = new DOMParser().parseFromString(result, "text/html").body;
+            result = [...result.querySelectorAll(options.filter)];
+            result = result.map((x) => x.outerHTML).reduce((x, y) => x + y);
+        }
+
+        if (options.element && options.element instanceof HTMLElement) {
+            options.element.innerHTML = result;
         }
 
         return promise;
     };
 
-    var image = async (blob, el = new Image()) => {
+    var image = async (blob, options) => {
+        const image =
+            options.element instanceof HTMLImageElement
+                ? options.element
+                : new Image();
+
         const url = URL.createObjectURL(blob);
 
         const promise = new Promise((resolve, reject) => {
-            el.onload = resolve;
-            el.onerror = reject;
+            image.onload = resolve;
+            image.onerror = reject;
         });
 
-        el.src = url;
+        image.src = url;
 
         const result = await promise;
 
@@ -151,17 +167,17 @@
         return result;
     };
 
-    var lload = async (blob, el) => {
+    var lload = async (blob, options) => {
         switch (blob.type) {
             case "image/png":
             case "image/jpeg":
-                return await image(blob, el);
+                return await image(blob, options);
 
             case "text/html":
-                return await html(blob, el);
+                return await html(blob, options);
 
             case "text/css":
-                return await css(blob, el);
+                return await css(blob, options);
 
             case "text/javascript":
                 return await javascript(blob);

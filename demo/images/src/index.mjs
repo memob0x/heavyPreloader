@@ -19,7 +19,7 @@
                 await loader.fetch(image.dataset.src);
                 image.parentElement.classList.add("fetched");
 
-                await loader.load(image.dataset.src, image);
+                await loader.load(image.dataset.src, { element: image });
                 image.parentElement.classList.add("loaded");
             })
     );
