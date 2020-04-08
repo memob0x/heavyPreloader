@@ -4,14 +4,24 @@ import * as lworker from "./loader.worker.mjs";
 const cache = {};
 
 /**
- *
+ * Fetches a resource url in the secondary thread and retrieves it as a blob
  * @private
- * @param {String} href
- * @param {Object} options
+ * @param {String} href The resource url to be fetched
+ * @param {Object} options The fetch options object
+ * @returns {Promise} The fetch promise
  */
-export default async (href, options = {}) => {
+export default async (href, options) => {
     // ...
-    if (href in cache) {
+    options = {
+        ...{
+            cache: true,
+            fetch: {},
+        },
+        ...options,
+    };
+
+    // ...
+    if (options.cache === true && href in cache) {
         return await cache[href];
     }
 

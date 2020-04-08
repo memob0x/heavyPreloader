@@ -2,57 +2,61 @@ import lfetch from "./loader.fetch.mjs";
 import lload from "./loader.load.mjs";
 
 export default class Loader {
-    /**
-     *
-     */
     constructor() {}
 
     /**
-     *
-     * @param {Array.<String>|Array.<URL>|String|URL} arg
-     * @param {Object} options
-     * @returns {Array.<Promise>|Promise}
+     * Fetches one or more resources url
+     * @param {Array.<String>|Array.<URL>|String|URL} resource The resource(s) url to be fetched in a separate thread
+     * @param {Object} options The fetch options object
+     * @returns {Array.<Promise>|Promise} The fetch promise(s)
      */
-    async fetch(arg, options) {
+    async fetch(resource, options) {
         // ...
-        if (Array.isArray(arg)) {
-            return await arg.map((a) => this.fetch(a));
+        if (Array.isArray(resource)) {
+            return await resource.map((a) => this.fetch(a, options));
         }
 
         // ...
-        if (typeof arg === "string") {
+        if (typeof resource === "string") {
             const a = document.createElement("a");
 
-            a.href = arg;
+            a.href = resource;
 
-            return await this.fetch(new URL(a));
+            return await this.fetch(new URL(a), options);
         }
 
         // ...
-        if (arg instanceof URL) {
-            return await lfetch(arg.href, (options && options.fetch) || {});
+        if (resource instanceof URL) {
+            return await lfetch(resource.href, options);
         }
 
         // ...
         throw new TypeError(
-            `Invalid argment of type ${typeof arg} passed to Loader class "fetch" method.`
+            `Invalid argment of type ${typeof resource} passed to Loader class "fetch" method.`
         );
     }
 
     /**
-     *
-     * @param {Array.<String>|Array.<URL>|Array.<Blob>|String|URL|Blob} arg
-     * @param {Object} options
-     * @returns {Array.<Promise>|Promise}
+     * Loads one or more resources url considering the passed options object and the resource mime type to be loaded
+     * @param {Array.<String>|Array.<URL>|Array.<Blob>|String|URL|Blob} resource The resource(s) to be loaded
+     * @param {Object} options The loader type options
+     * @returns {Array.<Promise>|Promise} The load promise(s)
      */
-    async load(arg, options) {
+    async load(resource, options) {
         // ...
-        if (Array.isArray(arg)) {
-            return await arg.map((a) => this.load(a, options));
+        if (Array.isArray(resource)) {
+            const isArrayOpts = Array.isArray(options);
+
+            return await resource.map((a, i) =>
+                this.load(a, isArrayOpts ? options[i] : options)
+            );
         }
 
         // ...
-        const blob = arg instanceof Blob ? arg : await this.fetch(arg, options);
+        const blob =
+            resource instanceof Blob
+                ? resource
+                : await this.fetch(resource, options);
 
         // ...
         return await lload(blob, options);

@@ -2,46 +2,48 @@
 
 ![Node.js CI](https://github.com/memob0x/loader/workflows/Node.js%20CI/badge.svg?branch=new-aim)
 
-⚙️ **loader.js** is a small script that lets you programmatically fetch whatever resource type you want in a **separate thread** leaving the main one free to "concentrate" on animations and other visually noticeable changes in order to enhance the perceived performance to the end user.
+⚙️ **loader.js** is a small script that lets you programmatically fetch whatever resource type in a **separate thread** leaving the main one free to "concentrate" on animations and other visually noticeable changes in order to enhance the perceived performance to the end user.
 
-Under the hood it uses `Worker` and `fetch` API to retrieve a `Blob` object to the main thread in order to be consumed by `URL` API.
+Under the hood it uses `Worker` and `fetch` API to retrieve a `Blob` object to the main thread in order to be consumed by `URL` API, `FileReader` instances and so on...
 
-# Overview
+# Methods
 
-The `Loader` class exposes these main methods:
+## `fetch(resource, [options])`
 
--   `fetch` retrieves the given resource(s) from inside a _Web Worker_ returning it in `Blob` form.
-    ```javascript
-    asdsad
-    ```
--   `load` fires `fetch` and possibly applies the loaded resource(s) interpreting the given options for each case returning
-    -   a `CSSStyleSheet` object when loading **css**
-    -   (possibly) the exported script **module** when loading **scripts**
-    -   the load/error `Event` when loading **images**
-    -   the retrieved **plain text** when loading **html**
-    ```javascript
-    asdsad
-    ```
-Please see the following programmatically load of a "lazy" image for a full example.
+This method fetches the given resource(s) and returns it as a `Blob` object.
 
-```javascript
-// instance construction
-const instance = new Loader();
+It is passed the following **arguments**:
 
-// caching the example actors: an image element and its "data-src" attribute
-const image = document.querySelector("img#dat-lazy-image");
-const url = image.dataset.src;
+-   _resource_ ( `String` | `URL` | `Array`.<`String`> | `Array`.<`URL`> )
+-   _options_ ( `Object` )
+    -   _cache_ ( `Boolean` )
+    -   _fetch_ ( `Object` )
 
-// fetching the resource url in the second thread
-const blob = instance.fetch(url);
+**Returns** a _promise_ (or an _array of promises_ if multiple resources are passed) with a `Blob` resolution type.
 
-// attaching the result to the image, waking it up from lazyness
-const event = instance.load(blob, { element: image });
-```
+## `load(resource, [options])`
+
+This method blabla
+
+It is passed the following **arguments**:
+
+-   _resource_ ( `String` | `URL` | `Array`.<`String`> | `Array`.<`URL`> )
+-   _options_ ( `Object` | `Array`.<`Object`> )
+    -   _element_ ( `HTMLElement` )
+    -   _filter_ ( `String` )
+
+**Returns** a _promise_ (or an _array of promises_ if multiple resources are passed) whose resolution type varies depending on the given resource media type:
+
+| Media Type        | Returned Type                        |
+| ----------------- | ------------------------------------ |
+| `text/html`       | plain text                           |
+| `text/css`        | `CSSStyleSheet`                      |
+| `text/javascript` | depends on what is possibly exported |
+| `image/*`         | `Event`                              |
 
 # Recipes
 
-Let's go into detail by cooking some very common recipes.
+Let's go into detail by cooking some of the most common recipes.
 
 ## [HTML](https://memob0x.github.io/loader/demos/html/index.html)
 
@@ -50,22 +52,23 @@ Loader supports `text/html` mimetype so it can be used to retrieve new contents,
 ```javascript
 // updating #root with new contents
 new Loader().load("/Messages/Inbox", {
-    // fetch options
+    // injection target
+    element: document.querySelector("#root"),
+    // result filter selector
+    filter: "#root .messages",
+    // fetch API options
     fetch: {
-        method: "GET",
         body: JSON.stringify({
             timestamp: new Date().getTime(),
             foo: "bar",
         }),
     },
-    // injection target
-    element: document.querySelector("#root"),
-    // result filter selector
-    filter: "#root .messages",
 });
 ```
 
-## [Stylesheets Loader](https://memob0x.github.io/loader/demos/css/index.html)
+Here's the full [demo](https://memob0x.github.io/loader/demos/html/index.html).
+
+## [Stylesheets](https://memob0x.github.io/loader/demos/css/index.html)
 
 Loader supports `text/css` mimetype so it can be used as an asynchronous stylesheets load callback (which is a quite an [ancient cross-browser issue](https://www.phpied.com/when-is-a-stylesheet-really-loaded/)).
 
@@ -79,7 +82,9 @@ Promise.allSettled(
 );
 ```
 
-## [Scripts Loader](https://memob0x.github.io/loader/demos/javascript/index.html)
+Here's the full [demo](https://memob0x.github.io/loader/demos/css/index.html).
+
+## [Scripts](https://memob0x.github.io/loader/demos/javascript/index.html)
 
 Loader internally uses dynamic `import` for `text/javascript` mimetype so it can be used to consume any kind of native module.
 
@@ -93,7 +98,9 @@ new Loader().load("cart.js").then((module) => {
 });
 ```
 
-## [Lazyload Images](https://memob0x.github.io/loader/demos/images/index.html)
+Here's the full [demo](https://memob0x.github.io/loader/demos/javascript/index.html).
+
+## [Lazy Images](https://memob0x.github.io/loader/demos/images/index.html)
 
 Loader can be used with `IntersectionObserver` to provide an easy and enhanced lazy load functionality.
 
@@ -126,6 +133,8 @@ const observer = new IntersectionObserver((entries) =>
     observer.observe(image)
 );
 ```
+
+Here's the full [demo](https://memob0x.github.io/loader/demos/images/index.html).
 
 ## [Manual Handling: RequireJS](https://memob0x.github.io/loader/demos/requirejs/index.html)
 
@@ -171,13 +180,17 @@ const include = async (path) => {
 include("cart").then((Cart) => new Cart().add("product-foo-12345678-bar"));
 ```
 
+Here's the full [demo](https://memob0x.github.io/loader/demos/requirejs/index.html).
+
 ## Requirements
-For a manual use of `fetch` method you'll just need:
+
+For an optimal use of `fetch` method you'll need:
+
 -   https://caniuse.com/#feat=webworkers
 -   https://caniuse.com/#feat=fetch
 
-For a complete use of `load` method with all its goodies you'll also need:
+For an optimal use of `load` method you'll need:
+
 -   https://developer.mozilla.org/en-US/docs/Web/API/URL/createObjectURL
 -   https://caniuse.com/#feat=mdn-api_stylesheet
 -   https://caniuse.com/#feat=es6-module-dynamic-import
-

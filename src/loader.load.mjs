@@ -4,9 +4,11 @@ import image from "./loader.load.image.mjs";
 import javascript from "./loader.load.javascript.mjs";
 
 /**
- *
- * @param {Blob} blob
- * @param {Object} options
+ * Loads a resource, which usually consists in attaching it to an existent DOM element
+ * @private
+ * @param {Blob} blob The resource to be loaded in Blob form
+ * @param {Object} options The resource load options
+ * @returns {Promise} The resource load in promise form
  */
 export default async (blob, options) => {
     //...

@@ -15,7 +15,10 @@ export default async (blob, options) => {
     URL.revokeObjectURL(url);
 
     //
-    if ("adoptedStyleSheets" in options.element) {
+    if (
+        typeof options.element === "object" &&
+        "adoptedStyleSheets" in options.element
+    ) {
         options.element.adoptedStyleSheets = [
             ...options.element.adoptedStyleSheets,
             sheet,

@@ -55,8 +55,16 @@
 
     const cache = {};
 
-    var lfetch = async (href, options = {}) => {
-        if (href in cache) {
+    var lfetch = async (href, options) => {
+        options = {
+            ...{
+                cache: true,
+                fetch: {},
+            },
+            ...options,
+        };
+
+        if (options.cache === true && href in cache) {
             return await cache[href];
         }
 
@@ -99,7 +107,10 @@
 
         URL.revokeObjectURL(url);
 
-        if ("adoptedStyleSheets" in options.element) {
+        if (
+            typeof options.element === "object" &&
+            "adoptedStyleSheets" in options.element
+        ) {
             options.element.adoptedStyleSheets = [
                 ...options.element.adoptedStyleSheets,
                 sheet,
@@ -191,34 +202,41 @@
     class Loader {
         constructor() {}
 
-        async fetch(arg, options) {
-            if (Array.isArray(arg)) {
-                return await arg.map((a) => this.fetch(a));
+        async fetch(resource, options) {
+            if (Array.isArray(resource)) {
+                return await resource.map((a) => this.fetch(a, options));
             }
 
-            if (typeof arg === "string") {
+            if (typeof resource === "string") {
                 const a = document.createElement("a");
 
-                a.href = arg;
+                a.href = resource;
 
-                return await this.fetch(new URL(a));
+                return await this.fetch(new URL(a), options);
             }
 
-            if (arg instanceof URL) {
-                return await lfetch(arg.href, (options && options.fetch) || {});
+            if (resource instanceof URL) {
+                return await lfetch(resource.href, options);
             }
 
             throw new TypeError(
-                `Invalid argment of type ${typeof arg} passed to Loader class "fetch" method.`
+                `Invalid argment of type ${typeof resource} passed to Loader class "fetch" method.`
             );
         }
 
-        async load(arg, options) {
-            if (Array.isArray(arg)) {
-                return await arg.map((a) => this.load(a, options));
+        async load(resource, options) {
+            if (Array.isArray(resource)) {
+                const isArrayOpts = Array.isArray(options);
+
+                return await resource.map((a, i) =>
+                    this.load(a, isArrayOpts ? options[i] : options)
+                );
             }
 
-            const blob = arg instanceof Blob ? arg : await this.fetch(arg, options);
+            const blob =
+                resource instanceof Blob
+                    ? resource
+                    : await this.fetch(resource, options);
 
             return await lload(blob, options);
         }
