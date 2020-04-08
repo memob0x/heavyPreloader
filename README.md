@@ -10,20 +10,19 @@ Under the hood it uses `Worker` and `fetch` API to retrieve a `Blob` object to t
 
 The `Loader` class exposes these main methods:
 
--   **fetch**
-    -   **First Argument:** the resource(s) url (`String` or `URL` object) as an only argument
-    -   **Second Argument:** an **options** `Object` as a second argument
-    -   **Only Job:** fetches the given resource(s) from inside a _Web Worker_.
-    -   **Returns:** the loaded resource(s) `Blob` object
--   **load**
-    -   **Arguments:** same as **fetch**
-    -   **First Job:** possibly fetches the given resources url(s) from inside a _Web Worker_.
-    -   **Second Job:** possibly applies the loaded resource(s) interpreting the given options for each case
-    -   **Returns:** the consumed `Blob` returned by **fetch response**, which is a different result for each case
-        -   A `CSSStyleSheet` object when loading **css**
-        -   (Possibly) The exported script **module** when loading **scripts**
-        -   The load/error `Event` when loading **images**
-        -   The retrieved **plain text** when loading **html**
+-   `fetch` retrieves the given resource(s) from inside a _Web Worker_ returning it in `Blob` form.
+    ```javascript
+    asdsad
+    ```
+-   `load` fires `fetch` and possibly applies the loaded resource(s) interpreting the given options for each case returning
+    -   a `CSSStyleSheet` object when loading **css**
+    -   (possibly) the exported script **module** when loading **scripts**
+    -   the load/error `Event` when loading **images**
+    -   the retrieved **plain text** when loading **html**
+    ```javascript
+    asdsad
+    ```
+Please see the following programmatically load of a "lazy" image for a full example.
 
 ```javascript
 // instance construction
@@ -50,7 +49,7 @@ Loader supports `text/html` mimetype so it can be used to retrieve new contents,
 
 ```javascript
 // updating #root with new contents
-void new Loader().load("/Messages/Inbox", {
+new Loader().load("/Messages/Inbox", {
     // fetch options
     fetch: {
         method: "GET",
@@ -68,27 +67,25 @@ void new Loader().load("/Messages/Inbox", {
 
 ## [Stylesheets Loader](https://memob0x.github.io/loader/demos/css/index.html)
 
-Loader supports stylesheets so it can be used as an asynchronous stylesheets load callback (which is a quite an [ancient cross-browser issue](https://www.phpied.com/when-is-a-stylesheet-really-loaded/)).
+Loader supports `text/css` mimetype so it can be used as an asynchronous stylesheets load callback (which is a quite an [ancient cross-browser issue](https://www.phpied.com/when-is-a-stylesheet-really-loaded/)).
 
 ```javascript
-(async () => {
-    // loading a new visual theme and a new app area
-    await Promise.allSettled(
-        new Loader().load(["theme.blue.css", "area.account.css"])
-    );
-
+// loading a new visual theme and a new app area
+Promise.allSettled(
+    new Loader().load(["theme.blue.css", "area.account.css"])
+).then(() =>
     // page ready, removing spinners and preloaders previously set
-    document.body.classList.add("page-ready");
-})();
+    document.body.classList.add("page-ready")
+);
 ```
 
 ## [Scripts Loader](https://memob0x.github.io/loader/demos/javascript/index.html)
 
-Loader internally uses dynamic `import` so it can be used to consume any kind of native module.
+Loader internally uses dynamic `import` for `text/javascript` mimetype so it can be used to consume any kind of native module.
 
 ```javascript
-// retrieving a specific module and using it
-void new Loader().load("cart.js").then((module) => {
+// retrieving and consuming a specific module
+new Loader().load("cart.js").then((module) => {
     const Cart = module.default;
     const cart = new Cart();
 
@@ -97,7 +94,8 @@ void new Loader().load("cart.js").then((module) => {
 ```
 
 ## [Lazyload Images](https://memob0x.github.io/loader/demos/images/index.html)
-Loader can be used with `IntersectionObserver` to get provide a lazy load functionality.
+
+Loader can be used with `IntersectionObserver` to provide an easy and enhanced lazy load functionality.
 
 ```javascript
 // instance construction
@@ -115,7 +113,7 @@ const observer = new IntersectionObserver((entries) =>
             // detaching observer to the visible image
             observer.unobserve(image);
 
-            // waking up the lazy image
+            // waking up the lazy image, fetching the image in a separate thread
             await loader.load(image.dataset.src, { element: image });
 
             // image is loaded, setting a css class
@@ -131,42 +129,55 @@ const observer = new IntersectionObserver((entries) =>
 
 ## [Manual Handling: RequireJS](https://memob0x.github.io/loader/demos/requirejs/index.html)
 
+You want to manually handle some resources, just skip `load` method and use `fetch`, please see the following example adapted to support [requirejs](https://requirejs.org/) library.
+
 ```javascript
-//
+// constructing a Loader instance
 const loader = new Loader();
 
+// setting up requirejs modules
+const requireConfig = {
+    paths: {
+        cart: "root/account/cart.js",
+    },
+};
+requirejs.config(requireConfig);
+
 /**
- *
+ * Wraps require to load modules in a separate thread
+ * @param {string} path The path to a previously registered requirejs module
+ * @returns {Promise} The module call in Promise form
  */
 const include = async (path) => {
-    //
-    const blob = await loader.fetch(path);
+    // fetching the module in a secondary thread
+    const blob = await loader.fetch(requireConfig.paths[path]);
 
-    //
+    // creating an url from a blob
     const url = URL.createObjectURL(blob);
 
-    //
+    // wrapping require to make a thenable of it in order to be consumed by await operatator
     const result = await new Promise((resolve, reject) =>
         require(url, resolve, reject)
     );
 
-    //
+    // dispose the previously created url
     URL.revokeObjectURL(url);
 
-    //
+    // returns the awaited module
     return result;
 };
 
-//
-include("cart").then((Cart) => {
-    const cart = new Cart();
-
-    cart.add("product-foo-12345678-bar");
-});
+// use case
+include("cart").then((Cart) => new Cart().add("product-foo-12345678-bar"));
 ```
 
 ## Requirements
-
+For a manual use of `fetch` method you'll just need:
 -   https://caniuse.com/#feat=webworkers
 -   https://caniuse.com/#feat=fetch
+
+For a complete use of `load` method with all its goodies you'll also need:
 -   https://developer.mozilla.org/en-US/docs/Web/API/URL/createObjectURL
+-   https://caniuse.com/#feat=mdn-api_stylesheet
+-   https://caniuse.com/#feat=es6-module-dynamic-import
+

@@ -10,6 +10,7 @@ import javascript from "./loader.load.javascript.mjs";
  */
 export default async (blob, options) => {
     //...
+    // TODO: get all major mimetypes
     switch (blob.type) {
         //...
         case "image/png":
