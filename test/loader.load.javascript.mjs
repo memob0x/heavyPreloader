@@ -1,3 +1,4 @@
-describe("loader javascript", () => {
-    it("should test scripts load", (done) => done());
+describe("scripts loader", () => {
+    it("should return a promise which resolves to possibly exported api from the fetched module", (done) =>
+        done());
 });
