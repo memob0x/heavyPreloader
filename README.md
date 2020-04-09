@@ -1,8 +1,8 @@
-# [loader.js](https://memob0x.github.io/loader/demos/index.html)
+# [loader.js](/demos/index.html)
 
 ![Node.js CI](https://github.com/memob0x/loader/workflows/Node.js%20CI/badge.svg?branch=new-aim)
 
-⚙️ **loader.js** is a small script that lets you programmatically fetch whatever resource type in a **separate thread** leaving the main one free to "concentrate" on animations and other visually noticeable changes in order to enhance the perceived performance to the end user.
+⚙️ **loader.js** is a small script (~4,0K) that lets you programmatically fetch whatever resource type in a **separate thread** leaving the main one free to "concentrate" on animations and other visually noticeable changes in order to enhance the perceived performance to the end user.
 
 Under the hood it uses `Worker` and `fetch` API to retrieve a `Blob` object to the main thread in order to be consumed by `URL` API, `FileReader` instances and so on...
 
@@ -10,27 +10,28 @@ Under the hood it uses `Worker` and `fetch` API to retrieve a `Blob` object to t
 
 ## `fetch(resource, [options])`
 
-This method fetches the given resource(s) and returns it as a `Blob` object.
+This method **fetches** the given **resource(s)** and returns it as a `Blob` object.
 
 It is passed the following **arguments**:
 
--   _resource_ ( `String` | `URL` | `Array`.<`String`> | `Array`.<`URL`> )
--   _options_ ( `Object` )
-    -   _cache_ ( `Boolean` )
-    -   _fetch_ ( `Object` )
+-   _resource_ (`String`|`URL`|`Array`.<`String`>|`Array`.<`URL`>) The resource(s) url to be fetched.
+-   _options_ (`Object`) An object of options consumed by the fetch method.
+    -   _cache_ (`Boolean`) Default set to true, if set to false, it will force the requested resource(s) not to be retrieved from the library cache.
+    -   _fetch_ (`Object`) The [fetch API options](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch#Supplying_request_options) object.
 
 **Returns** a _promise_ (or an _array of promises_ if multiple resources are passed) with a `Blob` resolution type.
 
 ## `load(resource, [options])`
 
-This method blabla
+This method **fetches** the given **resource(s)** and possibly **attach** it to an existent **element** compatibly with the given **options** object.
 
 It is passed the following **arguments**:
 
--   _resource_ ( `String` | `URL` | `Array`.<`String`> | `Array`.<`URL`> )
--   _options_ ( `Object` | `Array`.<`Object`> )
-    -   _element_ ( `HTMLElement` )
-    -   _filter_ ( `String` )
+-   _resource_ (`String`|`URL`|`Blob`|`Array`.<`String`>|`Array`.<`URL`>|`Array`.<`Blob`>) The resource(s) url to be fetched and loaded or the resource(s) blob to be loaded.
+-   _options_ (`Object`|`Array`.<`Object`>) An object or an array of objects with the options consumed by the load method.
+    -   (fetch method options)
+    -   _element_ (`HTMLElement`) The element to attach the fetched resource(s) to.
+    -   _filter_ (`String`) Used only when fetching `text/html`, traverses the fetched DOM in order to append only a certain part of it.
 
 **Returns** a _promise_ (or an _array of promises_ if multiple resources are passed) whose resolution type varies depending on the given resource media type:
 
@@ -41,13 +42,21 @@ It is passed the following **arguments**:
 | `text/javascript` | depends on what is possibly exported |
 | `image/*`         | `Event`                              |
 
-# Recipes
+# Recipes and Demos
 
 Let's go into detail by cooking some of the most common recipes.
 
-## [HTML](https://memob0x.github.io/loader/demos/html/index.html)
+#### All live demos:
 
-Loader supports `text/html` mimetype so it can be used to retrieve new contents, also with `load` method updating the current view with fresh data is quite easy.
+-   [Loading HTML](/demos/html/index.html)
+-   [Loading Stylesheets](/demos/css/index.html)
+-   [Loading Scripts](/demos/javascript/index.html)
+-   [Lazily Loading Images](/demos/images/index.html)
+-   [RequireJS Integration](/demos/requirejs/index.html)
+
+## [HTML](/demos/html/index.html)
+
+Loader supports `text/html` media type so it can be used to retrieve new contents, also with `load` method updating the current view with fresh data is quite easy.
 
 ```javascript
 // updating #root with new contents
@@ -66,11 +75,11 @@ new Loader().load("/Messages/Inbox", {
 });
 ```
 
-Here's the full [demo](https://memob0x.github.io/loader/demos/html/index.html).
+Here's the full [demo](/demos/html/index.html).
 
-## [Stylesheets](https://memob0x.github.io/loader/demos/css/index.html)
+## [Stylesheets](/demos/css/index.html)
 
-Loader supports `text/css` mimetype so it can be used as an asynchronous stylesheets load callback (which is a quite an [ancient cross-browser issue](https://www.phpied.com/when-is-a-stylesheet-really-loaded/)).
+Loader supports `text/css` media type so it can be used as an asynchronous stylesheets load callback (which is a quite an [ancient cross-browser issue](https://www.phpied.com/when-is-a-stylesheet-really-loaded/)).
 
 ```javascript
 // loading a new visual theme and a new app area
@@ -82,11 +91,11 @@ Promise.allSettled(
 );
 ```
 
-Here's the full [demo](https://memob0x.github.io/loader/demos/css/index.html).
+Here's the full [demo](/demos/css/index.html).
 
-## [Scripts](https://memob0x.github.io/loader/demos/javascript/index.html)
+## [Scripts](/demos/javascript/index.html)
 
-Loader internally uses dynamic `import` for `text/javascript` mimetype so it can be used to consume any kind of native module.
+Loader internally uses dynamic `import` for `text/javascript` media type so it can be used to consume any kind of native module.
 
 ```javascript
 // retrieving and consuming a specific module
@@ -98,9 +107,9 @@ new Loader().load("cart.js").then((module) => {
 });
 ```
 
-Here's the full [demo](https://memob0x.github.io/loader/demos/javascript/index.html).
+Here's the full [demo](/demos/javascript/index.html).
 
-## [Lazy Images](https://memob0x.github.io/loader/demos/images/index.html)
+## [Lazy Images](/demos/images/index.html)
 
 Loader can be used with `IntersectionObserver` to provide an easy and enhanced lazy load functionality.
 
@@ -134,9 +143,9 @@ const observer = new IntersectionObserver((entries) =>
 );
 ```
 
-Here's the full [demo](https://memob0x.github.io/loader/demos/images/index.html).
+Here's the full [demo](/demos/images/index.html).
 
-## [Manual Handling: RequireJS](https://memob0x.github.io/loader/demos/requirejs/index.html)
+## [Manual Handling: RequireJS](/demos/requirejs/index.html)
 
 You want to manually handle some resources, just skip `load` method and use `fetch`, please see the following example adapted to support [requirejs](https://requirejs.org/) library.
 
@@ -180,7 +189,7 @@ const include = async (path) => {
 include("cart").then((Cart) => new Cart().add("product-foo-12345678-bar"));
 ```
 
-Here's the full [demo](https://memob0x.github.io/loader/demos/requirejs/index.html).
+Here's the full [demo](/demos/requirejs/index.html).
 
 ## Requirements
 
