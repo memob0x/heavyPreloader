@@ -4,7 +4,7 @@ import lload from "../src/loader.load.mjs";
 
 describe("stylesheet loader", () => {
     it("should return a promise which resolves to a CSSStyleSheet object", async () => {
-        const path = "/base/test/resources/css.css";
+        const path = "/base/test/resources/css.inherit.css";
 
         const blob = await lfetch(getURL(path).href);
         const stylesheet = await lload(blob);
@@ -14,11 +14,10 @@ describe("stylesheet loader", () => {
         return stylesheet;
     });
 
-    const getBodyBackgroundColor = () =>
-        window.getComputedStyle(document.body).backgroundColor;
-
     it("should attach stylesheet to document if no different option is specified", async () => {
         const path = "/base/test/resources/css.blue-background.css";
+        const getBodyBackgroundColor = () =>
+            getComputedStyle(document.body).backgroundColor;
 
         expect(getBodyBackgroundColor()).to.equals("rgba(0, 0, 0, 0)");
 

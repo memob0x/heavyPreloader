@@ -300,11 +300,14 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         while (1) {
           switch (_context5.prev = _context5.next) {
             case 0:
-              image = options.element instanceof HTMLImageElement ? options.element : new Image();
+              image = options && options.element instanceof HTMLImageElement ? options.element : new Image();
               url = URL.createObjectURL(blob);
               promise = new Promise(function (resolve, reject) {
                 image.onload = resolve;
-                image.onerror = reject;
+
+                image.onerror = function () {
+                  return reject(new Error("Error loading image ".concat(blob.type)));
+                };
               });
               image.src = url;
               _context5.next = 6;
@@ -366,7 +369,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           switch (_context7.prev = _context7.next) {
             case 0:
               _context7.t0 = blob.type;
-              _context7.next = _context7.t0 === "image/png" ? 3 : _context7.t0 === "image/jpeg" ? 3 : _context7.t0 === "text/html" ? 6 : _context7.t0 === "text/css" ? 9 : _context7.t0 === "text/javascript" ? 12 : 15;
+              _context7.next = _context7.t0 === "image/png" ? 3 : _context7.t0 === "image/jpeg" ? 3 : _context7.t0 === "image/gif" ? 3 : _context7.t0 === "text/html" ? 6 : _context7.t0 === "text/css" ? 9 : _context7.t0 === "text/javascript" ? 12 : _context7.t0 === "application/javascript" ? 12 : 15;
               break;
 
             case 3:
@@ -398,7 +401,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
               return _context7.abrupt("return", _context7.sent);
 
             case 15:
-              throw new TypeError("Invalid argment of type ".concat(_typeof(blob), " passed to Loader class \"fetch\" method."));
+              throw new TypeError("Invalid ".concat(blob.type, " media type passed to Loader class \"load\" method."));
 
             case 16:
             case "end":

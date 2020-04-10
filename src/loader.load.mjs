@@ -17,6 +17,7 @@ export default async (blob, options) => {
         //...
         case "image/png":
         case "image/jpeg":
+        case "image/gif":
             return await image(blob, options);
 
         //...
@@ -29,11 +30,12 @@ export default async (blob, options) => {
 
         //...
         case "text/javascript":
+        case "application/javascript":
             return await javascript(blob);
     }
 
     // ...
     throw new TypeError(
-        `Invalid argment of type ${typeof blob} passed to Loader class "fetch" method.`
+        `Invalid ${blob.type} media type passed to Loader class "load" method.`
     );
 };

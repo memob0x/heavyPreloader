@@ -4,7 +4,7 @@ import lload from "../src/loader.load.mjs";
 
 describe("html loader", () => {
     it("should return a promise which resolves to plain text", async () => {
-        const path = "/base/test/resources/html.html";
+        const path = "/base/test/resources/html.a-view.html";
 
         const blob = await lfetch(getURL(path).href);
         const text = await lload(blob);

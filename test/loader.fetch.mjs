@@ -3,7 +3,7 @@ import fetch from "../src/loader.fetch.mjs";
 
 describe("fetch function", () => {
     it("should return a promise which resolves to a resource blob object", () => {
-        const path = "/base/test/resources/css.css";
+        const path = "/base/test/resources/css.inherit.css";
 
         const success = fetch(getURL(path).href);
         success.then((x) => expect(x).to.be.an.instanceof(Blob));

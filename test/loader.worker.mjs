@@ -8,6 +8,7 @@ describe("worker", () => {
         done();
     });
 
+    // TODO: simplify this test body
     it("should be able to retrieve a previously created worker without creating a new one", async () => {
         const value = "same-worker";
 

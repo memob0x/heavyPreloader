@@ -190,7 +190,7 @@
 
     var image = async (blob, options) => {
         const image =
-            options.element instanceof HTMLImageElement
+            options && options.element instanceof HTMLImageElement
                 ? options.element
                 : new Image();
 
@@ -198,7 +198,8 @@
 
         const promise = new Promise((resolve, reject) => {
             image.onload = resolve;
-            image.onerror = reject;
+            image.onerror = () =>
+                reject(new Error(`Error loading image ${blob.type}`));
         });
 
         image.src = url;
@@ -224,6 +225,7 @@
         switch (blob.type) {
             case "image/png":
             case "image/jpeg":
+            case "image/gif":
                 return await image(blob, options);
 
             case "text/html":
@@ -233,11 +235,12 @@
                 return await css(blob, options);
 
             case "text/javascript":
+            case "application/javascript":
                 return await javascript(blob);
         }
 
         throw new TypeError(
-            `Invalid argment of type ${typeof blob} passed to Loader class "fetch" method.`
+            `Invalid ${blob.type} media type passed to Loader class "load" method.`
         );
     };
 
