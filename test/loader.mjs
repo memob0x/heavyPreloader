@@ -1,3 +1,4 @@
+import { getURL } from "../src/loader.utils.mjs";
 import Loader from "../src/loader.mjs";
 
 describe("constructor and public methods", () => {
@@ -10,38 +11,123 @@ describe("constructor and public methods", () => {
         done();
     });
 
+    // TODO: refactor the following tests to make it more DRY
+
     describe("fetch public method", () => {
-        it("should be able to handle an url object", (done) => done());
+        it("should be able to handle an url object", async () => {
+            const fetch = await instance.fetch(
+                getURL("/base/test/resources/image.1440x900.jpg")
+            );
 
-        it("should be able to lists of url objects", (done) => done());
+            expect(fetch).to.be.an.instanceof(Blob);
+            expect(fetch).to.have.property("type", "image/jpeg");
 
-        it("should be able to handle strings", (done) => done());
+            return fetch;
+        });
 
-        it("should be able to handle lists of url objects", (done) => done());
+        it("should be able to lists of url objects", async () => {
+            const fetch = await instance.fetch([
+                getURL("/base/test/resources/image.1440x900.jpg"),
+                getURL("/base/test/resources/image.1440x900.jpg"),
+            ]);
 
-        it("should be able to handle strings", (done) => done());
+            expect(fetch).to.be.an("array");
 
-        it("should be able to handle lists of url objects", (done) => done());
+            const first = await fetch[0];
+            expect(first).to.be.an.instanceof(Blob);
+            expect(first).to.have.property("type", "image/jpeg");
+
+            const second = await fetch[0];
+            expect(second).to.be.an.instanceof(Blob);
+            expect(second).to.have.property("type", "image/jpeg");
+
+            return Promise.allSettled(fetch);
+        });
+
+        it("should be able to handle strings", async () => {
+            const fetch = await instance.fetch(
+                "/base/test/resources/image.1440x900.jpg"
+            );
+
+            expect(fetch).to.be.an.instanceof(Blob);
+            expect(fetch).to.have.property("type", "image/jpeg");
+
+            return fetch;
+        });
+
+        it("should be able to handle lists of strings", async () => {
+            const fetch = await instance.fetch([
+                "/base/test/resources/image.1440x900.jpg",
+                "/base/test/resources/image.1440x900.jpg",
+            ]);
+
+            expect(fetch).to.be.an("array");
+
+            const first = await fetch[0];
+            expect(first).to.be.an.instanceof(Blob);
+            expect(first).to.have.property("type", "image/jpeg");
+
+            const second = await fetch[0];
+            expect(second).to.be.an.instanceof(Blob);
+            expect(second).to.have.property("type", "image/jpeg");
+
+            return Promise.allSettled(fetch);
+        });
     });
 
     describe("load public method", () => {
-        it("should be able to handle an url object", (done) => done());
+        it("should be able to handle an url object", async () => {
+            const load = await instance.load(
+                getURL("/base/test/resources/image.1440x900.jpg")
+            );
 
-        it("should be able to lists of url objects", (done) => done());
+            expect(load).to.be.an.instanceof(Event);
 
-        it("should be able to handle strings", (done) => done());
+            return load;
+        });
 
-        it("should be able to handle lists of url objects", (done) => done());
+        it("should be able to lists of url objects", async () => {
+            const load = await instance.load([
+                getURL("/base/test/resources/image.1440x900.jpg"),
+                getURL("/base/test/resources/image.1440x900.jpg"),
+            ]);
 
-        it("should be able to handle strings", (done) => done());
+            expect(load).to.be.an("array");
 
-        it("should be able to handle lists of url objects", (done) => done());
+            const first = await load[0];
+            expect(first).to.be.an.instanceof(Event);
 
-        it("should be able to handle blob objects", (done) => done());
+            const second = await load[0];
+            expect(second).to.be.an.instanceof(Event);
 
-        it("should be able to handle lists of blob objects", (done) => done());
+            return Promise.allSettled(load);
+        });
 
-        it("should be able to handle lists of options if a list of resources is given", (done) =>
-            done());
+        it("should be able to handle strings", async () => {
+            const load = await instance.load(
+                "/base/test/resources/image.1440x900.jpg"
+            );
+
+            expect(load).to.be.an.instanceof(Event);
+
+            return load;
+        });
+
+        it("should be able to handle lists of strings", async () => {
+            const load = await instance.load([
+                "/base/test/resources/image.1440x900.jpg",
+                "/base/test/resources/image.1440x900.jpg",
+            ]);
+
+            expect(load).to.be.an("array");
+
+            const first = await load[0];
+            expect(first).to.be.an.instanceof(Event);
+
+            const second = await load[0];
+            expect(second).to.be.an.instanceof(Event);
+
+            return Promise.allSettled(load);
+        });
     });
 });
