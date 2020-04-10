@@ -1,9 +1,9 @@
-import { get, terminate } from "../src/loader.worker.mjs";
+import lworker from "../src/loader.worker.mjs";
 
 describe("worker", () => {
     it("should be able to create a worker dynamically", (done) => {
-        expect(get()).to.be.an.instanceof(Worker);
-        expect(terminate()).to.be.a("null");
+        expect(lworker.worker()).to.be.an.instanceof(Worker);
+        expect(lworker.terminate()).to.be.a("null");
 
         done();
     });
@@ -11,7 +11,7 @@ describe("worker", () => {
     it("should be able to retrieve a previously created worker without creating a new one", async () => {
         const value = "same-worker";
 
-        const worker = get();
+        const worker = lworker.worker();
 
         const promise = new Promise((resolve) => {
             worker.onmessage = (event) => {
@@ -23,26 +23,26 @@ describe("worker", () => {
 
         worker.postMessage("foobar");
 
-        get().postMessage(value);
+        lworker.worker().postMessage(value);
 
         const result = await promise;
 
         expect(result).to.equals(value);
 
-        terminate();
-        terminate();
+        lworker.terminate();
+        lworker.terminate();
 
         return promise;
     });
 
     it("should be able to terminate the worker when all instances are disposed", (done) => {
-        expect(get()).to.be.an.instanceof(Worker);
+        expect(lworker.worker()).to.be.an.instanceof(Worker);
 
-        expect(get()).to.be.an.instanceof(Worker);
+        expect(lworker.worker()).to.be.an.instanceof(Worker);
 
-        expect(terminate()).to.be.an.instanceof(Worker);
+        expect(lworker.terminate()).to.be.an.instanceof(Worker);
 
-        expect(terminate()).to.be.a("null");
+        expect(lworker.terminate()).to.be.a("null");
 
         done();
     });

@@ -1,2 +1,5 @@
 -   unit tests
+-   provide all major media type cases in loader.load.mjs
+-   jsdocs and comments
 -   demo pages
+-   images with srcset recipe

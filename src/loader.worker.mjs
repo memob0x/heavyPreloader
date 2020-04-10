@@ -2,42 +2,9 @@
  *
  * @private
  * @static
+ * TODO: provide unit test
  */
-const body = () =>
-    (onmessage = async (event) => {
-        //
-        try {
-            const response = await fetch(event.data.href, event.data.options);
-            const blob = await response.blob();
-
-            event.data.status = response.status;
-            event.data.statusText = response.statusText;
-            event.data.blob = blob;
-        } catch (e) {
-            event.data.statusText = e;
-        }
-
-        // ...
-        postMessage(event.data);
-    });
-
-// ...
-let lworker = null;
-let requests = 0;
-
-/**
- *
- * @private
- */
-export const get = () => {
-    // ...
-    requests++;
-
-    // ...
-    if (lworker) {
-        return lworker;
-    }
-
+const createDynamicWorker = (body) => {
     // ...
     const url = URL.createObjectURL(
         new Blob(["(", body.toString(), ")()"], {
@@ -46,29 +13,86 @@ export const get = () => {
     );
 
     // ...
-    lworker = new Worker(url);
+    const worker = new Worker(url);
 
     // ...
     URL.revokeObjectURL(url);
 
-    //
-    return lworker;
+    // ...
+    return worker;
 };
 
 /**
  *
  * @private
+ * @static
+ * TODO: provide unit test
  */
-export const terminate = () => {
-    //
-    requests--;
+const createFetchWorker = () =>
+    createDynamicWorker(
+        () =>
+            (onmessage = async (event) => {
+                //
+                try {
+                    const response = await fetch(
+                        event.data.href,
+                        event.data.options
+                    );
+                    const blob = await response.blob();
 
-    //
-    if (requests <= 0) {
-        lworker.terminate();
+                    event.data.status = response.status;
+                    event.data.statusText = response.statusText;
+                    event.data.blob = blob;
+                } catch (e) {
+                    event.data.statusText = e;
+                }
 
-        lworker = null;
+                // ...
+                postMessage(event.data);
+            })
+    );
+
+/**
+ *
+ */
+export default new (class LoaderWorker {
+    constructor() {
+        this._worker = null;
+
+        this._requests = 0;
     }
 
-    return lworker;
-};
+    terminate() {
+        //
+        //
+        if (this._requests > 0) {
+            this._requests--;
+        }
+
+        //
+        if (this._requests === 0) {
+            this._worker.terminate();
+
+            this._worker = null;
+        }
+
+        //
+        return this._worker;
+    }
+
+    worker() {
+        // ...
+        this._requests++;
+
+        // ...
+        if (this._worker) {
+            return this._worker;
+        }
+
+        // ...
+        this._worker = createFetchWorker();
+
+        //
+        return this._worker;
+    }
+})();

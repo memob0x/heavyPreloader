@@ -4,54 +4,83 @@
     (global = global || self, global.Loader = factory());
 }(this, (function () { 'use strict';
 
-    const body = () =>
-        (onmessage = async (event) => {
-            try {
-                const response = await fetch(event.data.href, event.data.options);
-                const blob = await response.blob();
+    const a = document.createElement("a");
 
-                event.data.status = response.status;
-                event.data.statusText = response.statusText;
-                event.data.blob = blob;
-            } catch (e) {
-                event.data.statusText = e;
-            }
+    const getURL = (path) => {
+        a.href = path;
 
-            postMessage(event.data);
-        });
+        return new URL(a.href);
+    };
 
-    let lworker = null;
-    let requests = 0;
-
-    const get = () => {
-        requests++;
-
-        if (lworker) {
-            return lworker;
-        }
-
+    const createDynamicWorker = (body) => {
         const url = URL.createObjectURL(
             new Blob(["(", body.toString(), ")()"], {
                 type: "application/javascript",
             })
         );
 
-        lworker = new Worker(url);
+        const worker = new Worker(url);
 
         URL.revokeObjectURL(url);
 
-        return lworker;
+        return worker;
     };
 
-    const terminate = () => {
-        requests--;
+    const createFetchWorker = () =>
+        createDynamicWorker(
+            () =>
+                (onmessage = async (event) => {
+                    try {
+                        const response = await fetch(
+                            event.data.href,
+                            event.data.options
+                        );
+                        const blob = await response.blob();
 
-        if (requests <= 0) {
-            lworker.terminate();
+                        event.data.status = response.status;
+                        event.data.statusText = response.statusText;
+                        event.data.blob = blob;
+                    } catch (e) {
+                        event.data.statusText = e;
+                    }
 
-            lworker = null;
+                    postMessage(event.data);
+                })
+        );
+
+    var lworker = new (class LoaderWorker {
+        constructor() {
+            this._worker = null;
+
+            this._requests = 0;
         }
-    };
+
+        terminate() {
+            if (this._requests > 0) {
+                this._requests--;
+            }
+
+            if (this._requests === 0) {
+                this._worker.terminate();
+
+                this._worker = null;
+            }
+
+            return this._worker;
+        }
+
+        worker() {
+            this._requests++;
+
+            if (this._worker) {
+                return this._worker;
+            }
+
+            this._worker = createFetchWorker();
+
+            return this._worker;
+        }
+    })();
 
     const cache = {};
 
@@ -69,7 +98,7 @@
         }
 
         return (cache[href] = new Promise((resolve, reject) => {
-            const worker = get();
+            const worker = lworker.worker();
 
             worker.postMessage({
                 href: href,
@@ -83,7 +112,7 @@
                     return;
                 }
 
-                terminate();
+                lworker.terminate();
 
                 if (data.status === 200) {
                     resolve(data.blob);
@@ -133,13 +162,26 @@
 
         let result = await promise;
 
-        if (typeof options.filter === "string" && options.filter.length) {
+        if (
+            options &&
+            typeof options.filter === "string" &&
+            options.filter.length
+        ) {
             result = new DOMParser().parseFromString(result, "text/html").body;
             result = [...result.querySelectorAll(options.filter)];
-            result = result.map((x) => x.outerHTML).reduce((x, y) => x + y);
+            result = result.length
+                ? result.map((x) => x.outerHTML).reduce((x, y) => x + y)
+                : result;
         }
 
-        if (options.element && options.element instanceof HTMLElement) {
+        if (
+            options &&
+            options.element &&
+            options.element instanceof HTMLElement &&
+            result &&
+            typeof result === "string" &&
+            result.length
+        ) {
             options.element.innerHTML = result;
         }
 
@@ -208,11 +250,7 @@
             }
 
             if (typeof resource === "string") {
-                const a = document.createElement("a");
-
-                a.href = resource;
-
-                return await this.fetch(new URL(a), options);
+                return await this.fetch(getURL(resource), options);
             }
 
             if (resource instanceof URL) {

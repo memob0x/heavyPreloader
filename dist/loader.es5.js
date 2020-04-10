@@ -1,11 +1,5 @@
 "use strict";
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
 function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function _getRequireWildcardCache() { return cache; }; return cache; }
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || _typeof(obj) !== "object" && typeof obj !== "function") { return { "default": obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj["default"] = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
@@ -28,6 +22,12 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
 
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
@@ -39,80 +39,110 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 })(void 0, function () {
   'use strict';
 
-  var body = function body() {
-    return onmessage = function () {
-      var _ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee(event) {
-        var response, blob;
-        return regeneratorRuntime.wrap(function _callee$(_context) {
-          while (1) {
-            switch (_context.prev = _context.next) {
-              case 0:
-                _context.prev = 0;
-                _context.next = 3;
-                return fetch(event.data.href, event.data.options);
+  var a = document.createElement("a");
 
-              case 3:
-                response = _context.sent;
-                _context.next = 6;
-                return response.blob();
-
-              case 6:
-                blob = _context.sent;
-                event.data.status = response.status;
-                event.data.statusText = response.statusText;
-                event.data.blob = blob;
-                _context.next = 15;
-                break;
-
-              case 12:
-                _context.prev = 12;
-                _context.t0 = _context["catch"](0);
-                event.data.statusText = _context.t0;
-
-              case 15:
-                postMessage(event.data);
-
-              case 16:
-              case "end":
-                return _context.stop();
-            }
-          }
-        }, _callee, null, [[0, 12]]);
-      }));
-
-      return function onmessage(_x) {
-        return _ref.apply(this, arguments);
-      };
-    }();
+  var getURL = function getURL(path) {
+    a.href = path;
+    return new URL(a.href);
   };
 
-  var lworker = null;
-  var requests = 0;
-
-  var get = function get() {
-    requests++;
-
-    if (lworker) {
-      return lworker;
-    }
-
+  var createDynamicWorker = function createDynamicWorker(body) {
     var url = URL.createObjectURL(new Blob(["(", body.toString(), ")()"], {
       type: "application/javascript"
     }));
-    lworker = new Worker(url);
+    var worker = new Worker(url);
     URL.revokeObjectURL(url);
-    return lworker;
+    return worker;
   };
 
-  var terminate = function terminate() {
-    requests--;
+  var createFetchWorker = function createFetchWorker() {
+    return createDynamicWorker(function () {
+      return onmessage = function () {
+        var _ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee(event) {
+          var response, blob;
+          return regeneratorRuntime.wrap(function _callee$(_context) {
+            while (1) {
+              switch (_context.prev = _context.next) {
+                case 0:
+                  _context.prev = 0;
+                  _context.next = 3;
+                  return fetch(event.data.href, event.data.options);
 
-    if (requests <= 0) {
-      lworker.terminate();
-      lworker = null;
+                case 3:
+                  response = _context.sent;
+                  _context.next = 6;
+                  return response.blob();
+
+                case 6:
+                  blob = _context.sent;
+                  event.data.status = response.status;
+                  event.data.statusText = response.statusText;
+                  event.data.blob = blob;
+                  _context.next = 15;
+                  break;
+
+                case 12:
+                  _context.prev = 12;
+                  _context.t0 = _context["catch"](0);
+                  event.data.statusText = _context.t0;
+
+                case 15:
+                  postMessage(event.data);
+
+                case 16:
+                case "end":
+                  return _context.stop();
+              }
+            }
+          }, _callee, null, [[0, 12]]);
+        }));
+
+        return function onmessage(_x) {
+          return _ref.apply(this, arguments);
+        };
+      }();
+    });
+  };
+
+  var lworker = new (function () {
+    function LoaderWorker() {
+      _classCallCheck(this, LoaderWorker);
+
+      this._worker = null;
+      this._requests = 0;
     }
-  };
 
+    _createClass(LoaderWorker, [{
+      key: "terminate",
+      value: function terminate() {
+        if (this._requests > 0) {
+          this._requests--;
+        }
+
+        if (this._requests === 0) {
+          this._worker.terminate();
+
+          this._worker = null;
+        }
+
+        return this._worker;
+      }
+    }, {
+      key: "worker",
+      value: function worker() {
+        this._requests++;
+
+        if (this._worker) {
+          return this._worker;
+        }
+
+        this._worker = createFetchWorker();
+        return this._worker;
+      }
+    }]);
+
+    return LoaderWorker;
+  }())();
   var cache = {};
 
   var lfetch = function () {
@@ -139,7 +169,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
             case 5:
               return _context2.abrupt("return", cache[href] = new Promise(function (resolve, reject) {
-                var worker = get();
+                var worker = lworker.worker();
                 worker.postMessage({
                   href: href,
                   options: options.fetch
@@ -151,7 +181,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
                     return;
                   }
 
-                  terminate();
+                  lworker.terminate();
 
                   if (data.status === 200) {
                     resolve(data.blob);
@@ -234,17 +264,17 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
             case 5:
               result = _context4.sent;
 
-              if (typeof options.filter === "string" && options.filter.length) {
+              if (options && typeof options.filter === "string" && options.filter.length) {
                 result = new DOMParser().parseFromString(result, "text/html").body;
                 result = _toConsumableArray(result.querySelectorAll(options.filter));
-                result = result.map(function (x) {
+                result = result.length ? result.map(function (x) {
                   return x.outerHTML;
                 }).reduce(function (x, y) {
                   return x + y;
-                });
+                }) : result;
               }
 
-              if (options.element && options.element instanceof HTMLElement) {
+              if (options && options.element && options.element instanceof HTMLElement && result && typeof result === "string" && result.length) {
                 options.element.innerHTML = result;
               }
 
@@ -394,7 +424,6 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         var _fetch = _asyncToGenerator(regeneratorRuntime.mark(function _callee8(resource, options) {
           var _this = this;
 
-          var a;
           return regeneratorRuntime.wrap(function _callee8$(_context8) {
             while (1) {
               switch (_context8.prev = _context8.next) {
@@ -414,34 +443,32 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
                 case 4:
                   if (!(typeof resource === "string")) {
-                    _context8.next = 10;
+                    _context8.next = 8;
                     break;
                   }
 
-                  a = document.createElement("a");
-                  a.href = resource;
-                  _context8.next = 9;
-                  return this.fetch(new URL(a), options);
+                  _context8.next = 7;
+                  return this.fetch(getURL(resource), options);
 
-                case 9:
+                case 7:
                   return _context8.abrupt("return", _context8.sent);
 
-                case 10:
+                case 8:
                   if (!(resource instanceof URL)) {
-                    _context8.next = 14;
+                    _context8.next = 12;
                     break;
                   }
 
-                  _context8.next = 13;
+                  _context8.next = 11;
                   return lfetch(resource.href, options);
 
-                case 13:
+                case 11:
                   return _context8.abrupt("return", _context8.sent);
 
-                case 14:
+                case 12:
                   throw new TypeError("Invalid argment of type ".concat(_typeof(resource), " passed to Loader class \"fetch\" method."));
 
-                case 15:
+                case 13:
                 case "end":
                   return _context8.stop();
               }

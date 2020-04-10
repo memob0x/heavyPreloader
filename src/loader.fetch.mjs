@@ -1,4 +1,4 @@
-import * as lworker from "./loader.worker.mjs";
+import lworker from "./loader.worker.mjs";
 
 // ...
 const cache = {};
@@ -28,7 +28,7 @@ export default async (href, options) => {
     // ...
     return (cache[href] = new Promise((resolve, reject) => {
         //
-        const worker = lworker.get();
+        const worker = lworker.worker();
 
         // ...
         worker.postMessage({

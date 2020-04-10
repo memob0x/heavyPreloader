@@ -19,7 +19,7 @@ export default class Loader {
 
         // ...
         if (typeof resource === "string") {
-            return await this.fetch(getURL(a), options);
+            return await this.fetch(getURL(resource), options);
         }
 
         // ...
