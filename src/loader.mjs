@@ -1,3 +1,4 @@
+import { getURL } from "./loader.utils.mjs";
 import lfetch from "./loader.fetch.mjs";
 import lload from "./loader.load.mjs";
 
@@ -18,11 +19,7 @@ export default class Loader {
 
         // ...
         if (typeof resource === "string") {
-            const a = document.createElement("a");
-
-            a.href = resource;
-
-            return await this.fetch(new URL(a), options);
+            return await this.fetch(getURL(a), options);
         }
 
         // ...

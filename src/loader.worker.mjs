@@ -69,4 +69,6 @@ export const terminate = () => {
 
         lworker = null;
     }
+
+    return lworker;
 };

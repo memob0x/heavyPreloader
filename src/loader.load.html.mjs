@@ -16,17 +16,30 @@ export default async (blob, options) => {
     let result = await promise;
 
     //
-    if (typeof options.filter === "string" && options.filter.length) {
+    if (
+        options &&
+        typeof options.filter === "string" &&
+        options.filter.length
+    ) {
         //
         result = new DOMParser().parseFromString(result, "text/html").body;
         //
         result = [...result.querySelectorAll(options.filter)];
         //
-        result = result.map((x) => x.outerHTML).reduce((x, y) => x + y);
+        result = result.length
+            ? result.map((x) => x.outerHTML).reduce((x, y) => x + y)
+            : result;
     }
 
     //
-    if (options.element && options.element instanceof HTMLElement) {
+    if (
+        options &&
+        options.element &&
+        options.element instanceof HTMLElement &&
+        result &&
+        typeof result === "string" &&
+        result.length
+    ) {
         options.element.innerHTML = result;
     }
 
