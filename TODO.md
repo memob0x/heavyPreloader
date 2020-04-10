@@ -1,4 +1,4 @@
 -   jsdocs and comments
 -   demo pages
--   fix TODO and FIXME notes among unit test files
 -   figure out images with srcset recipe
+-   fix TODO notes among unit test files

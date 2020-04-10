@@ -7,7 +7,7 @@ describe("html loader", () => {
         const path = "/base/test/resources/html.a-view.html";
 
         const blob = await lfetch(getURL(path).href);
-        const text = await lload(blob);
+        const text = await lload.load(blob);
 
         expect(text).to.be.a("string");
 
@@ -21,7 +21,7 @@ describe("html loader", () => {
         expect(el.innerHTML).to.equals("");
 
         const blob = await lfetch(getURL(path).href);
-        const text = await lload(blob, { element: el });
+        const text = await lload.load(blob, { element: el });
 
         expect(el.innerHTML).to.equals(text);
         expect(el.children[0].tagName.toLowerCase()).to.equals("div");
@@ -36,7 +36,7 @@ describe("html loader", () => {
         expect(el.innerHTML).to.equals("");
 
         const blob = await lfetch(getURL(path).href);
-        const text = await lload(blob, { element: el, filter: "p" });
+        const text = await lload.load(blob, { element: el, filter: "p" });
 
         expect(el.innerHTML).not.to.equals("");
         expect(el.children[0].tagName.toLowerCase()).to.equals("p");

@@ -7,7 +7,7 @@ describe("image loader", () => {
         const path = "/base/test/resources/image.1440x900.jpg";
 
         const blob = await lfetch(getURL(path).href);
-        const event = await lload(blob);
+        const event = await lload.load(blob);
 
         expect(event).to.be.an.instanceof(Event);
 
@@ -21,7 +21,7 @@ describe("image loader", () => {
         expect(el.naturalHeight).to.equals(0);
 
         const blob = await lfetch(getURL(path).href);
-        const event = await lload(blob, { element: el });
+        const event = await lload.load(blob, { element: el });
 
         expect(el.naturalHeight).to.equals(900);
 

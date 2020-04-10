@@ -1,7 +1,6 @@
 import { getURL } from "./loader.utils.mjs";
 import lfetch from "./loader.fetch.mjs";
 import lload from "./loader.load.mjs";
-import { register } from "./loader.load.mjs";
 
 export default class Loader {
     constructor() {}
@@ -57,7 +56,7 @@ export default class Loader {
                 : await this.fetch(resource, options);
 
         // ...
-        return await lload(blob, options);
+        return await lload.load(blob, options);
     }
 
     /**
@@ -67,6 +66,6 @@ export default class Loader {
      * @returns {void}
      */
     register(type, loader) {
-        return register(type, loader);
+        return lload.register(type, loader);
     }
 }

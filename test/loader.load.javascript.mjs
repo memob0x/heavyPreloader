@@ -9,7 +9,7 @@ describe("scripts loader", () => {
         expect(window).not.to.have.property("foo");
 
         const blob = await lfetch(getURL(path).href);
-        const empty = await lload(blob);
+        const empty = await lload.load(blob);
 
         expect(empty).to.be.a("module").that.is.empty;
         expect(window).to.have.property("foo", "bar");
@@ -21,7 +21,7 @@ describe("scripts loader", () => {
         const path = "/base/test/resources/javascript.module.mjs";
 
         const blob = await lfetch(getURL(path).href);
-        const module = await lload(blob);
+        const module = await lload.load(blob);
 
         expect(module).to.be.a("module").that.is.not.empty;
         expect(module).to.have.property("default");
