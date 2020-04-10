@@ -1,4 +1,4 @@
 -   jsdocs and comments
 -   demo pages
 -   figure out images with srcset recipe
--   fix TODO notes among unit test files
+-   check TODO notes

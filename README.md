@@ -33,14 +33,24 @@ It is passed the following **arguments**:
     -   _element_ (`HTMLElement`) The element to attach the fetched resource(s) to.
     -   _filter_ (`String`) Used only when fetching `text/html`, traverses the fetched DOM in order to append only a certain part of it.
 
-**Returns** a _promise_ (or an _array of promises_ if multiple resources are passed) whose resolution type varies depending on the given resource media type:
+**Returns** a _promise_ (or an _array of promises_ if multiple resources are passed) whose resolution type varies depending on the given resource MIME type:
 
-| Media Type     | Returned Type   |
+| MIME type      | Returned Type   |
 | -------------- | --------------- |
 | `text/html`    | `String`        |
 | `text/css`     | `CSSStyleSheet` |
 | `*/javascript` | `Object`        |
 | `image/*`      | `Event`         |
+
+## `register(type, loader)`
+
+This method lets you **register** a custom **loader** for a given MIME type.
+
+It is passed the following **arguments**:
+
+-   _resource_ (`String`) The MIME type to be manually
+    handled. A specificity prioritization is applied, which means that while "_text/html_" would win over "_text_" and "_html_", "_text_" would win over "_html_".
+-   _options_ (`Function`) The loader function itself. Please note that this function should accept a mandatory `Blob` **resource** argument (besides an optional `Object` **options** argument) and should return a `Promise`.
 
 # Recipes and Demos
 
@@ -52,11 +62,10 @@ Let's go into detail by cooking some of the most common recipes.
 -   [Loading Stylesheets](https://memob0x.github.io/loader/demo/css/index.html)
 -   [Loading Scripts](https://memob0x.github.io/loader/demo/javascript/index.html)
 -   [Lazily Loading Images](https://memob0x.github.io/loader/demo/images/index.html)
--   [RequireJS Integration](https://memob0x.github.io/loader/demo/requirejs/index.html)
 
 ## [HTML](https://memob0x.github.io/loader/demo/html/index.html)
 
-Loader supports `text/html` media type so it can be used to retrieve new contents, also with `load` method updating the current view with fresh data is quite easy.
+`Loader` supports `text/html` MIME type so it can be used to retrieve new contents, also with `load` method updating the current view with fresh data is quite easy.
 
 ```javascript
 // updating #root with new contents
@@ -79,7 +88,7 @@ Here's the full [demo](https://memob0x.github.io/loader/demo/html/index.html).
 
 ## [Stylesheets](https://memob0x.github.io/loader/demo/css/index.html)
 
-Loader supports `text/css` media type so it can be used as an asynchronous stylesheets load callback (which is a quite an [ancient cross-browser issue](https://www.phpied.com/when-is-a-stylesheet-really-loaded/)).
+`Loader` supports `text/css` MIME type so it can be used as an asynchronous stylesheets load callback (which is a quite an [ancient cross-browser issue](https://www.phpied.com/when-is-a-stylesheet-really-loaded/)).
 
 ```javascript
 // loading a new visual theme and a new app area
@@ -95,7 +104,7 @@ Here's the full [demo](https://memob0x.github.io/loader/demo/css/index.html).
 
 ## [Scripts](https://memob0x.github.io/loader/demo/javascript/index.html)
 
-Loader internally uses dynamic `import` for `text/javascript` media type so it can be used to consume any kind of native module.
+`Loader` internally uses dynamic `import` for `text/javascript` MIME type so it can be used to consume any kind of native module.
 
 ```javascript
 // retrieving and consuming a specific module
@@ -111,7 +120,7 @@ Here's the full [demo](https://memob0x.github.io/loader/demo/javascript/index.ht
 
 ## [Lazy Images](https://memob0x.github.io/loader/demo/images/index.html)
 
-Loader can be used with `IntersectionObserver` to provide an easy and enhanced lazy load functionality.
+`Loader` can be used with `IntersectionObserver` to provide an easy and enhanced lazy load functionality.
 
 ```javascript
 // instance construction
@@ -145,51 +154,37 @@ const observer = new IntersectionObserver((entries) =>
 
 Here's the full [demo](https://memob0x.github.io/loader/demo/images/index.html).
 
-## [Manual Handling: RequireJS](https://memob0x.github.io/loader/demo/requirejs/index.html)
+## Manual Handling
 
-You want to manually handle some resources, just skip `load` method and use `fetch`, please see the following example adapted to support [requirejs](https://requirejs.org/) library.
+`Loader` supports **custom loaders registration** which means that you can add support for MIME types that `Loader` doesn't support by default, override the default ones or even wrap existent legacy resource loaders in order to enhance existent perfomance state.
+
+The following example is adapted to support **pdf** files.
 
 ```javascript
 // constructing a Loader instance
 const loader = new Loader();
 
-// setting up requirejs modules
-const requireConfig = {
-    paths: {
-        cart: "root/account/cart.js",
-    },
-};
-requirejs.config(requireConfig);
-
-/**
- * Wraps require to load modules in a separate thread
- * @param {string} path The path to a previously registered requirejs module
- * @returns {Promise} The module call in Promise form
- */
-const include = async (path) => {
-    // fetching the module in a secondary thread
-    const blob = await loader.fetch(requireConfig.paths[path]);
-
+// registering a custom loader for "application/pdf" MIME type
+loader.register("application/pdf", async (blob, options) => {
     // creating an url from a blob
     const url = URL.createObjectURL(blob);
 
-    // wrapping require to make a thenable of it in order to be consumed by await operatator
-    const result = await new Promise((resolve, reject) =>
-        require(url, resolve, reject)
-    );
+    // handling pdf, replace this with your own working implementation
+    const result = await Promise.resolve("handled");
+
+    // doing something with the given options (optional)
+    options.element.classList.add("loaded");
 
     // dispose the previously created url
     URL.revokeObjectURL(url);
 
-    // returns the awaited module
+    // returning the handler result
     return result;
-};
+});
 
-// use case
-include("cart").then((Cart) => new Cart().add("product-foo-12345678-bar"));
+// fetching depliant.pdf in a separate thread and doing something with a DOM node to provide feedback to the user
+loader.load("depliant.pdf", { element: document.querySelector("#depliant") });
 ```
-
-Here's the full [demo](https://memob0x.github.io/loader/demo/requirejs/index.html).
 
 ## Requirements
 
