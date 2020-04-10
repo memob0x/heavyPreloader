@@ -82,48 +82,54 @@
         }
     })();
 
-    const cache = {};
-
-    var lfetch = async (href, options) => {
-        options = {
-            ...{
-                cache: true,
-                fetch: {},
-            },
-            ...options,
-        };
-
-        if (options.cache === true && href in cache) {
-            return await cache[href];
+    var lfetch = new (class LoaderFetch {
+        constructor() {
+            this.cache = {};
         }
 
-        return (cache[href] = new Promise((resolve, reject) => {
-            const worker = lworker.worker();
+        async fetch(href, options) {
+            options = {
+                ...{
+                    cache: true,
+                    fetch: {},
+                },
+                ...options,
+            };
 
-            worker.postMessage({
-                href: href,
-                options: options.fetch,
-            });
+            if (options.cache === true && href in this.cache) {
+                return await this.cache[href];
+            }
 
-            worker.addEventListener("message", (event) => {
-                const data = event.data;
+            return (this.cache[href] = new Promise((resolve, reject) => {
+                const worker = lworker.worker();
 
-                if (data.href !== href) {
-                    return;
-                }
+                worker.postMessage({
+                    href: href,
+                    options: options.fetch,
+                });
 
-                lworker.terminate();
+                worker.addEventListener("message", (event) => {
+                    const data = event.data;
 
-                if (data.status === 200) {
-                    resolve(data.blob);
+                    if (data.href !== href) {
+                        return;
+                    }
 
-                    return;
-                }
+                    lworker.terminate();
 
-                reject(new Error(`${data.statusText} for ${data.href} resource.`));
-            });
-        }));
-    };
+                    if (data.status === 200) {
+                        resolve(data.blob);
+
+                        return;
+                    }
+
+                    reject(
+                        new Error(`${data.statusText} for ${data.href} resource.`)
+                    );
+                });
+            }));
+        }
+    })();
 
     var css = async (blob, options) => {
         options = { ...{ element: document }, options };
@@ -221,32 +227,38 @@
         return result;
     };
 
-    let loaders = {
-        image: image,
-        html: html,
-        css: css,
-        javascript: javascript,
-    };
-
-    const register = (type, loader) => (loaders[type] = loader);
-
-    var lload = async (blob, options) => {
-        const type = blob.type;
-
-        const keys = type.split("/").reduce((x, y) => [type, x, y]);
-
-        for (const key in keys) {
-            const loader = keys[key];
-
-            if (loader in loaders) {
-                return await loaders[loader](blob, options);
-            }
+    var lload = new (class LoaderLoad {
+        constructor() {
+            this.loaders = {
+                image: image,
+                html: html,
+                css: css,
+                javascript: javascript,
+            };
         }
 
-        throw new TypeError(
-            `Invalid ${blob.type} media type passed to Loader class "load" method.`
-        );
-    };
+        register(type, loader) {
+            this.loaders[type] = loader;
+        }
+
+        async load(blob, options) {
+            const type = blob.type;
+
+            const keys = type.split("/").reduce((x, y) => [type, x, y]);
+
+            for (const key in keys) {
+                const loader = keys[key];
+
+                if (loader in this.loaders) {
+                    return await this.loaders[loader](blob, options);
+                }
+            }
+
+            throw new TypeError(
+                `Invalid ${blob.type} media type passed to Loader class "load" method.`
+            );
+        }
+    })();
 
     class Loader {
         constructor() {}
@@ -261,7 +273,7 @@
             }
 
             if (resource instanceof URL) {
-                return await lfetch(resource.href, options);
+                return await lfetch.fetch(resource.href, options);
             }
 
             throw new TypeError(
@@ -283,11 +295,11 @@
                     ? resource
                     : await this.fetch(resource, options);
 
-            return await lload(blob, options);
+            return await lload.load(blob, options);
         }
 
         register(type, loader) {
-            return register(type, loader);
+            return lload.register(type, loader);
         }
     }
 

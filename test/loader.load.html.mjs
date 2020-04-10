@@ -6,7 +6,7 @@ describe("html loader", () => {
     it("should return a promise which resolves to plain text", async () => {
         const path = "/base/test/resources/html.a-view.html";
 
-        const blob = await lfetch(getURL(path).href);
+        const blob = await lfetch.fetch(getURL(path).href);
         const text = await lload.load(blob);
 
         expect(text).to.be.a("string");
@@ -20,7 +20,7 @@ describe("html loader", () => {
 
         expect(el.innerHTML).to.equals("");
 
-        const blob = await lfetch(getURL(path).href);
+        const blob = await lfetch.fetch(getURL(path).href);
         const text = await lload.load(blob, { element: el });
 
         expect(el.innerHTML).to.equals(text);
@@ -35,7 +35,7 @@ describe("html loader", () => {
 
         expect(el.innerHTML).to.equals("");
 
-        const blob = await lfetch(getURL(path).href);
+        const blob = await lfetch.fetch(getURL(path).href);
         const text = await lload.load(blob, { element: el, filter: "p" });
 
         expect(el.innerHTML).not.to.equals("");

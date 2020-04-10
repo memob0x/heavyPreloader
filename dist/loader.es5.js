@@ -143,70 +143,83 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
     return LoaderWorker;
   }())();
-  var cache = {};
+  var lfetch = new (function () {
+    function LoaderFetch() {
+      _classCallCheck(this, LoaderFetch);
 
-  var lfetch = function () {
-    var _ref2 = _asyncToGenerator(regeneratorRuntime.mark(function _callee2(href, options) {
-      return regeneratorRuntime.wrap(function _callee2$(_context2) {
-        while (1) {
-          switch (_context2.prev = _context2.next) {
-            case 0:
-              options = _objectSpread({}, {
-                cache: true,
-                fetch: {}
-              }, {}, options);
+      this.cache = {};
+    }
 
-              if (!(options.cache === true && href in cache)) {
-                _context2.next = 5;
-                break;
+    _createClass(LoaderFetch, [{
+      key: "fetch",
+      value: function () {
+        var _fetch = _asyncToGenerator(regeneratorRuntime.mark(function _callee2(href, options) {
+          return regeneratorRuntime.wrap(function _callee2$(_context2) {
+            while (1) {
+              switch (_context2.prev = _context2.next) {
+                case 0:
+                  options = _objectSpread({}, {
+                    cache: true,
+                    fetch: {}
+                  }, {}, options);
+
+                  if (!(options.cache === true && href in this.cache)) {
+                    _context2.next = 5;
+                    break;
+                  }
+
+                  _context2.next = 4;
+                  return this.cache[href];
+
+                case 4:
+                  return _context2.abrupt("return", _context2.sent);
+
+                case 5:
+                  return _context2.abrupt("return", this.cache[href] = new Promise(function (resolve, reject) {
+                    var worker = lworker.worker();
+                    worker.postMessage({
+                      href: href,
+                      options: options.fetch
+                    });
+                    worker.addEventListener("message", function (event) {
+                      var data = event.data;
+
+                      if (data.href !== href) {
+                        return;
+                      }
+
+                      lworker.terminate();
+
+                      if (data.status === 200) {
+                        resolve(data.blob);
+                        return;
+                      }
+
+                      reject(new Error("".concat(data.statusText, " for ").concat(data.href, " resource.")));
+                    });
+                  }));
+
+                case 6:
+                case "end":
+                  return _context2.stop();
               }
+            }
+          }, _callee2, this);
+        }));
 
-              _context2.next = 4;
-              return cache[href];
-
-            case 4:
-              return _context2.abrupt("return", _context2.sent);
-
-            case 5:
-              return _context2.abrupt("return", cache[href] = new Promise(function (resolve, reject) {
-                var worker = lworker.worker();
-                worker.postMessage({
-                  href: href,
-                  options: options.fetch
-                });
-                worker.addEventListener("message", function (event) {
-                  var data = event.data;
-
-                  if (data.href !== href) {
-                    return;
-                  }
-
-                  lworker.terminate();
-
-                  if (data.status === 200) {
-                    resolve(data.blob);
-                    return;
-                  }
-
-                  reject(new Error("".concat(data.statusText, " for ").concat(data.href, " resource.")));
-                });
-              }));
-
-            case 6:
-            case "end":
-              return _context2.stop();
-          }
+        function fetch(_x2, _x3) {
+          return _fetch.apply(this, arguments);
         }
-      }, _callee2);
-    }));
 
-    return function lfetch(_x2, _x3) {
-      return _ref2.apply(this, arguments);
-    };
-  }();
+        return fetch;
+      }()
+    }]);
+
+    return LoaderFetch;
+  }())();
 
   var css = function () {
-    var _ref3 = _asyncToGenerator(regeneratorRuntime.mark(function _callee3(blob, options) {
+    var _ref2 = _asyncToGenerator(regeneratorRuntime.mark(function _callee3(blob, options) {
       var url, sheet;
       return regeneratorRuntime.wrap(function _callee3$(_context3) {
         while (1) {
@@ -240,12 +253,12 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }));
 
     return function css(_x4, _x5) {
-      return _ref3.apply(this, arguments);
+      return _ref2.apply(this, arguments);
     };
   }();
 
   var html = function () {
-    var _ref4 = _asyncToGenerator(regeneratorRuntime.mark(function _callee4(blob, options) {
+    var _ref3 = _asyncToGenerator(regeneratorRuntime.mark(function _callee4(blob, options) {
       var reader, promise, result;
       return regeneratorRuntime.wrap(function _callee4$(_context4) {
         while (1) {
@@ -289,12 +302,12 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }));
 
     return function html(_x6, _x7) {
-      return _ref4.apply(this, arguments);
+      return _ref3.apply(this, arguments);
     };
   }();
 
   var image = function () {
-    var _ref5 = _asyncToGenerator(regeneratorRuntime.mark(function _callee5(blob, options) {
+    var _ref4 = _asyncToGenerator(regeneratorRuntime.mark(function _callee5(blob, options) {
       var image, url, promise, result;
       return regeneratorRuntime.wrap(function _callee5$(_context5) {
         while (1) {
@@ -327,12 +340,12 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }));
 
     return function image(_x8, _x9) {
-      return _ref5.apply(this, arguments);
+      return _ref4.apply(this, arguments);
     };
   }();
 
   var javascript = function () {
-    var _ref6 = _asyncToGenerator(regeneratorRuntime.mark(function _callee6(blob) {
+    var _ref5 = _asyncToGenerator(regeneratorRuntime.mark(function _callee6(blob) {
       var url, result;
       return regeneratorRuntime.wrap(function _callee6$(_context6) {
         while (1) {
@@ -358,73 +371,87 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }));
 
     return function javascript(_x10) {
-      return _ref6.apply(this, arguments);
+      return _ref5.apply(this, arguments);
     };
   }();
 
-  var loaders = {
-    image: image,
-    html: html,
-    css: css,
-    javascript: javascript
-  };
+  var lload = new (function () {
+    function LoaderLoad() {
+      _classCallCheck(this, LoaderLoad);
 
-  var _register = function register(type, loader) {
-    return loaders[type] = loader;
-  };
+      this.loaders = {
+        image: image,
+        html: html,
+        css: css,
+        javascript: javascript
+      };
+    }
 
-  var lload = function () {
-    var _ref7 = _asyncToGenerator(regeneratorRuntime.mark(function _callee7(blob, options) {
-      var type, keys, key, loader;
-      return regeneratorRuntime.wrap(function _callee7$(_context7) {
-        while (1) {
-          switch (_context7.prev = _context7.next) {
-            case 0:
-              type = blob.type;
-              keys = type.split("/").reduce(function (x, y) {
-                return [type, x, y];
-              });
-              _context7.t0 = regeneratorRuntime.keys(keys);
+    _createClass(LoaderLoad, [{
+      key: "register",
+      value: function register(type, loader) {
+        this.loaders[type] = loader;
+      }
+    }, {
+      key: "load",
+      value: function () {
+        var _load = _asyncToGenerator(regeneratorRuntime.mark(function _callee7(blob, options) {
+          var type, keys, key, loader;
+          return regeneratorRuntime.wrap(function _callee7$(_context7) {
+            while (1) {
+              switch (_context7.prev = _context7.next) {
+                case 0:
+                  type = blob.type;
+                  keys = type.split("/").reduce(function (x, y) {
+                    return [type, x, y];
+                  });
+                  _context7.t0 = regeneratorRuntime.keys(keys);
 
-            case 3:
-              if ((_context7.t1 = _context7.t0()).done) {
-                _context7.next = 12;
-                break;
+                case 3:
+                  if ((_context7.t1 = _context7.t0()).done) {
+                    _context7.next = 12;
+                    break;
+                  }
+
+                  key = _context7.t1.value;
+                  loader = keys[key];
+
+                  if (!(loader in this.loaders)) {
+                    _context7.next = 10;
+                    break;
+                  }
+
+                  _context7.next = 9;
+                  return this.loaders[loader](blob, options);
+
+                case 9:
+                  return _context7.abrupt("return", _context7.sent);
+
+                case 10:
+                  _context7.next = 3;
+                  break;
+
+                case 12:
+                  throw new TypeError("Invalid ".concat(blob.type, " media type passed to Loader class \"load\" method."));
+
+                case 13:
+                case "end":
+                  return _context7.stop();
               }
+            }
+          }, _callee7, this);
+        }));
 
-              key = _context7.t1.value;
-              loader = keys[key];
-
-              if (!(loader in loaders)) {
-                _context7.next = 10;
-                break;
-              }
-
-              _context7.next = 9;
-              return loaders[loader](blob, options);
-
-            case 9:
-              return _context7.abrupt("return", _context7.sent);
-
-            case 10:
-              _context7.next = 3;
-              break;
-
-            case 12:
-              throw new TypeError("Invalid ".concat(blob.type, " media type passed to Loader class \"load\" method."));
-
-            case 13:
-            case "end":
-              return _context7.stop();
-          }
+        function load(_x11, _x12) {
+          return _load.apply(this, arguments);
         }
-      }, _callee7);
-    }));
 
-    return function lload(_x11, _x12) {
-      return _ref7.apply(this, arguments);
-    };
-  }();
+        return load;
+      }()
+    }]);
+
+    return LoaderLoad;
+  }())();
 
   var Loader = function () {
     function Loader() {
@@ -434,7 +461,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     _createClass(Loader, [{
       key: "fetch",
       value: function () {
-        var _fetch = _asyncToGenerator(regeneratorRuntime.mark(function _callee8(resource, options) {
+        var _fetch2 = _asyncToGenerator(regeneratorRuntime.mark(function _callee8(resource, options) {
           var _this = this;
 
           return regeneratorRuntime.wrap(function _callee8$(_context8) {
@@ -473,7 +500,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
                   }
 
                   _context8.next = 11;
-                  return lfetch(resource.href, options);
+                  return lfetch.fetch(resource.href, options);
 
                 case 11:
                   return _context8.abrupt("return", _context8.sent);
@@ -490,7 +517,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         }));
 
         function fetch(_x13, _x14) {
-          return _fetch.apply(this, arguments);
+          return _fetch2.apply(this, arguments);
         }
 
         return fetch;
@@ -498,7 +525,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "load",
       value: function () {
-        var _load = _asyncToGenerator(regeneratorRuntime.mark(function _callee9(resource, options) {
+        var _load2 = _asyncToGenerator(regeneratorRuntime.mark(function _callee9(resource, options) {
           var _this2 = this;
 
           var isArrayOpts, blob;
@@ -540,7 +567,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
                 case 12:
                   blob = _context9.t0;
                   _context9.next = 15;
-                  return lload(blob, options);
+                  return lload.load(blob, options);
 
                 case 15:
                   return _context9.abrupt("return", _context9.sent);
@@ -554,7 +581,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         }));
 
         function load(_x15, _x16) {
-          return _load.apply(this, arguments);
+          return _load2.apply(this, arguments);
         }
 
         return load;
@@ -562,7 +589,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }, {
       key: "register",
       value: function register(type, loader) {
-        return _register(type, loader);
+        return lload.register(type, loader);
       }
     }]);
 

@@ -6,7 +6,7 @@ describe("stylesheet loader", () => {
     it("should return a promise which resolves to a CSSStyleSheet object", async () => {
         const path = "/base/test/resources/css.inherit.css";
 
-        const blob = await lfetch(getURL(path).href);
+        const blob = await lfetch.fetch(getURL(path).href);
         const stylesheet = await lload.load(blob);
 
         expect(stylesheet).to.be.an.instanceof(CSSStyleSheet);
@@ -21,7 +21,7 @@ describe("stylesheet loader", () => {
 
         expect(getBodyBackgroundColor()).to.equals("rgba(0, 0, 0, 0)");
 
-        const blob = await lfetch(getURL(path).href);
+        const blob = await lfetch.fetch(getURL(path).href);
         const stylesheet = await lload.load(blob);
 
         expect(getBodyBackgroundColor()).to.equals("rgb(0, 0, 255)");

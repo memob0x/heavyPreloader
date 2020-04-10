@@ -24,7 +24,7 @@ export default class Loader {
 
         // ...
         if (resource instanceof URL) {
-            return await lfetch(resource.href, options);
+            return await lfetch.fetch(resource.href, options);
         }
 
         // ...

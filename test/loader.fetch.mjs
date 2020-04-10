@@ -1,23 +1,35 @@
 import { getURL } from "../src/loader.utils.mjs";
-import fetch from "../src/loader.fetch.mjs";
+import lfetch from "../src/loader.fetch.mjs";
 
 describe("fetch function", () => {
-    it("should return a promise which resolves to a resource blob object", () => {
-        const path = "/base/test/resources/css.inherit.css";
+    const path = "/base/test/resources/css.inherit.css";
+    const url = getURL(path).href;
 
-        const success = fetch(getURL(path).href);
+    it("should return a promise which resolves to a resource blob object", () => {
+        const success = lfetch.fetch(url);
         success.then((x) => expect(x).to.be.an.instanceof(Blob));
 
-        const error = fetch(path);
+        const error = lfetch.fetch(path);
         error.catch((x) => expect(x).to.be.an.instanceof(Error));
 
         return Promise.allSettled([success, error]);
     });
 
-    xit("should return a cached promise when a resource has already been fetched", (done) => {
-        // TODO: figure out how to detect cache resource
-        fetch("");
+    it("should return a cached promise when a resource has already been fetched", async () => {
+        expect(lfetch.cache).to.have.property(url);
 
-        done();
+        const value = "ok";
+
+        const promise = Promise.resolve(value);
+
+        lfetch.cache[url] = promise;
+
+        const result = await lfetch.fetch(url);
+
+        expect(result).to.equals(value);
+
+        lfetch.cache = {};
+
+        return promise;
     });
 });
