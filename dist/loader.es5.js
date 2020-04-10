@@ -362,48 +362,58 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     };
   }();
 
+  var loaders = {
+    image: image,
+    html: html,
+    css: css,
+    javascript: javascript
+  };
+
+  var _register = function register(type, loader) {
+    return loaders[type] = loader;
+  };
+
   var lload = function () {
     var _ref7 = _asyncToGenerator(regeneratorRuntime.mark(function _callee7(blob, options) {
+      var type, keys, key, loader;
       return regeneratorRuntime.wrap(function _callee7$(_context7) {
         while (1) {
           switch (_context7.prev = _context7.next) {
             case 0:
-              _context7.t0 = blob.type;
-              _context7.next = _context7.t0 === "image/png" ? 3 : _context7.t0 === "image/jpeg" ? 3 : _context7.t0 === "image/gif" ? 3 : _context7.t0 === "text/html" ? 6 : _context7.t0 === "text/css" ? 9 : _context7.t0 === "text/javascript" ? 12 : _context7.t0 === "application/javascript" ? 12 : 15;
-              break;
+              type = blob.type;
+              keys = type.split("/").reduce(function (x, y) {
+                return [type, x, y];
+              });
+              _context7.t0 = regeneratorRuntime.keys(keys);
 
             case 3:
-              _context7.next = 5;
-              return image(blob, options);
+              if ((_context7.t1 = _context7.t0()).done) {
+                _context7.next = 12;
+                break;
+              }
 
-            case 5:
-              return _context7.abrupt("return", _context7.sent);
+              key = _context7.t1.value;
+              loader = keys[key];
 
-            case 6:
-              _context7.next = 8;
-              return html(blob, options);
+              if (!(loader in loaders)) {
+                _context7.next = 10;
+                break;
+              }
 
-            case 8:
-              return _context7.abrupt("return", _context7.sent);
+              _context7.next = 9;
+              return loaders[loader](blob, options);
 
             case 9:
-              _context7.next = 11;
-              return css(blob, options);
-
-            case 11:
               return _context7.abrupt("return", _context7.sent);
+
+            case 10:
+              _context7.next = 3;
+              break;
 
             case 12:
-              _context7.next = 14;
-              return javascript(blob);
-
-            case 14:
-              return _context7.abrupt("return", _context7.sent);
-
-            case 15:
               throw new TypeError("Invalid ".concat(blob.type, " media type passed to Loader class \"load\" method."));
 
-            case 16:
+            case 13:
             case "end":
               return _context7.stop();
           }
@@ -549,6 +559,11 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
         return load;
       }()
+    }, {
+      key: "register",
+      value: function register(type, loader) {
+        return _register(type, loader);
+      }
     }]);
 
     return Loader;

@@ -7,6 +7,7 @@ describe("constructor and public methods", () => {
     it("constructor should expose load and fetch methods", (done) => {
         expect(instance).to.respondTo("load");
         expect(instance).to.respondTo("fetch");
+        expect(instance).to.respondTo("register");
 
         done();
     });

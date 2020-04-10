@@ -221,22 +221,26 @@
         return result;
     };
 
+    let loaders = {
+        image: image,
+        html: html,
+        css: css,
+        javascript: javascript,
+    };
+
+    const register = (type, loader) => (loaders[type] = loader);
+
     var lload = async (blob, options) => {
-        switch (blob.type) {
-            case "image/png":
-            case "image/jpeg":
-            case "image/gif":
-                return await image(blob, options);
+        const type = blob.type;
 
-            case "text/html":
-                return await html(blob, options);
+        const keys = type.split("/").reduce((x, y) => [type, x, y]);
 
-            case "text/css":
-                return await css(blob, options);
+        for (const key in keys) {
+            const loader = keys[key];
 
-            case "text/javascript":
-            case "application/javascript":
-                return await javascript(blob);
+            if (loader in loaders) {
+                return await loaders[loader](blob, options);
+            }
         }
 
         throw new TypeError(
@@ -280,6 +284,10 @@
                     : await this.fetch(resource, options);
 
             return await lload(blob, options);
+        }
+
+        register(type, loader) {
+            return register(type, loader);
         }
     }
 

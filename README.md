@@ -35,12 +35,12 @@ It is passed the following **arguments**:
 
 **Returns** a _promise_ (or an _array of promises_ if multiple resources are passed) whose resolution type varies depending on the given resource media type:
 
-| Media Type        | Returned Type                        |
-| ----------------- | ------------------------------------ |
-| `text/html`       | plain text                           |
-| `text/css`        | `CSSStyleSheet`                      |
-| `text/javascript` | depends on what is possibly exported |
-| `image/*`         | `Event`                              |
+| Media Type     | Returned Type   |
+| -------------- | --------------- |
+| `text/html`    | `String`        |
+| `text/css`     | `CSSStyleSheet` |
+| `*/javascript` | `Object`        |
+| `image/*`      | `Event`         |
 
 # Recipes and Demos
 

@@ -1,39 +1,49 @@
-import lload from "../src/loader.load.mjs";
-
-// FIXME: find a more accurate way rather then checking the returned type, this is not the proper way to test this function
+import Loader from "../src/loader.mjs";
 
 describe("load function", () => {
-    it("should be able to recognize image media type blob objects", async () => {
-        try {
-            await lload(new Blob([], { type: "image/gif" }));
-        } catch (e) {
-            expect(e).to.be.an.instanceof(Error);
-        }
+    const instance = new Loader();
 
-        return Promise.resolve();
+    it("should be able to recognize image media type blob objects", async () => {
+        const type = "image/gif";
+        const promise = new Promise((resolve) =>
+            instance.register(type, resolve)
+        );
+
+        await instance.load(new Blob([], { type: type }));
+
+        return promise;
     });
 
     it("should be able to recognize css media type blob objects", async () => {
-        const load = await lload(new Blob([], { type: "text/css" }));
+        const type = "text/css";
+        const promise = new Promise((resolve) =>
+            instance.register(type, resolve)
+        );
 
-        expect(load).to.be.an.instanceof(CSSStyleSheet);
+        await instance.load(new Blob([], { type: type }));
 
-        return load;
+        return promise;
     });
 
     it("should be able to recognize javascript media type blob objects", async () => {
-        const load = await lload(new Blob([], { type: "text/javascript" }));
+        const type = "application/javascript";
+        const promise = new Promise((resolve) =>
+            instance.register(type, resolve)
+        );
 
-        expect(load).to.be.a("module");
+        await instance.load(new Blob([], { type: type }));
 
-        return load;
+        return promise;
     });
 
     it("should be able to recognize html media type blob objects", async () => {
-        const load = await lload(new Blob([], { type: "text/html" }));
+        const type = "text/html";
+        const promise = new Promise((resolve) =>
+            instance.register(type, resolve)
+        );
 
-        expect(load).to.be.a("string");
+        await instance.load(new Blob([], { type: type }));
 
-        return load;
+        return promise;
     });
 });

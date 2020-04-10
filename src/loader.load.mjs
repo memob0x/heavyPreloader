@@ -3,6 +3,23 @@ import html from "./loader.load.html.mjs";
 import image from "./loader.load.image.mjs";
 import javascript from "./loader.load.javascript.mjs";
 
+// loaders closure, filled with default loaders
+// https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
+let loaders = {
+    image: image,
+    html: html,
+    css: css,
+    javascript: javascript,
+};
+
+/**
+ *
+ * @param {String} type
+ * @param {Function} loader
+ * @returns {void}
+ */
+export const register = (type, loader) => (loaders[type] = loader);
+
 /**
  * Loads a resource, which usually consists in attaching it to an existent DOM element
  * @private
@@ -11,27 +28,18 @@ import javascript from "./loader.load.javascript.mjs";
  * @returns {Promise} The resource load in promise form
  */
 export default async (blob, options) => {
+    const type = blob.type;
+
     //...
-    // TODO: get all major mimetypes
-    switch (blob.type) {
-        //...
-        case "image/png":
-        case "image/jpeg":
-        case "image/gif":
-            return await image(blob, options);
+    const keys = type.split("/").reduce((x, y) => [type, x, y]);
 
-        //...
-        case "text/html":
-            return await html(blob, options);
+    // ...
+    for (const key in keys) {
+        const loader = keys[key];
 
-        //...
-        case "text/css":
-            return await css(blob, options);
-
-        //...
-        case "text/javascript":
-        case "application/javascript":
-            return await javascript(blob);
+        if (loader in loaders) {
+            return await loaders[loader](blob, options);
+        }
     }
 
     // ...
