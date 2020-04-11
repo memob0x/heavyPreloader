@@ -4,18 +4,12 @@
 
     const loader = new Loader();
 
-    const btnPageLoad = document.querySelector("button#page-load");
-
-    btnPageLoad.addEventListener("click", async () => {
-        btnPageLoad.remove();
-
-        await loader.load(["/demo/images/dist/index.css"]);
-
-        await loader.load("/demo/images/index.html", {
-            element: document.body,
-            filter: "#root",
+    document
+        .querySelector(".button-contents-loader")
+        .addEventListener("click", async () => {
+            await loader.load("/demo/images/index.html", {
+                element: document.querySelector(".contents-article"),
+                filter: ".contents-article",
+            });
         });
-
-        await loader.load("/demo/images/src/index.mjs");
-    });
 })();

@@ -1,0 +1,234 @@
+$color-background: #fafafa;
+$color-text: #1b1b1b;
+
+$color-panels-background: #ffffff;
+$color-panels-borders: #dbdbdb;
+
+$color-labels-background: #ffebcd;
+$color-labels-text: $color-text;
+
+$color-button-text: $color-text;
+$color-button-background: $color-background;
+$color-button-borders: $color-panels-borders;
+
+$transition-colors: 0.15s linear;
+
+$contents-sidebar-width: 240px;
+$contents-gutters: 20px;
+
+$screens-mobile: 640px;
+
+%flex-column {
+    display: flex;
+    flex-direction: column;
+}
+
+%flex-grow {
+    flex-grow: 1;
+}
+
+%flex-column-grow {
+    @extend %flex-grow;
+    @extend %flex-column;
+}
+
+%min-height-100 {
+    min-height: 100%;
+}
+
+%panel {
+    transition: background-color #{$transition-colors},
+        border-color #{$transition-colors};
+    background-color: $color-panels-background;
+    border-width: 0;
+    border-color: $color-panels-borders;
+    border-style: solid;
+}
+
+%container {
+    width: 1024px;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 24px;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    @extend %min-height-100;
+    @extend %flex-column-grow;
+
+    font-family: sans-serif;
+    line-height: 23px;
+    font-size: 13px;
+
+    color: $color-text;
+    transition: color #{$transition-colors};
+}
+
+p {
+    margin: 0 0 $contents-gutters / 2;
+
+    &:only-child {
+        margin: 0;
+    }
+}
+
+body {
+    @extend %min-height-100;
+    @extend %flex-column-grow;
+
+    margin: 0;
+    transition: background-color #{$transition-colors};
+    background-color: $color-background;
+}
+
+#root {
+    @extend %flex-column-grow;
+}
+
+.topbar {
+    @extend %panel;
+    border-bottom-width: 1px;
+}
+
+.topbar-inner {
+    @extend %container;
+}
+
+.topbar-title {
+    padding: 0 $contents-gutters;
+    margin: 0;
+    font-size: 26px;
+    display: flex;
+    align-items: center;
+}
+
+.contents {
+    @extend %flex-column-grow;
+    @extend %container;
+}
+
+.contents-inner {
+    @extend %panel;
+    @extend %flex-grow;
+
+    border-width: 1px;
+    border-radius: 3px;
+    display: flex;
+    flex-wrap: nowrap;
+    flex-direction: column;
+
+    @media (min-width: #{$screens-mobile}) {
+        flex-direction: row;
+    }
+}
+
+.contents-body {
+    display: flex;
+    order: 1;
+    flex-direction: column;
+    padding: $contents-gutters/2 0;
+
+    @media (min-width: #{$screens-mobile}) {
+        width: calc(100% - #{$contents-sidebar-width});
+    }
+}
+
+.contents-article {
+    padding: $contents-gutters/2 $contents-gutters;
+}
+
+.contents-article {
+    padding: $contents-gutters/2 $contents-gutters;
+    order: 2;
+
+    @media (min-width: #{$screens-mobile}) {
+        order: 1;
+    }
+}
+
+.contents-contents {
+    padding: $contents-gutters/2 $contents-gutters;
+    order: 1;
+
+    &:empty {
+        display: none;
+    }
+
+    @media (min-width: #{$screens-mobile}) {
+        order: 2;
+    }
+}
+
+.contents-sidebar {
+    @extend %panel;
+    order: 0;
+    border-bottom-width: 1px;
+    padding: $contents-gutters;
+    display: flex;
+    flex-direction: column;
+
+    @media (min-width: #{$screens-mobile}) {
+        border-right-width: 1px;
+        border-bottom-width: 0;
+        width: $contents-sidebar-width;
+    }
+}
+
+.button {
+    color: $color-button-text;
+    border: 1px solid $color-button-borders;
+    background: $color-button-background;
+    transition: color #{$transition-colors},
+        background-color #{$transition-colors},
+        border-color #{$transition-colors};
+
+    padding: 11px 18px;
+    outline: none;
+    cursor: pointer;
+
+    &:focus,
+    &:hover {
+        border-color: darken($color-button-borders, 5%);
+        background: darken($color-button-background, 5%);
+    }
+
+    &:active {
+        border-color: darken($color-button-borders, 8%);
+        background: darken($color-button-background, 8%);
+    }
+}
+
+.label {
+    font-size: 16px;
+    display: inline-block;
+    padding: 0 10px;
+    border-radius: 6px;
+    position: relative;
+    top: 1px;
+    margin: 0 7px;
+    color: $color-labels-text;
+    transition: color #{$transition-colors};
+
+    &:before {
+        position: absolute;
+        top: -4px;
+        right: 0;
+        bottom: -4px;
+        left: 0;
+        background: $color-labels-background;
+        transition: background-color #{$transition-colors};
+        content: "";
+        z-index: 0;
+        border-radius: 4px;
+    }
+
+    span {
+        position: relative;
+        top: 1px;
+        z-index: 1;
+    }
+}

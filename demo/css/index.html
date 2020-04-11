@@ -2,14 +2,50 @@
 <html>
     <head>
         <meta charset="UTF-8" />
-        <title>Loader Demo</title>
+        <title>Loader.js: Stylesheets</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
         <script src="/demo/shimport.js"></script>
+        <link href="dist/index.css" rel="stylesheet" />
     </head>
 
     <body>
         <div id="root">
-            <button id="page-load">load blue theme</button>
+            <div class="topbar">
+                <div class="topbar-inner">
+                    <h1 class="topbar-title">
+                        Loader.js:
+                        <span class="label"><span>Stylesheets</span></span>
+                    </h1>
+                </div>
+            </div>
+
+            <div class="contents">
+                <section class="contents-inner">
+                    <div class="contents-body">
+                        <article class="contents-article">
+                            <p>
+                                <strong>Loader</strong> supports
+                                <strong>text/css</strong> MIME type so it can be
+                                used as an asynchronous stylesheets load
+                                callback (which is a quite an [ancient
+                                cross-browser issue.
+                            </p>
+
+                            <p>
+                                Press "Toggle Dark Mode" to fetch and apply an
+                                extra dark mode theme stylesheet.
+                            </p>
+                        </article>
+                    </div>
+
+                    <aside class="contents-sidebar">
+                        <button class="button button-dark-mode-toggler">
+                            Toggle Dark Mode
+                        </button>
+                    </aside>
+                </section>
+            </div>
         </div>
 
         <script>

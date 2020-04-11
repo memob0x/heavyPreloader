@@ -1,14 +1,14 @@
 (async () => {
-    const loaderLib = await import(location.origin + "/src/loader.mjs");
-    const Loader = loaderLib.default;
+    const loaderModule = await import(location.origin + "/src/loader.mjs");
+    const Loader = loaderModule.default;
 
     const loader = new Loader();
 
-    const btnPageLoad = document.querySelector("button#page-load");
+    document
+        .querySelector(".button-dark-mode-toggler")
+        .addEventListener("click", async () => {
+            await loader.load(["/demo/css/dist/index.dark.css"]);
 
-    btnPageLoad.addEventListener("click", async () => {
-        btnPageLoad.remove();
-
-        await loader.load(["/demo/css/dist/index.css"]);
-    });
+            document.documentElement.classList.toggle("dark-mode");
+        });
 })();

@@ -1,4 +1,5 @@
--   jsdocs and comments
 -   demo pages
+-   jsdocs and comments
 -   figure out images with srcset recipe
+-   handlebars for demo html
 -   check TODO notes

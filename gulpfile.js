@@ -14,12 +14,12 @@ const autoprefixer = require("autoprefixer");
 const minify = require("gulp-minify");
 const rename = require("gulp-rename");
 
-const BASE_DEMO = "./demo/";
+const BASE_DEMO = "./demo";
 
-const _file = (ext = "", base = "./") => `${base}+([a-z])?(\-+([a-z]))${ext}`;
+const _file = (ext = "", base = ".") => `${base}/*${ext}`;
 
-const _src = (ext = "", base = "./") => [
-    gulp.src(_file(ext, `${base}src/`)),
+const _src = (ext = "", base = ".") => [
+    gulp.src(_file(ext, `${base}/src/`)),
 
     sourcemaps.init({
         loadMaps: false,
@@ -27,13 +27,13 @@ const _src = (ext = "", base = "./") => [
     }),
 ];
 
-const _dest = (base = "./") => [
+const _dest = (base = ".") => [
     sourcemaps.write("."),
 
-    gulp.dest(`${base}dist/`),
+    gulp.dest(`${base}/dist/`),
 ];
 
-// TODO: fix <anonymouse> tasks
+// TODO: fix <anonymous> tasks
 const demoCss = gulp.series(
     ...fs
         .readdirSync(BASE_DEMO)
@@ -42,13 +42,13 @@ const demoCss = gulp.series(
             pump(
                 [
                     //
-                    ..._src(".scss", `${BASE_DEMO}/${folder}/`),
+                    ..._src(".scss", `${BASE_DEMO}/${folder}`),
                     //
                     sass({ outputStyle: "compressed" }),
                     //
                     postcss([autoprefixer()]),
                     //
-                    ..._dest(`${BASE_DEMO}/${folder}/`),
+                    ..._dest(`${BASE_DEMO}/${folder}`),
                 ],
                 done
             )
@@ -100,9 +100,9 @@ const libEs6 = (done) =>
 gulp.task("default", gulp.parallel(libEs5, libEs6, /* demoJs,*/ demoCss));
 
 const watch = () => {
-    gulp.watch(_glob(".mjs"), gulp.parallel(libEs5, libEs6));
-    // gulp.watch(_glob(".js", BASE_DEMO), demoJs);
-    gulp.watch(_glob(".scss", BASE_DEMO), demoCss);
+    gulp.watch(_file(".mjs"), gulp.parallel(libEs5, libEs6));
+    // gulp.watch(_file(".js", `${BASE_DEMO}/**/src`), demoJs);
+    gulp.watch(_file(".scss", `${BASE_DEMO}/**`), demoCss);
 };
 
 gulp.task("watch", gulp.series("default", watch));

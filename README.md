@@ -52,6 +52,8 @@ It is passed the following **arguments**:
     handled. A specificity prioritization is applied, which means that while "_text/html_" would win over "_text_" and "_html_", "_text_" would win over "_html_".
 -   _options_ (`Function`) The loader function itself. Please note that this function should accept a mandatory `Blob` **resource** argument (besides an optional `Object` **options** argument) and should return a `Promise`.
 
+Have a look at the [Manual Handling](#manual-handling) section for a code example.
+
 # Recipes and Demos
 
 Let's go into detail by cooking some of the most common recipes.
@@ -156,7 +158,7 @@ Here's the full [demo](https://memob0x.github.io/loader/demo/images/index.html).
 
 ## Manual Handling
 
-`Loader` supports **custom loaders registration** which means that you can add support for MIME types that `Loader` doesn't support by default, override the default ones or even wrap existent legacy resource loaders in order to enhance existent perfomance state.
+`Loader` supports **custom loaders registration** which means that you can add support for MIME types that are not already supported by default, override the default ones or even wrap legacy resource loaders in order to enhance existent perfomance state.
 
 The following example is adapted to support **pdf** files.
 
@@ -169,7 +171,7 @@ loader.register("application/pdf", async (blob, options) => {
     // creating an url from a blob
     const url = URL.createObjectURL(blob);
 
-    // handling pdf, replace this with your own working implementation
+    // handling pdf load (to be replaced with your own working implementation)
     const result = await Promise.resolve("handled");
 
     // doing something with the given options (optional)
@@ -182,7 +184,7 @@ loader.register("application/pdf", async (blob, options) => {
     return result;
 });
 
-// fetching depliant.pdf in a separate thread and doing something with a DOM node to provide feedback to the user
+// fetching depliant.pdf file in a separate thread and doing something with a DOM node to provide feedback to the user
 loader.load("depliant.pdf", { element: document.querySelector("#depliant") });
 ```
 

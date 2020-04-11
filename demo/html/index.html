@@ -2,16 +2,109 @@
 <html>
     <head>
         <meta charset="UTF-8" />
-        <title>Loader Demo</title>
+        <title>Loader.js: HTML</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
         <script src="/demo/shimport.js"></script>
+        <link href="dist/index.css" rel="stylesheet" />
     </head>
 
     <body>
         <div id="root">
-            <button id="page-load">
-                hot reload with images demo page contents
-            </button>
+            <div class="topbar">
+                <div class="topbar-inner">
+                    <h1 class="topbar-title">
+                        Loader.js:
+                        <span class="label"><span>HTML</span></span>
+                    </h1>
+                </div>
+            </div>
+
+            <div class="contents">
+                <section class="contents-inner">
+                    <div class="contents-body">
+                        <article class="contents-article">
+                            <p>
+                                <strong>Loader</strong> supports
+                                <strong>text/html</strong> MIME type so it can
+                                be used to retrieve new contents.
+                            </p>
+
+                            <p>
+                                Press "Load New Contents" to replace
+                                placeholders with actual contents.
+                            </p>
+                        </article>
+
+                        <div class="contents-contents">
+                            <ul class="contents-info-list">
+                                <li class="contents-info-list-item">
+                                    <article class="contents-info">
+                                        <span class="contents-info-icon"></span>
+
+                                        <div class="contents-info-contents">
+                                            <span
+                                                class="contents-info-title"
+                                            ></span>
+                                            <span
+                                                class="contents-info-subtitle"
+                                            ></span>
+                                        </div>
+                                    </article>
+                                </li>
+                                <li class="contents-info-list-item">
+                                    <article class="contents-info">
+                                        <span class="contents-info-icon"></span>
+
+                                        <div class="contents-info-contents">
+                                            <span
+                                                class="contents-info-title"
+                                            ></span>
+                                            <span
+                                                class="contents-info-subtitle"
+                                            ></span>
+                                        </div>
+                                    </article>
+                                </li>
+                                <li class="contents-info-list-item">
+                                    <article class="contents-info">
+                                        <span class="contents-info-icon"></span>
+
+                                        <div class="contents-info-contents">
+                                            <span
+                                                class="contents-info-title"
+                                            ></span>
+                                            <span
+                                                class="contents-info-subtitle"
+                                            ></span>
+                                        </div>
+                                    </article>
+                                </li>
+                                <li class="contents-info-list-item">
+                                    <article class="contents-info">
+                                        <span class="contents-info-icon"></span>
+
+                                        <div class="contents-info-contents">
+                                            <span
+                                                class="contents-info-title"
+                                            ></span>
+                                            <span
+                                                class="contents-info-subtitle"
+                                            ></span>
+                                        </div>
+                                    </article>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <aside class="contents-sidebar">
+                        <button class="button button-contents-loader">
+                            Load New Contents
+                        </button>
+                    </aside>
+                </section>
+            </div>
         </div>
 
         <script>
