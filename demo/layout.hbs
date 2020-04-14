@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Loader.js: {{title}}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link href="{{path}}/dist/index.css" rel="stylesheet" />
+</head>
+
+<body>
+    <div id="root">
+        <div class="topbar">
+            <div class="topbar-inner">
+                <h1 class="topbar-title">
+                    Loader.js:
+
+                    <span class="label">
+                        <span>
+                            {{title}}
+                        </span>
+                    </span>
+                </h1>
+            </div>
+        </div>
+
+        <div class="contents">
+            <section class="contents-inner">
+                <div class="contents-body">
+                    <article class="contents-article">
+                        {{> intro}}
+                    </article>
+
+                    <div class="contents-demo">
+                        {{> demo}}
+                    </div>
+                </div>
+
+                <aside class="contents-sidebar">
+                    {{> sidebar}}
+                </aside>
+            </section>
+        </div>
+    </div>
+
+    <script src="/demo/layout.js"></script>
+    <script>
+        shimport("{{path}}/src/index.mjs");
+    </script>
+</body>
+
+</html>

@@ -7,9 +7,9 @@
     document
         .querySelector(".button-contents-loader")
         .addEventListener("click", async () => {
-            await loader.load("/demo/images/index.html", {
-                element: document.querySelector(".contents-article"),
-                filter: ".contents-article",
+            await loader.load("//jsonplaceholder.typicode.com/posts", {
+                element: document.querySelector(".contents-demo"),
+                filter: ".contents-demo",
             });
         });
 })();
