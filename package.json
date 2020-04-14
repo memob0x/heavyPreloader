@@ -2,7 +2,7 @@
     "name": "loader",
     "version": "2.0.0",
     "scripts": {
-        "build": "node ./build.mjs && node ./demo/build.mjs",
+        "build": "node ./build/lib.mjs && node ./build/demo.mjs",
         "test": "karma start --single-run --browsers ChromeHeadless karma.conf.js"
     },
     "devDependencies": {
