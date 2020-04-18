@@ -1,1 +1,75 @@
 
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Loader.js: </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link href="/dist/index.css" rel="stylesheet" />
+</head>
+
+<body>
+    <div id="root">
+        <div class="topbar">
+            <div class="topbar-inner">
+                <h1 class="topbar-title">
+                    Loader.js:
+
+                    <span class="label">
+                        <span>
+                            
+                        </span>
+                    </span>
+                </h1>
+            </div>
+        </div>
+
+        <div class="contents">
+            <section class="contents-inner">
+                <div class="contents-body">
+                    <article class="contents-article">
+                        <p>
+                            <strong>Loader</strong> supports <strong>text/css</strong> MIME type
+                            so it can be used as an asynchronous stylesheets load callback
+                            (which is a quite an [ancient cross-browser issue.
+                        </p>
+                        
+                        <p>
+                            Press "Toggle Dark Mode" to fetch and apply an extra dark mode theme
+                            stylesheet.
+                        </p>
+                    </article>
+
+                    <div class="contents-demo">
+                    </div>
+                </div>
+
+                <aside class="contents-sidebar">
+                    <button class="button button-dark-mode-toggler">
+                        Toggle Dark Mode
+                    </button>
+                </aside>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        function shimport(src) {
+            try {
+                new Function('import("' + src + '")')();
+            } catch (e) {
+                var s = document.createElement("script");
+                s.src = "https://unpkg.com/shimport";
+                s.dataset.main = src;
+                document.head.appendChild(s);
+            }
+        }
+
+        shimport("/src/index.mjs");
+    </script>
+</body>
+
+</html>

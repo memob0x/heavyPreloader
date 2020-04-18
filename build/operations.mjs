@@ -2,6 +2,7 @@ import { rollup } from "rollup";
 import { promises as fs } from "fs";
 import { basename } from "path";
 import sass from "node-sass";
+import Handlebars from "handlebars";
 
 export const createBoundle = async (options) => {
     options = { ...{ plugins: [], format: "umd" }, ...options };
@@ -49,7 +50,15 @@ export const buildCSS = async (file, dest) => {
 export const buildHTML = async (path, dest) => {
     console.log(`${path}: start`);
 
-    // TODO: file --> ../dist/*.css
+    const fileBuffer = await fs.readFile(path);
+    const layoutBuffer = await fs.readFile("./demo/layout.hbs");
+
+    const tpl = Handlebars.compile(
+        fileBuffer.toString() + layoutBuffer.toString()
+    );
+
+    const filename = basename(path).replace(/hbs$/g, "html");
+    await fs.writeFile(`${dest}/${filename}`, tpl());
 
     console.log(`${path}: end`);
 };
