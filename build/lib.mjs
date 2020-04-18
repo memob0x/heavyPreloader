@@ -1,41 +1,44 @@
-import { rollup } from "rollup";
 import terser from "rollup-plugin-terser";
 import babel from "rollup-plugin-babel";
 import "@babel/core";
+import { createBoundle } from "./operations.mjs";
 
 const minify = () =>
     terser.terser({
         sourcemap: true,
     });
 
-const boundler = async (file = "", plugins = []) => {
-    console.log(`${file} boundle: start`);
-
-    const init = await rollup({
-        input: "src/loader.mjs",
-        plugins: plugins,
-    });
-
-    await init.write({
-        format: "umd",
-        name: "Loader",
-        sourcemap: true,
-        file: file,
-    });
-
-    console.log(`${file} boundle: end`);
-};
-
-(async () => {
+(async (options, basename) => {
     console.log("library boundle: start");
 
-    await boundler("dist/loader.js");
+    await createBoundle({
+        ...options,
+        output: `${basename}.js`,
+    });
 
-    await boundler("dist/loader.min.js", [minify()]);
+    await createBoundle({
+        ...options,
+        output: `${basename}.min.js`,
+        plugins: [minify()],
+    });
 
-    await boundler("dist/loader.es5.js", [babel()]);
+    await createBoundle({
+        ...options,
+        output: `${basename}.es5.js`,
+        plugins: [babel()],
+    });
 
-    await boundler("dist/loader.es5.min.js", [babel(), minify()]);
+    await createBoundle({
+        ...options,
+        output: `${basename}.es5.min.js`,
+        plugins: [babel(), minify()],
+    });
 
     console.log("library boundle: end");
-})();
+})(
+    {
+        name: "Loader",
+        input: "src/loader.mjs",
+    },
+    "dist/loader"
+);

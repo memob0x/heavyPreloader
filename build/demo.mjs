@@ -1,39 +1,39 @@
-import { promises as fs } from "fs";
-import { join } from "path";
+import {
+    readdir,
+    asyncFilter,
+    asyncForEach,
+    isDirectory,
+    isExtension,
+} from "./utils.mjs";
+import { buildCSS, buildHTML } from "./operations.mjs";
 
-const asyncFilter = async (arr, predicate) => {
-    const results = await Promise.all(arr.map(predicate));
+const buildComponent = async (path = "") => {
+    const files = await readdir(`${path}/src`);
 
-    return arr.filter((_v, index) => results[index]);
+    const scsss = await asyncFilter(
+        files,
+        async (file) => await isExtension(file, "scss")
+    );
+    await asyncForEach(
+        scsss,
+        async (scss) => await buildCSS(scss, `${path}/dist`)
+    );
+
+    const hbss = await asyncFilter(
+        files,
+        async (file) => await isExtension(file, "hbs")
+    );
+    await asyncForEach(hbss, async (hbs) => await buildHTML(hbs, path));
 };
 
-const asyncForEach = async (array, callback) => {
-    for (let index = 0; index < array.length; index++) {
-        await callback(array[index], index, array);
-    }
-};
-
-const build = async (folder = "") => {
-    console.log(`${folder} demo: start`);
-
-    // TODO: /demo/xyz/src/*.scss --> /demo/xyz/dist/*.css
-    // TODO: /demo/xyz/src/*.hbs --> /demo/xyz/index.html
-
-    console.log(`${folder} demo: end`);
-};
-
-(async (path) => {
+(async (root) => {
     console.warn("demo: start");
 
-    const files = await fs.readdir(path);
+    const paths = await readdir(root);
 
-    const dirs = await asyncFilter(files, async (file) => {
-        const stat = await fs.stat(join(path, file));
+    const dirs = await asyncFilter(paths, isDirectory);
 
-        return stat.isDirectory();
-    });
-
-    await asyncForEach(dirs, build);
+    await asyncForEach(dirs, buildComponent);
 
     console.warn("demo: end");
 })("./demo");
