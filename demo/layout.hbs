@@ -3,10 +3,10 @@
 
 <head>
     <meta charset="UTF-8" />
-    <title>Loader.js: {{title}}</title>
+    <title>Loader.js: {{@folder}}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <link href="{{path}}/dist/index.css" rel="stylesheet" />
+    <link href="/{{@path}}/dist/index.css" rel="stylesheet" />
 </head>
 
 <body>
@@ -18,7 +18,7 @@
 
                     <span class="label">
                         <span>
-                            {{title}}
+                            {{@folder}}
                         </span>
                     </span>
                 </h1>
@@ -29,16 +29,16 @@
             <section class="contents-inner">
                 <div class="contents-body">
                     <article class="contents-article">
-                        {{> intro}}
+                        {{#block "intro"}}{{/block}}
                     </article>
 
                     <div class="contents-demo">
-                        {{> demo}}
+                        {{#block "demo"}}{{/block}}
                     </div>
                 </div>
 
                 <aside class="contents-sidebar">
-                    {{> sidebar}}
+                    {{#block "sidebar"}}{{/block}}
                 </aside>
             </section>
         </div>
@@ -56,7 +56,7 @@
             }
         }
 
-        shimport("{{path}}/src/index.mjs");
+        shimport("/{{@path}}/src/index.mjs");
     </script>
 </body>
 

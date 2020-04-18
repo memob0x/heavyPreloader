@@ -1,4 +1,6 @@
-{{#* inline "intro"}}
+{{#extend "layout"}}
+
+{{#content "intro"}}
 <p>
     <strong>Loader</strong> supports <strong>text/css</strong> MIME type
     so it can be used as an asynchronous stylesheets load callback
@@ -9,12 +11,14 @@
     Press "Toggle Dark Mode" to fetch and apply an extra dark mode theme
     stylesheet.
 </p>
-{{/inline}}
+{{/content}}
 
-{{#*inline "sidebar"}}
+{{#content "sidebar"}}
 <button class="button button-dark-mode-toggler">
     Toggle Dark Mode
 </button>
-{{/inline}}
+{{/content}}
 
-{{#* inline "demo"}}{{/inline}}
+{{#content "demo"}}{{/content}}
+
+{{/extend}}

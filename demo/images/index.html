@@ -1,14 +1,12 @@
-
-
 <!DOCTYPE html>
 <html>
 
 <head>
     <meta charset="UTF-8" />
-    <title>Loader.js: </title>
+    <title>Loader.js: images</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <link href="/dist/index.css" rel="stylesheet" />
+    <link href="/demo/images/dist/index.css" rel="stylesheet" />
 </head>
 
 <body>
@@ -20,7 +18,7 @@
 
                     <span class="label">
                         <span>
-                            
+                            images
                         </span>
                     </span>
                 </h1>
@@ -32,22 +30,25 @@
                 <div class="contents-body">
                     <article class="contents-article">
                         <div class="image">
-                            <img data-src="https://cors-anywhere.herokuapp.com///placehold.it/1440x900.jpg" />
-                        </div>
+    <img data-src="https://cors-anywhere.herokuapp.com///placehold.it/1440x900.jpg" />
+</div>
+
                     </article>
 
                     <div class="contents-demo">
+                        
                     </div>
                 </div>
 
                 <aside class="contents-sidebar">
                     <button id="images-fetch">
-                        prefetch all images
-                    </button>
-                    
-                    <button id="images-observe">
-                        prepare and load visible images only
-                    </button>
+    prefetch all images
+</button>
+
+<button id="images-observe">
+    prepare and load visible images only
+</button>
+
                 </aside>
             </section>
         </div>
@@ -65,7 +66,7 @@
             }
         }
 
-        shimport("/src/index.mjs");
+        shimport("/demo/images/src/index.mjs");
     </script>
 </body>
 

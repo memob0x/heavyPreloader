@@ -2,7 +2,7 @@
     "name": "loader",
     "version": "2.0.0",
     "scripts": {
-        "build": "node ./build/lib.mjs && node ./build/demo.mjs",
+        "build": "node ./build.mjs",
         "test": "karma start --single-run --browsers ChromeHeadless karma.conf.js"
     },
     "devDependencies": {
@@ -16,6 +16,7 @@
         "autoprefixer": "^9.7.5",
         "chai": "4.2.0",
         "handlebars": "^4.7.6",
+        "handlebars-layouts": "^3.1.4",
         "karma": "^4.4.1",
         "karma-chai": "^0.1.0",
         "karma-chrome-launcher": "^3.1.0",

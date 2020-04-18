@@ -1,5 +1,5 @@
 -   demo pages
 -   jsdocs and comments
--   current handlebars file build convention for demos kinda sucks, should be something like partials dinamic registration + layout file
--   figure out images with srcset recipe
+-   figure out images with srcset recipe and demo
 -   check TODO notes in ./src lib files
+-   possibly improve build readibility
