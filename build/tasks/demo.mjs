@@ -1,4 +1,5 @@
 import { promises as fs } from "fs";
+import { basename } from "path";
 import Handlebars from "handlebars";
 
 import {
@@ -29,6 +30,26 @@ const buildComponentHtml = async (files, path) =>
         async (hbs) => await buildHTML(hbs, path)
     );
 
+const registerHtmlPartials = async (files) => {
+    const dirs = await asyncFilter(files, isDirectory);
+
+    await asyncForEach(
+        dirs,
+        async (path) =>
+            await asyncForEach(
+                await asyncFilter(
+                    await readdir(path),
+                    async (file) => await isExtension(file, "hbs")
+                ),
+                async (file) =>
+                    Handlebars.registerPartial(
+                        basename(file).replace(/\.hbs$/, ""),
+                        await fs.readFile(file, "utf-8")
+                    )
+            )
+    );
+};
+
 (async (root) => {
     Handlebars.registerPartial(
         "layout",
@@ -37,8 +58,10 @@ const buildComponentHtml = async (files, path) =>
 
     const paths = await readdir(root);
     const dirs = await asyncFilter(paths, isDirectory);
-    await asyncForEach(dirs, async (path = "") => {
+    await asyncForEach(dirs, async (path) => {
         const files = await readdir(`${path}/src`);
+
+        await registerHtmlPartials(files);
 
         await Promise.all([
             buildComponentStyle(files, path),

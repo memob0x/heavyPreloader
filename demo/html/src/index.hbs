@@ -1,17 +1,28 @@
 {{#extend "layout"}}
 
 {{#content "intro"}}
+
+
 <p>
     <strong>Loader</strong> supports <strong>text/html</strong> MIME type so it
     can be used to retrieve new contents.
 </p>
 <p>Press "Load New Contents" to replace placeholders with actual contents.</p>
+
 {{/content}}
 
 {{#content "sidebar"}}
+
 <button class="button button-contents-loader">Load New Contents</button>
+
 {{/content}}
 
-{{#content "demo"}}{{/content}}
+{{#content "demo"}}
+
+{{#repeat 30}}
+{{> item}}
+{{/repeat}}
+
+{{/content}}
 
 {{/extend}}
