@@ -9,7 +9,7 @@
         .addEventListener("click", async () => {
             await loader.load("//jsonplaceholder.typicode.com/posts", {
                 element: document.querySelector(".contents-demo"),
-                filter: ".contents-demo",
+                filter: ".contents-demo"
             });
         });
 })();

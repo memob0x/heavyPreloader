@@ -1,30 +1,49 @@
 import { extname } from "path";
 import { promises as fs } from "fs";
-import { join } from "path";
+import { basename, join } from "path";
 
-export const readdir = async (root) => {
-    const files = await fs.readdir(root);
+const getFiles = async (path, extension) =>
+    await asyncFilter(
+        Array.isArray(path) ? path : await getFilesAndDirectories(path),
+        async (file) => await hasExtension(file, extension)
+    );
 
-    return files.map((file) => join(root, file));
+const getDirectories = async (path) =>
+    await asyncFilter(
+        Array.isArray(path) ? path : await getFilesAndDirectories(path),
+        isDirectory
+    );
+
+const asyncFilter = async (array, predicate) => {
+    const results = await Promise.all(array.map(predicate));
+
+    return array.filter((_v, index) => results[index]);
 };
 
-export const asyncFilter = async (arr, predicate) => {
-    const results = await Promise.all(arr.map(predicate));
-
-    return arr.filter((_v, index) => results[index]);
-};
-
-export const asyncForEach = async (array, callback) => {
+const asyncForEach = async (array, callback) => {
     for (let index = 0; index < array.length; index++) {
         await callback(array[index], index, array);
     }
 };
 
-export const isDirectory = async (path) => {
-    const stat = await fs.stat(path);
+const isDirectory = async (path) => (await fs.stat(path)).isDirectory();
 
-    return stat.isDirectory();
-};
-
-export const isExtension = async (path, extension) =>
+const hasExtension = async (path, extension) =>
     extname(path) === `.${extension}`;
+
+export const loopFiles = async (path, ext, cb) =>
+    await asyncForEach(await getFiles(path, ext), cb);
+
+export const loopDirectories = async (path, cb) =>
+    await asyncForEach(await getDirectories(path), cb);
+
+export const getFilesAndDirectories = async (root) =>
+    (await fs.readdir(root)).map((file) => join(root, file));
+
+export const getFileName = (file) =>
+    basename(file).split(".").slice(0, -1).join(".");
+
+export const replaceExtension = (file, extension) =>
+    `${getFileName(file)}.${extension}`;
+
+export const readFile = (path) => fs.readFile(path, "utf-8");

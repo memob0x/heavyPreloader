@@ -2,6 +2,7 @@ import { promises as fs } from "fs";
 import { basename } from "path";
 import Handlebars from "handlebars";
 import layouts from "handlebars-layouts";
+import { replaceExtension, readFile } from "../utils.mjs";
 
 Handlebars.registerHelper(layouts(Handlebars));
 
@@ -19,14 +20,14 @@ export default async (path, dest) => {
     console.log(`${path}: start`);
 
     await fs.writeFile(
-        `${dest}/${basename(path).replace(/hbs$/g, "html")}`,
-        Handlebars.compile(await fs.readFile(path, "utf-8"))(
+        `${dest}/${replaceExtension(path, "html")}`,
+        Handlebars.compile(await readFile(path))(
             {},
             {
                 data: {
                     path: dest,
-                    folder: basename(dest),
-                },
+                    folder: basename(dest)
+                }
             }
         )
     );
