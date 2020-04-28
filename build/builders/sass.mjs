@@ -1,6 +1,6 @@
 import { promises as fs } from "fs";
 import sass from "node-sass";
-import { replaceExtension } from "../utils.mjs";
+import { extension } from "../utils.mjs";
 
 export default async (file, dest) => {
     console.log(`${file}: start`);
@@ -16,10 +16,10 @@ export default async (file, dest) => {
         )
     );
 
-    const getFileName = replaceExtension(file, "css");
+    const name = extension(file, "css");
     await Promise.all([
-        fs.writeFile(`${dest}/${getFileName}.map`, result.map),
-        fs.writeFile(`${dest}/${getFileName}`, result.css)
+        fs.writeFile(`${dest}/${name}.map`, result.map),
+        fs.writeFile(`${dest}/${name}`, result.css)
     ]);
 
     console.log(`${file}: end`);

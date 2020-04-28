@@ -1,39 +1,33 @@
 import Handlebars from "handlebars";
-import {
-    getFilesAndDirectories,
-    loopFiles,
-    loopDirectories,
-    getFileName,
-    readFile
-} from "../utils.mjs";
+import { ls, each, name, buffer } from "../utils.mjs";
 import buildCSS from "../builders/sass.mjs";
 import buildHTML from "../builders/hbs.mjs";
 
+const partial = async (name, path) =>
+    Handlebars.registerPartial(name, await buffer(path));
+
+const eachHbs = async (path, callback) => await each(path, "hbs", callback);
+
 (async (root) => {
-    Handlebars.registerPartial("layout", await readFile(`${root}/layout.hbs`));
+    partial("layout", `${root}/layout.hbs`);
 
-    await loopDirectories(root, async (path) => {
-        const files = await getFilesAndDirectories(`${path}/src`);
+    await each(root, async (path) => {
+        const entries = await ls(`${path}/src`);
 
-        await loopDirectories(
-            files,
+        await each(
+            entries,
             async (path) =>
-                await loopFiles(path, "hbs", async (file) =>
-                    Handlebars.registerPartial(
-                        getFileName(file),
-                        await readFile(file)
-                    )
-                )
+                await eachHbs(path, async (file) => partial(name(file), file))
         );
 
         await Promise.all([
-            loopFiles(
-                files,
+            each(
+                entries,
                 "scss",
                 async (scss) => await buildCSS(scss, `${path}/dist`)
             ),
 
-            loopFiles(files, "hbs", async (hbs) => await buildHTML(hbs, path))
+            eachHbs(entries, async (hbs) => await buildHTML(hbs, path))
         ]);
     });
 })("./demo");

@@ -2,7 +2,7 @@ import { promises as fs } from "fs";
 import { basename } from "path";
 import Handlebars from "handlebars";
 import layouts from "handlebars-layouts";
-import { replaceExtension, readFile } from "../utils.mjs";
+import { extension, buffer } from "../utils.mjs";
 
 Handlebars.registerHelper(layouts(Handlebars));
 
@@ -10,6 +10,8 @@ Handlebars.registerHelper("repeat", (n, block) => {
     let accum = "";
 
     for (var i = 0; i < n; ++i) {
+        block.data.index = i;
+        
         accum += block.fn(i);
     }
 
@@ -20,8 +22,8 @@ export default async (path, dest) => {
     console.log(`${path}: start`);
 
     await fs.writeFile(
-        `${dest}/${replaceExtension(path, "html")}`,
-        Handlebars.compile(await readFile(path))(
+        `${dest}/${extension(path, "html")}`,
+        Handlebars.compile(await buffer(path))(
             {},
             {
                 data: {

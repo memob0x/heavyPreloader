@@ -1,21 +1,25 @@
 {{#extend "layout"}}
 
 {{#content "intro"}}
-<div class="image">
-    <img data-src="https://cors-anywhere.herokuapp.com///placehold.it/1440x900.jpg" />
-</div>
+test
 {{/content}}
 
 {{#content "sidebar"}}
-<button id="images-fetch">
+<button class="button button-images-fetch">
     prefetch all images
 </button>
 
-<button id="images-observe">
+<button class="button button-images-observe">
     prepare and load visible images only
 </button>
 {{/content}}
 
-{{#content "demo"}}{{/content}}
+{{#content "demo"}}
+
+{{#repeat 10}}
+{{> image}}
+{{/repeat}}
+
+{{/content}}
 
 {{/extend}}

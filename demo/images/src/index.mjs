@@ -5,8 +5,8 @@
     const loader = new Loader();
 
     const images = document.querySelectorAll("img[data-src]");
-    const btnFetch = document.querySelector("button#images-fetch");
-    const btnObserve = document.querySelector("button#images-observe");
+    const btnFetch = document.querySelector(".button-images-fetch");
+    const btnObserve = document.querySelector(".button-images-observe");
 
     const observer = new IntersectionObserver((entries) =>
         entries
