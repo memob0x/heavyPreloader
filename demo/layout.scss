@@ -178,6 +178,20 @@ body {
     }
 }
 
+.navigation {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    &__entry {
+        margin-bottom: $contents-gutters;
+
+        &:last-child {
+            margin-bottom: 0;
+        }
+    }
+}
+
 .button {
     color: $color-button-text;
     border: 1px solid $color-button-borders;
@@ -199,6 +213,10 @@ body {
     &:active {
         border-color: darken($color-button-borders, 8%);
         background: darken($color-button-background, 8%);
+    }
+
+    .navigation & {
+        width: 100%;
     }
 }
 

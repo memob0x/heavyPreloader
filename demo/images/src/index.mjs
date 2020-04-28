@@ -5,8 +5,6 @@
     const loader = new Loader();
 
     const images = document.querySelectorAll("img[data-src]");
-    const btnFetch = document.querySelector(".button-images-fetch");
-    const btnObserve = document.querySelector(".button-images-observe");
 
     const observer = new IntersectionObserver((entries) =>
         entries
@@ -24,22 +22,25 @@
             })
     );
 
-    btnFetch.addEventListener("click", () => {
-        btnFetch.remove();
+    document
+        .querySelector(".button-images-fetch")
+        .addEventListener("click", () => {
+            document.body.classList.add("images-fetched");
 
-        [...images].forEach(async (x) => {
-            await loader.fetch(x.dataset.src);
-            x.parentElement.classList.add("fetched");
+            [...images].forEach(async (x) => {
+                await loader.fetch(x.dataset.src);
+                x.parentElement.classList.add("fetched");
+            });
         });
-    });
 
-    btnObserve.addEventListener("click", () => {
-        btnObserve.remove();
-        btnFetch.remove();
+    document
+        .querySelector(".button-images-observe")
+        .addEventListener("click", () => {
+            document.body.classList.add("images-observed");
 
-        [...images].forEach((i) => (i.parentNode.style.display = "block"));
-        [...images].forEach((i) => (i.style.display = "block"));
+            [...images].forEach((i) => (i.parentNode.style.display = "block"));
+            [...images].forEach((i) => (i.style.display = "block"));
 
-        images.forEach((i) => observer.observe(i));
-    });
+            images.forEach((i) => observer.observe(i));
+        });
 })();

@@ -5,13 +5,19 @@ test
 {{/content}}
 
 {{#content "sidebar"}}
-<button class="button button-images-fetch">
-    prefetch all images
-</button>
+<ul class="navigation">
+    <li class="navigation__entry navigation__entry--fetch-images">
+        <button class="button button-images-fetch">
+            prefetch all images
+        </button>
+    </li>
 
-<button class="button button-images-observe">
-    prepare and load visible images only
-</button>
+    <li class="navigation__entry navigation__entry--observe-images">
+        <button class="button button-images-observe">
+            prepare and load visible images only
+        </button>
+    </li>
+</ul>
 {{/content}}
 
 {{#content "demo"}}
