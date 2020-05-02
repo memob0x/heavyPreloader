@@ -4,14 +4,19 @@
 
     const loader = new Loader();
 
-    document
-        .querySelector(".button-contents-loader")
-        .addEventListener("click", async () => {
-            event.currentTarget.disabled = true;
-
-            await loader.load(`${location.origin}/demo/html/items.html`, {
-                element: document.querySelector(".contents-demo"),
-                filter: ".contents-demo__inner"
-            });
-        });
+    [...document.querySelectorAll(".navigation__button--load-html")].forEach(
+        (btn) =>
+            btn.addEventListener(
+                "click",
+                async (event) =>
+                    await loader.load(
+                        `${location.origin}/demo/html/${event.currentTarget.dataset.target}.html`,
+                        {
+                            cache: false,
+                            element: document.querySelector(".contents-demo"),
+                            filter: ".contents-demo__inner"
+                        }
+                    )
+            )
+    );
 })();

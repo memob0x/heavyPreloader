@@ -1,23 +1,12 @@
 @import "../../layout.scss";
 
-$images-background: #dfdfdf;
-
-%hide {
-    display: none;
-}
-
-%show {
-    display: block;
-}
-
 .contents-demo {
     display: flex;
     flex-wrap: wrap;
 }
 
 %image {
-    background: $images-background;
-    @extend %hide;
+    background: $placeholders-background;
     margin: 10px;
     position: relative;
     transition: background-color 0.4s ease;
@@ -43,15 +32,14 @@ $images-background: #dfdfdf;
     @extend %image;
 }
 
-.image--shown {
+.image--loading {
     @extend %image;
-    @extend %show;
+    background: darken($placeholders-background, 15%);
 }
 
 .image--loaded {
     @extend %image;
-    @extend %show;
-    background: darken($images-background, 30%);
+    background: darken($placeholders-background, 30%);
 }
 
 .image__img {

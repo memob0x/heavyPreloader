@@ -3,7 +3,6 @@
 {{!-- intro block --}}
 {{#content "intro"}}
 
-
 <p>
     <strong>Loader</strong> supports <strong>text/html</strong> MIME type so it
     can be used to retrieve new contents.
@@ -15,7 +14,19 @@
 {{!-- sidebar block --}}
 {{#content "sidebar"}}
 
-<button class="button button-contents-loader">Load Contents</button>
+<ul class="navigation">
+    <li class="navigation__entry">
+        <button class="button navigation__button--load-html" data-target="albums">
+            Load music titles
+        </button>
+    </li>
+
+    <li class="navigation__entry">
+        <button class="button navigation__button--load-html" data-target="movies">
+            Load movie titles
+        </button>
+    </li>
+</ul>
 
 {{/content}}
 
