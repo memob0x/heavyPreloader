@@ -22,9 +22,9 @@ test
 
 {{#content "demo"}}
 
-{{#repeat 10}}
-{{> image}}
-{{/repeat}}
+{{#each @images}}
+{{> image image=.}}
+{{/each}}
 
 {{/content}}
 

@@ -20,9 +20,9 @@
 {{#content "demo"}}
 
 <div class="contents-demo__inner">
-    {{#repeat 10}}
-    {{> item}}
-    {{/repeat}}
+    {{#each @items}}
+    {{> item item=.}}
+    {{/each}}
 </div>
 
 {{/content}}

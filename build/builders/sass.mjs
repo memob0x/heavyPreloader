@@ -1,14 +1,14 @@
 import { promises as fs } from "fs";
 import sass from "node-sass";
-import { extension } from "../utils.mjs";
+import { name } from "../utils.mjs";
 
-export default async (file, dest) => {
-    console.log(`${file}: start`);
+export default async (path, dest) => {
+    console.log(`${path}: start`);
 
     const result = await new Promise((resolve, reject) =>
         sass.render(
             {
-                file: file,
+                file: path,
                 outputStyle: "compressed",
                 sourceMap: dest
             },
@@ -16,11 +16,11 @@ export default async (file, dest) => {
         )
     );
 
-    const name = extension(file, "css");
+    const file = name(path, "css");
     await Promise.all([
-        fs.writeFile(`${dest}/${name}.map`, result.map),
-        fs.writeFile(`${dest}/${name}`, result.css)
+        fs.writeFile(`${dest}/${file}.map`, result.map),
+        fs.writeFile(`${dest}/${file}`, result.css)
     ]);
 
-    console.log(`${file}: end`);
+    console.log(`${path}: end`);
 };

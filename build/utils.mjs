@@ -39,8 +39,16 @@ export const each = async (...args) =>
 export const ls = async (root) =>
     (await fs.readdir(root)).map((file) => join(root, file));
 
-export const name = (file) => basename(file).split(".").slice(0, -1).join(".");
+export const extension = (path, extension) => {
+    const fragments = path.split(".").slice(0, -1);
 
-export const extension = (file, extension) => `${name(file)}.${extension}`;
+    if (extension) {
+        fragments.push(extension);
+    }
+
+    return fragments.join(".");
+};
+
+export const name = (path, ext) => extension(basename(path), ext);
 
 export const buffer = (path) => fs.readFile(path, "utf-8");
