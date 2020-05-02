@@ -27,7 +27,7 @@
         // ...
         const url = URL.createObjectURL(
             new Blob(["(", body.toString(), ")()"], {
-                type: "application/javascript",
+                type: "application/javascript"
             })
         );
 
@@ -137,9 +137,9 @@
             options = {
                 ...{
                     cache: true,
-                    fetch: {},
+                    fetch: {}
                 },
-                ...options,
+                ...options
             };
 
             // ...
@@ -155,7 +155,7 @@
                 // ...
                 worker.postMessage({
                     href: href,
-                    options: options.fetch,
+                    options: options.fetch
                 });
 
                 // ...
@@ -210,7 +210,7 @@
         ) {
             options.element.adoptedStyleSheets = [
                 ...options.element.adoptedStyleSheets,
-                sheet,
+                sheet
             ];
         }
 
@@ -322,7 +322,7 @@
                 image: image,
                 html: html,
                 css: css,
-                javascript: javascript,
+                javascript: javascript
             };
         }
 

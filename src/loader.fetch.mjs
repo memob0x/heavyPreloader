@@ -21,9 +21,9 @@ export default new (class LoaderFetch {
         options = {
             ...{
                 cache: true,
-                fetch: {},
+                fetch: {}
             },
-            ...options,
+            ...options
         };
 
         // ...
@@ -39,7 +39,7 @@ export default new (class LoaderFetch {
             // ...
             worker.postMessage({
                 href: href,
-                options: options.fetch,
+                options: options.fetch
             });
 
             // ...

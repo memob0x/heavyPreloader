@@ -8,7 +8,7 @@ const createDynamicWorker = (body) => {
     // ...
     const url = URL.createObjectURL(
         new Blob(["(", body.toString(), ")()"], {
-            type: "application/javascript",
+            type: "application/javascript"
         })
     );
 

@@ -21,7 +21,7 @@ export default async (blob, options) => {
     ) {
         options.element.adoptedStyleSheets = [
             ...options.element.adoptedStyleSheets,
-            sheet,
+            sheet
         ];
     }
 

@@ -14,7 +14,7 @@ export default new (class LoaderLoad {
             image: image,
             html: html,
             css: css,
-            javascript: javascript,
+            javascript: javascript
         };
     }
 
