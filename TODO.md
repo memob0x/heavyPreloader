@@ -2,6 +2,9 @@
 
 -   finish demo pages
 -   complete lib jsdocs and comments
+-   demo actions should be triggerable multiple times like "css" demo (remove "disabled" attr)
+    -   eg. "images" demo actions --> "load movie covers", "load album covers" ...
+    -   eg. "html" demo actions --> "load movie titles", "load song titles"...
 
 ## 2.0
 

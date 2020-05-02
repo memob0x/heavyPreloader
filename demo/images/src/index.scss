@@ -10,27 +10,12 @@ $images-background: #dfdfdf;
     display: block;
 }
 
-.navigation__entry--observe-images {
-    .images-observed & {
-        @extend %hide;
-    }
-}
-.navigation__entry--fetch-images {
-    .images-fetched & {
-        @extend %hide;
-    }
-
-    .images-observed & {
-        @extend %hide;
-    }
-}
-
 .contents-demo {
     display: flex;
     flex-wrap: wrap;
 }
 
-.image {
+%image {
     background: $images-background;
     @extend %hide;
     margin: 10px;
@@ -52,15 +37,21 @@ $images-background: #dfdfdf;
         content: "";
         padding: 0 0 100%;
     }
+}
 
-    &.loaded {
-        @extend %show;
-        background: darken($images-background, 30%);
-    }
+.image {
+    @extend %image;
+}
 
-    &.fetched {
-        @extend %show;
-    }
+.image--shown {
+    @extend %image;
+    @extend %show;
+}
+
+.image--loaded {
+    @extend %image;
+    @extend %show;
+    background: darken($images-background, 30%);
 }
 
 .image__img {
@@ -74,7 +65,7 @@ $images-background: #dfdfdf;
     height: 100%;
     object-fit: cover;
 
-    .loaded & {
+    .image--loaded & {
         opacity: 1;
     }
 }

@@ -3,9 +3,6 @@
     const Loader = loaderLib.default;
 
     const loader = new Loader();
-
-    const images = document.querySelectorAll("img[data-src]");
-
     const observer = new IntersectionObserver((entries) =>
         entries
             .filter((x) => x.isIntersecting)
@@ -14,33 +11,35 @@
 
                 observer.unobserve(image);
 
-                await loader.fetch(image.dataset.src);
-                image.parentElement.classList.add("fetched");
-
                 await loader.load(image.dataset.src, { element: image });
-                image.parentElement.classList.add("loaded");
+
+                setImageState(image, ImageStates.LOADED);
             })
     );
 
-    document
-        .querySelector(".button-images-fetch")
-        .addEventListener("click", () => {
-            document.body.classList.add("images-fetched");
+    const ImageStates = {
+        DEFAULT: "image",
+        SHOWN: "image--shown",
+        LOADED: "image--loaded"
+    };
 
-            [...images].forEach(async (x) => {
-                await loader.fetch(x.dataset.src);
-                x.parentElement.classList.add("fetched");
+    const setImageState = (image, state) => {
+        for (const value of Object.values(ImageStates)) {
+            image.parentElement.classList[state === value ? "add" : "remove"](
+                value
+            );
+        }
+    };
+
+    const images = document.querySelectorAll("img[data-src]");
+
+    document
+        .querySelector(".navigation__button--load-images")
+        .addEventListener("click", () => {
+            images.forEach((image) => {
+                setImageState(image, ImageStates.SHOWN);
+
+                observer.observe(image);
             });
-        });
-
-    document
-        .querySelector(".button-images-observe")
-        .addEventListener("click", () => {
-            document.body.classList.add("images-observed");
-
-            [...images].forEach((i) => (i.parentNode.style.display = "block"));
-            [...images].forEach((i) => (i.style.display = "block"));
-
-            images.forEach((i) => observer.observe(i));
         });
 })();

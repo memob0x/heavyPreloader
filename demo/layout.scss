@@ -71,8 +71,9 @@ html {
 p {
     margin: 0 0 $contents-gutters / 2;
 
+    &:last-child,
     &:only-child {
-        margin: 0;
+        margin-bottom: 0;
     }
 }
 
@@ -143,23 +144,15 @@ body {
 
 .contents-article {
     padding: $contents-gutters/2 $contents-gutters;
-    order: 2;
-
-    @media (min-width: #{$screens-mobile}) {
-        order: 1;
-    }
+    order: 1;
 }
 
 .contents-demo {
     padding: $contents-gutters/2 $contents-gutters;
-    order: 1;
+    order: 2;
 
     &:empty {
         display: none;
-    }
-
-    @media (min-width: #{$screens-mobile}) {
-        order: 2;
     }
 }
 

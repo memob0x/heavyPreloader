@@ -4,14 +4,14 @@
 
     const loader = new Loader();
 
-    const fetchBtn = document.querySelector(".button-contents-loader");
+    document
+        .querySelector(".button-contents-loader")
+        .addEventListener("click", async () => {
+            event.currentTarget.disabled = true;
 
-    fetchBtn.addEventListener("click", async () => {
-        fetchBtn.remove();
-
-        await loader.load(`${location.origin}/demo/html/items.html`, {
-            element: document.querySelector(".contents-demo"),
-            filter: ".contents-demo__inner"
+            await loader.load(`${location.origin}/demo/html/items.html`, {
+                element: document.querySelector(".contents-demo"),
+                filter: ".contents-demo__inner"
+            });
         });
-    });
 })();

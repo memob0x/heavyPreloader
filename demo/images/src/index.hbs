@@ -1,6 +1,6 @@
 {{#extend "layout"}}
 
-{{!-- layout introduction --}}
+{{!-- intro block --}}
 {{#content "intro"}}
 
 <p><strong>Loader</strong> can be used with <strong>IntersectionObserver</strong> to provide an easy and enhanced
@@ -8,18 +8,12 @@
 
 {{/content}}
 
-{{!-- layout sidebar --}}
+{{!-- sidebar block --}}
 {{#content "sidebar"}}
 
 <ul class="navigation">
-    <li class="navigation__entry navigation__entry--fetch-images">
-        <button class="button button-images-fetch">
-            prefetch all images
-        </button>
-    </li>
-
-    <li class="navigation__entry navigation__entry--observe-images">
-        <button class="button button-images-observe">
+    <li class="navigation__entry">
+        <button class="button navigation__button--load-images">
             prepare and load visible images only
         </button>
     </li>
@@ -27,7 +21,7 @@
 
 {{/content}}
 
-{{!-- layout demo playground area --}}
+{{!-- demo block --}}
 {{#content "demo"}}
 
 {{#each @images}}
