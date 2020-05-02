@@ -1,10 +1,16 @@
 {{#extend "layout"}}
 
+{{!-- layout introduction --}}
 {{#content "intro"}}
-test
+
+<p><strong>Loader</strong> can be used with <strong>IntersectionObserver</strong> to provide an easy and enhanced
+    lazy load functionality.</p>
+
 {{/content}}
 
+{{!-- layout sidebar --}}
 {{#content "sidebar"}}
+
 <ul class="navigation">
     <li class="navigation__entry navigation__entry--fetch-images">
         <button class="button button-images-fetch">
@@ -18,8 +24,10 @@ test
         </button>
     </li>
 </ul>
+
 {{/content}}
 
+{{!-- layout demo playground area --}}
 {{#content "demo"}}
 
 {{#each @images}}

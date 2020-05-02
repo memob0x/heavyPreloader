@@ -14,7 +14,10 @@ const getModel = async (path) =>
 const buildView = async (view, data) =>
     await minify({
         compressor: htmlMinifier,
-        content: Handlebars.compile(view)({}, { data: data })
+        content: Handlebars.compile(view)({}, { data: data }),
+        options: {
+            collapseInlineTagWhitespace: false
+        }
     });
 
 export default async (path, dest) => {
