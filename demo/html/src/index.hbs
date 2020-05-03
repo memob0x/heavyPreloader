@@ -3,11 +3,8 @@
 {{!-- intro block --}}
 {{#content "intro"}}
 
-<p>
-    <strong>Loader</strong> supports <strong>text/html</strong> MIME type so it
-    can be used to retrieve new contents.
-</p>
-<p>Press "Load New Contents" to replace placeholders with actual contents.</p>
+<p>Press the <strong>Load Music Titles</strong> button or the <strong>Load Movie Titles</strong> button to fetch fresh
+    <strong>html</strong> contents in a separate processor <strong>thread</strong>.</p>
 
 {{/content}}
 
@@ -17,13 +14,13 @@
 <ul class="navigation">
     <li class="section__item navigation__item">
         <button class="navigation__button--load-html" data-target="albums">
-            Load music titles
+            Load Music Titles
         </button>
     </li>
 
     <li class="section__item navigation__item">
         <button class="navigation__button--load-html" data-target="movies">
-            Load movie titles
+            Load Movie Titles
         </button>
     </li>
 </ul>

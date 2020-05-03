@@ -17,18 +17,21 @@
 }
 
 .item {
-    @extend %flex;
     @extend %contents-grid__item;
 
     @media (min-width: #{$screen-medium - 40px}) {
         width: calc(50% - #{$contents-gutters});
     }
 
+    &__inner {
+        @extend %flex;
+        justify-content: space-between;
+    }
+
     &__capital {
         @extend %flex-column-justify-center;
         width: 20%;
         position: relative;
-        margin: 0 4% 0 0;
 
         &::before {
             @extend %item__pseudos;
@@ -49,12 +52,21 @@
     }
 
     &__wrapper {
+        width: 76%;
         @extend %flex-column-justify-center;
-        flex-grow: 1;
     }
 
     %row {
-        margin: 4px 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        line-height: 1.35;
+
+        margin: 1px 0;
+
+        &:empty {
+            margin: 2px 0;
+        }
 
         &::before {
             border-radius: 3px;
@@ -63,6 +75,7 @@
 
     &__title {
         @extend %row;
+        font-weight: bold;
 
         &:empty::before {
             @extend %item__pseudos;
@@ -72,6 +85,7 @@
 
     &__subtitle {
         @extend %row;
+        font-size: smaller;
 
         &:empty::before {
             @extend %item__pseudos;
