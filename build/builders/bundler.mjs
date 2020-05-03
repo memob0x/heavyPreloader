@@ -1,21 +1,62 @@
+import "@babel/core";
 import { rollup } from "rollup";
+import terser from "rollup-plugin-terser";
+import babel from "rollup-plugin-babel";
 
-export default async (options) => {
-    options = { ...{ plugins: [], format: "umd" }, ...options };
+const write = { sourcemap: true };
 
-    console.log(`${options.output}: start`);
+const minify = () => terser.terser(write);
 
-    await (
-        await rollup({
+const variants = [
+    {
+        formats: [],
+        plugins: []
+    },
+    {
+        formats: ["min"],
+        plugins: [minify()]
+    },
+    {
+        formats: ["es5"],
+        plugins: [babel()]
+    },
+    {
+        formats: ["es5", "min"],
+        plugins: [babel(), minify()]
+    }
+];
+
+export const OUTPUT_FORMAT_KEYWORD = "%formats%";
+
+export default async (format, options) => {
+    let jobs = [];
+
+    variants.forEach(async (variant) => {
+        const output = options.output.replace(
+            OUTPUT_FORMAT_KEYWORD,
+            [format, ...variant.formats].join(".")
+        );
+
+        console.log(`${output}: start`);
+
+        const init = await rollup({
             input: options.input,
-            plugins: options.plugins,
-        })
-    ).write({
-        format: options.format,
-        name: options.name,
-        sourcemap: true,
-        file: options.output,
+            plugins: variant.plugins
+        });
+
+        const job = init.write({
+            ...write,
+            format: format,
+            name: options.name,
+            file: output
+        });
+
+        jobs.push(job);
+
+        await job;
+
+        console.log(`${output}: end`);
     });
 
-    console.log(`${options.output}: end`);
+    await Promise.all(jobs);
 };

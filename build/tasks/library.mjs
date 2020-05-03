@@ -1,42 +1,14 @@
-import terser from "rollup-plugin-terser";
-import babel from "rollup-plugin-babel";
-import "@babel/core";
+import { OUTPUT_FORMAT_KEYWORD } from "../builders/bundler.mjs";
+import bundle from "../builders/bundler.mjs";
 
-import createBundle from "../builders/bundler.mjs";
-
-const minify = () =>
-    terser.terser({
-        sourcemap: true,
-    });
-
-(async (options, basename) =>
+(async (options) =>
     await Promise.all([
-        createBundle({
-            ...options,
-            output: `${basename}.js`,
-        }),
-
-        createBundle({
-            ...options,
-            output: `${basename}.min.js`,
-            plugins: [minify()],
-        }),
-
-        createBundle({
-            ...options,
-            output: `${basename}.es5.js`,
-            plugins: [babel()],
-        }),
-
-        createBundle({
-            ...options,
-            output: `${basename}.es5.min.js`,
-            plugins: [babel(), minify()],
-        }),
-    ]))(
-    {
-        name: "Loader",
-        input: "src/loader.mjs",
-    },
-    "dist/loader"
-);
+        bundle("cjs", options),
+        bundle("amd", options),
+        bundle("iife", options),
+        bundle("es", options)
+    ]))({
+    name: "Loader",
+    input: "src/loader.mjs",
+    output: `dist/loader.${OUTPUT_FORMAT_KEYWORD}.js`
+});
