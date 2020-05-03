@@ -5,7 +5,7 @@
     const loader = new Loader();
 
     document
-        .querySelector(".button-dark-mode-toggler")
+        .querySelector(".navigation__button--load-css")
         .addEventListener("click", async () => {
             await loader.load(["/demo/css/dist/index.dark.css"]);
 

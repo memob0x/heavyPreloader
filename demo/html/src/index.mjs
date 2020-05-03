@@ -13,8 +13,8 @@
                         `${location.origin}/demo/html/${event.currentTarget.dataset.target}.html`,
                         {
                             cache: false,
-                            element: document.querySelector(".contents-demo"),
-                            filter: ".contents-demo__inner"
+                            element: document.querySelector(".demo-area"),
+                            filter: ".demo-area__inner"
                         }
                     )
             )

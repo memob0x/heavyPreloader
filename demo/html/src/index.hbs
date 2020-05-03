@@ -15,14 +15,14 @@
 {{#content "sidebar"}}
 
 <ul class="navigation">
-    <li class="navigation__entry">
-        <button class="button navigation__button--load-html" data-target="albums">
+    <li class="section__item navigation__item">
+        <button class="navigation__button--load-html" data-target="albums">
             Load music titles
         </button>
     </li>
 
-    <li class="navigation__entry">
-        <button class="button navigation__button--load-html" data-target="movies">
+    <li class="section__item navigation__item">
+        <button class="navigation__button--load-html" data-target="movies">
             Load movie titles
         </button>
     </li>
@@ -33,7 +33,7 @@
 {{!-- demo block --}}
 {{#content "demo"}}
 
-<div class="contents-demo__inner">
+<div class="demo-area__inner">
     {{#each @items}}
     {{> item item=.}}
     {{/each}}

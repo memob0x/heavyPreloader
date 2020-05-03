@@ -12,11 +12,11 @@
 <body>
     <div id="root">
         <div class="topbar">
-            <div class="topbar-inner">
-                <h1 class="topbar-title">
+            <div class="topbar__inner">
+                <h1 class="topbar__title">
                     Loader.js:
 
-                    <span class="label">
+                    <span class="topbar__label">
                         <span>
                             {{@folder}}
                         </span>
@@ -25,27 +25,27 @@
             </div>
         </div>
 
-        <div class="contents">
-            <section class="contents-inner">
-                <div class="contents-body">
-                    <article class="contents-article">
+        <section class="contents">
+            <div class="contents__inner">
+                <div class="section--main">
+                    <article class="section__item">
                         {{#block "intro"}}{{/block}}
                     </article>
 
-                    <div class="contents-demo">
+                    <article class="section__item demo-area">
                         {{#block "demo"}}{{/block}}
-                    </div>
+                    </article>
                 </div>
 
-                <aside class="contents-sidebar">
+                <aside class="section--sidebar">
                     {{#block "sidebar"}}{{/block}}
                 </aside>
-            </section>
-        </div>
+            </div>
+        </section>
     </div>
 
     <script>
-        function shimport(src) {
+        (function (src) {
             try {
                 new Function('import("' + src + '")')();
             } catch (e) {
@@ -54,9 +54,7 @@
                 s.dataset.main = src;
                 document.head.appendChild(s);
             }
-        }
-
-        shimport("/{{@path}}/src/index.mjs");
+        })("/{{@path}}/src/index.mjs");
     </script>
 </body>
 

@@ -13,26 +13,56 @@ $color-button-borders--dark-mode: #818181;
     border-color: $color-panels-borders--dark-mode;
 }
 
-html.dark-mode {
-    color: $color-text--dark-mode;
+$dark-mode-selector: "html.dark-mode";
 
-    body {
+@mixin dark-mode {
+    #{$dark-mode-selector} & {
+        @content;
+    }
+}
+
+#{$dark-mode-selector} {
+    color: $color-text--dark-mode;
+}
+
+body {
+    @include dark-mode {
         background-color: $color-background--dark-mode;
     }
+}
 
-    .topbar {
+.topbar {
+    @include dark-mode {
         @extend %panel;
     }
 
-    .contents-inner {
+    &__label {
+        @include dark-mode {
+            color: $color-labels-text--dark-mode;
+        }
+
+        &::before {
+            @include dark-mode {
+                background-color: $color-labels-background--dark-mode;
+            }
+        }
+    }
+}
+
+.contents__inner {
+    @include dark-mode {
         @extend %panel;
     }
+}
 
-    .contents-sidebar {
+.section--sidebar {
+    @include dark-mode {
         @extend %panel;
     }
+}
 
-    .button {
+.navigation__button--load-css {
+    @include dark-mode {
         color: $color-button-text--dark-mode;
         border-color: $color-button-borders--dark-mode;
         background: $color-button-background--dark-mode;
@@ -46,14 +76,6 @@ html.dark-mode {
         &:active {
             border-color: lighten($color-button-borders--dark-mode, 8%);
             background: lighten($color-button-background--dark-mode, 8%);
-        }
-    }
-
-    .label {
-        color: $color-labels-text--dark-mode;
-
-        &::before {
-            background-color: $color-labels-background--dark-mode;
         }
     }
 }

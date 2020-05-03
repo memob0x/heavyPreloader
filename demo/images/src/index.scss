@@ -1,6 +1,10 @@
 @import "../../layout.scss";
 
-.contents-demo {
+.navigation__button--load-images {
+    @extend %button;
+}
+
+.demo-area {
     display: flex;
     flex-wrap: wrap;
 }
