@@ -8,6 +8,8 @@
     },
     "scripts": {
         "build": "node ./build.mjs",
+        "demo": "node ./build.mjs --demo",
+        "library": "node ./build.mjs --library",
         "test": "karma start --single-run --browsers ChromeHeadless karma.conf.js"
     },
     "dependencies": {
