@@ -3,9 +3,10 @@ import bundle from "../builders/bundler.mjs";
 
 (async (options) =>
     await Promise.all([
-        bundle("cjs", options),
-        bundle("amd", options),
         bundle("iife", options),
+        bundle("amd", options),
+        bundle("cjs", options),
+        bundle("system", options),
         bundle("es", options)
     ]))({
     name: "Loader",
