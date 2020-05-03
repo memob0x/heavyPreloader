@@ -3,3 +3,79 @@
 .navigation__button--load-html {
     @extend %button;
 }
+
+.demo-area__inner {
+    .demo-area--html & {
+        @extend %contents-grid;
+    }
+}
+
+%item__pseudos {
+    display: block;
+    content: "\2002";
+    background-color: $placeholders-background;
+}
+
+.item {
+    @extend %flex;
+    @extend %contents-grid__item;
+
+    @media (min-width: #{$screen-medium - 40px}) {
+        width: calc(50% - #{$contents-gutters});
+    }
+
+    &__capital {
+        @extend %flex-column-justify-center;
+        width: 20%;
+        position: relative;
+        margin: 0 4% 0 0;
+
+        &::before {
+            @extend %item__pseudos;
+            border-radius: 100%;
+            line-height: 0;
+            padding: 0 0 100% 0;
+        }
+
+        &:after {
+            content: attr(data-capital);
+            @extend %flex-justify-center;
+            @extend %cover;
+            align-items: center;
+            font-size: 23px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+    }
+
+    &__wrapper {
+        @extend %flex-column-justify-center;
+        flex-grow: 1;
+    }
+
+    %row {
+        margin: 4px 0;
+
+        &::before {
+            border-radius: 3px;
+        }
+    }
+
+    &__title {
+        @extend %row;
+
+        &:empty::before {
+            @extend %item__pseudos;
+            max-width: 56%;
+        }
+    }
+
+    &__subtitle {
+        @extend %row;
+
+        &:empty::before {
+            @extend %item__pseudos;
+            max-width: 87%;
+        }
+    }
+}

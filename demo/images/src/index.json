@@ -39,6 +39,46 @@
         {
             "music-src": "images/music-9.webp",
             "movie-src": "images/movie-9.jpg"
+        },
+        {
+            "music-src": "images/music-10.png",
+            "movie-src": "images/movie-10.jpg"
+        },
+        {
+            "music-src": "images/music-11.webp",
+            "movie-src": "images/movie-11.jpg"
+        },
+        {
+            "music-src": "images/music-12.webp",
+            "movie-src": "images/movie-12.jpg"
+        },
+        {
+            "music-src": "images/music-13.webp",
+            "movie-src": "images/movie-13.jpg"
+        },
+        {
+            "music-src": "images/music-14.webp",
+            "movie-src": "images/movie-14.jpg"
+        },
+        {
+            "music-src": "images/music-15.png",
+            "movie-src": "images/movie-15.jpg"
+        },
+        {
+            "music-src": "images/music-16.webp",
+            "movie-src": "images/movie-16.webp"
+        },
+        {
+            "music-src": "images/music-17.webp",
+            "movie-src": "images/movie-17.jpg"
+        },
+        {
+            "music-src": "images/music-18.webp",
+            "movie-src": "images/movie-18.jpg"
+        },
+        {
+            "music-src": "images/music-19.webp",
+            "movie-src": "images/movie-19.jpg"
         }
     ]
 }

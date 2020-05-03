@@ -1,8 +1,3 @@
-import css from "./loader.load.css.mjs";
-import html from "./loader.load.html.mjs";
-import image from "./loader.load.image.mjs";
-import javascript from "./loader.load.javascript.mjs";
-
 /**
  *
  */
@@ -10,12 +5,7 @@ export default new (class LoaderLoad {
     constructor() {
         // loaders closure, filled with default loaders
         // https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
-        this.loaders = {
-            image: image,
-            html: html,
-            css: css,
-            javascript: javascript
-        };
+        this.loaders = {};
     }
 
     /**

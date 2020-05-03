@@ -1,8 +1,11 @@
-import { getURL } from "../src/loader.utils.mjs";
-import lfetch from "../src/loader.fetch.mjs";
-import lload from "../src/loader.load.mjs";
+import { getURL } from "../../src/loader.utils.mjs";
+import lfetch from "../../src/loader.fetch.mjs";
+import lload from "../../src/loader.load.mjs";
+import image from "../../src/loaders/loader.image.mjs";
 
 describe("image loader", () => {
+    lload.register("image", image);
+
     it("should return a promise which resolves to a load/error Event", async () => {
         const path = "/base/test/resources/image.1440x900.jpg";
 

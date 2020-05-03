@@ -4,25 +4,26 @@
     @extend %button;
 }
 
-.demo-area {
-    display: flex;
-    flex-wrap: wrap;
+.demo-area__inner {
+    .demo-area--images & {
+        @extend %contents-grid;
+    }
 }
 
 %image {
+    @extend %contents-grid__item;
     background: $placeholders-background;
-    margin: 10px;
     position: relative;
     transition: background-color 0.4s ease;
     border-radius: 6px;
     overflow: hidden;
 
-    @media (min-width: 320px) {
-        width: calc(50% - 20px);
+    @media (min-width: #{$screen-small}) and (max-width: #{$screen-medium}) {
+        width: calc(100% / 2 - #{$contents-gutters});
     }
 
-    @media (min-width: 768px) {
-        width: calc(100% / 3 - 20px);
+    @media (min-width: #{$screen-medium}) {
+        width: calc(100% / 3 - #{$contents-gutters});
     }
 
     &::before {
@@ -34,30 +35,25 @@
 
 .image {
     @extend %image;
-}
 
-.image--loading {
-    @extend %image;
-    background: darken($placeholders-background, 15%);
-}
+    &--loading {
+        @extend %image;
+        background: darken($placeholders-background, 15%);
+    }
 
-.image--loaded {
-    @extend %image;
-    background: darken($placeholders-background, 30%);
-}
+    &--loaded {
+        @extend %image;
+        background: darken($placeholders-background, 30%);
+    }
 
-.image__img {
-    opacity: 0;
-    transition: opacity 0.4s ease;
-    position: absolute;
-    top: 0;
-    left: 0;
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+    &__img {
+        @extend %cover;
+        opacity: 0;
+        transition: opacity 0.4s ease;
+        object-fit: cover;
+    }
 
-    .image--loaded & {
+    &--loaded &__img {
         opacity: 1;
     }
 }

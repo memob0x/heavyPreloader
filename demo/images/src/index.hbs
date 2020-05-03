@@ -30,9 +30,11 @@
 {{!-- demo block --}}
 {{#content "demo"}}
 
-{{#each @images}}
-{{> image image=.}}
-{{/each}}
+<div class="demo-area__inner">
+    {{#each @images}}
+    {{> image image=.}}
+    {{/each}}
+</div>
 
 {{/content}}
 

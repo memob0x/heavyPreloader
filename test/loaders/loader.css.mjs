@@ -1,8 +1,11 @@
-import { getURL } from "../src/loader.utils.mjs";
-import lfetch from "../src/loader.fetch.mjs";
-import lload from "../src/loader.load.mjs";
+import { getURL } from "../../src/loader.utils.mjs";
+import lfetch from "../../src/loader.fetch.mjs";
+import lload from "../../src/loader.load.mjs";
+import css from "../../src/loaders/loader.css.mjs";
 
 describe("stylesheet loader", () => {
+    lload.register("css", css);
+
     it("should return a promise which resolves to a CSSStyleSheet object", async () => {
         const path = "/base/test/resources/css.inherit.css";
 

@@ -16,9 +16,20 @@ $placeholders-background: #dfdfdf;
 $transition-colors: 0.15s linear;
 
 $contents__sidebar-width: 240px;
+$contents__sidebar-width--small: 140px;
 $contents-gutters: 20px;
 
-$screens-mobile: 640px;
+// TODO: media query mixins
+
+$screen-small: 480px;
+$screen-medium: 768px;
+$screen-large: 1024px;
+
+// TODO: refactor flex extensions
+
+%flex {
+    display: flex;
+}
 
 %flex-column {
     display: flex;
@@ -32,6 +43,16 @@ $screens-mobile: 640px;
 %flex-column-grow {
     @extend %flex-grow;
     @extend %flex-column;
+}
+
+%flex-justify-center {
+    @extend %flex;
+    justify-content: center;
+}
+
+%flex-column-justify-center {
+    @extend %flex-justify-center;
+    flex-direction: column;
 }
 
 %min-height-100 {
@@ -55,9 +76,30 @@ $screens-mobile: 640px;
 }
 
 %section {
-    display: flex;
-    flex-direction: column;
+    @extend %flex-column;
     padding: $contents-gutters/2 0;
+}
+
+%contents-grid {
+    display: flex;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    margin: $contents-gutters / 2 * -1;
+}
+
+%contents-grid__item {
+    width: 100%;
+    margin: $contents-gutters / 2;
+}
+
+%cover {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    left: 0;
+    right: 0;
+    bottom: 0;
 }
 
 %label {
@@ -72,6 +114,7 @@ $screens-mobile: 640px;
     transition: color #{$transition-colors};
 
     &:before {
+        content: "";
         position: absolute;
         top: -4px;
         right: 0;
@@ -79,7 +122,6 @@ $screens-mobile: 640px;
         left: 0;
         background: $color-labels-background;
         transition: background-color #{$transition-colors};
-        content: "";
         z-index: 0;
         border-radius: 4px;
     }
@@ -192,7 +234,7 @@ p {
         flex-wrap: nowrap;
         flex-direction: column;
 
-        @media (min-width: #{$screens-mobile}) {
+        @media (min-width: #{$screen-small}) {
             flex-direction: row;
         }
     }
@@ -207,7 +249,11 @@ p {
         @extend %section;
         order: 1;
 
-        @media (min-width: #{$screens-mobile}) {
+        @media (min-width: #{$screen-small}) and (max-width: #{$screen-medium}) {
+            width: calc(100% - #{$contents__sidebar-width--small});
+        }
+
+        @media (min-width: #{$screen-medium}) {
             width: calc(100% - #{$contents__sidebar-width});
         }
     }
@@ -218,9 +264,16 @@ p {
         order: 0;
         border-bottom-width: 1px;
 
-        @media (min-width: #{$screens-mobile}) {
+        @media (min-width: #{$screen-small}) {
             border-right-width: 1px;
             border-bottom-width: 0;
+        }
+
+        @media (min-width: #{$screen-small}) and (max-width: #{$screen-medium}) {
+            width: $contents__sidebar-width--small;
+        }
+
+        @media (min-width: #{$screen-medium}) {
             width: $contents__sidebar-width;
         }
     }

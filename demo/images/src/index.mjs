@@ -1,10 +1,15 @@
 (async () => {
     const loaderLib = await import(location.origin + "/src/loader.mjs");
+    const imageLoader = await import(
+        location.origin + "/src/loaders/loader.image.mjs"
+    );
     const Loader = loaderLib.default;
 
     let src;
 
     const loader = new Loader();
+    loader.register("image", imageLoader.default);
+
     const observer = new IntersectionObserver((entries) =>
         entries
             .filter((x) => x.isIntersecting)
