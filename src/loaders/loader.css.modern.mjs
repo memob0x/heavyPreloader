@@ -1,6 +1,7 @@
 export default async (resource, options) => {
     //
-    const url = resource instanceof Blob ? URL.createObjectURL(blob) : resource;
+    const url =
+        resource instanceof Blob ? URL.createObjectURL(resource) : resource;
 
     //
     const sheet = new CSSStyleSheet();

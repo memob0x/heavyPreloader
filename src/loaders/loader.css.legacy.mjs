@@ -1,6 +1,7 @@
 export default async (resource) => {
     //
-    const url = resource instanceof Blob ? URL.createObjectURL(blob) : resource;
+    const url =
+        resource instanceof Blob ? URL.createObjectURL(resource) : resource;
 
     //
     const sheet = await new Promise((resolve) => {
@@ -12,9 +13,9 @@ export default async (resource) => {
         link.href = url;
 
         //
-        const cb = () => {
-            link.removeEventListener("load", cb);
-            link.removeEventListener("error", cb);
+        const callback = () => {
+            link.removeEventListener("load", callback);
+            link.removeEventListener("error", callback);
 
             resolve(link);
         };
@@ -24,13 +25,13 @@ export default async (resource) => {
         let i = sheets.length;
         while (i--) {
             if (sheets[i].href === url) {
-                cb();
+                callback();
             }
         }
 
         //
-        link.addEventListener("load", cb);
-        link.addEventListener("error", cb);
+        link.addEventListener("load", callback);
+        link.addEventListener("error", callback);
 
         //
         document.head.append(link);

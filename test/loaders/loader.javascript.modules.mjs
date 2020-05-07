@@ -1,9 +1,9 @@
 import { getURL } from "../../src/loader.utils.mjs";
 import Fetch from "../../src/loader.fetch.mjs";
 import Load from "../../src/loader.load.mjs";
-import javascript from "../../src/loaders/loader.javascript.mjs";
+import javascript from "../../src/loaders/loader.javascript.modules.mjs";
 
-describe("scripts loader", () => {
+describe("scripts loader (modules)", () => {
     const lfetch = new Fetch();
     const lload = new Load();
     lload.register("javascript", javascript);
@@ -11,6 +11,7 @@ describe("scripts loader", () => {
     it("should return a promise which resolves to empty module if a non-module script is fetched", async () => {
         const path = "/base/test/resources/javascript.global.js";
 
+        delete window.foo;
         expect(window).not.to.have.property("foo");
 
         const blob = await lfetch.fetch(getURL(path).href);

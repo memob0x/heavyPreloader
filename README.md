@@ -80,9 +80,9 @@ new Loader().load("/Messages/Inbox", {
     fetch: {
         body: JSON.stringify({
             timestamp: new Date().getTime(),
-            foo: "bar",
-        }),
-    },
+            foo: "bar"
+        })
+    }
 });
 ```
 
@@ -190,13 +190,8 @@ loader.load("depliant.pdf", { element: document.querySelector("#depliant") });
 
 ## Requirements
 
-For an optimal use of `fetch` method you'll need:
+For basic functionality of this library (plugins excluded) the following requirements are needed:
 
 -   https://caniuse.com/#feat=webworkers
 -   https://caniuse.com/#feat=fetch
-
-For an optimal use of `load` method you'll need:
-
 -   https://developer.mozilla.org/en-US/docs/Web/API/URL/createObjectURL
--   https://caniuse.com/#feat=mdn-api_stylesheet
--   https://caniuse.com/#feat=es6-module-dynamic-import
