@@ -1,9 +1,10 @@
 import { getURL } from "../src/loader.utils.mjs";
-import lfetch from "../src/loader.fetch.mjs";
+import Fetch from "../src/loader.fetch.mjs";
 
 describe("fetch function", () => {
     const path = "/base/test/resources/css.inherit.css";
     const url = getURL(path).href;
+    const lfetch = new Fetch();
 
     it("should return a promise which resolves to a resource blob object", () => {
         const success = lfetch.fetch(url);

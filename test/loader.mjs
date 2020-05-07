@@ -1,8 +1,10 @@
 import { getURL } from "../src/loader.utils.mjs";
 import Loader from "../src/loader.mjs";
+import image from "../src/loaders/loader.image.mjs";
 
 describe("constructor and public methods", () => {
     const instance = new Loader();
+    instance.register("image", image);
 
     it("constructor should expose load and fetch methods", (done) => {
         expect(instance).to.respondTo("load");
@@ -29,7 +31,7 @@ describe("constructor and public methods", () => {
         it("should be able to lists of url objects", async () => {
             const fetch = await instance.fetch([
                 getURL("/base/test/resources/image.1440x900.jpg"),
-                getURL("/base/test/resources/image.1440x900.jpg"),
+                getURL("/base/test/resources/image.1440x900.jpg")
             ]);
 
             expect(fetch).to.be.an("array");
@@ -59,7 +61,7 @@ describe("constructor and public methods", () => {
         it("should be able to handle lists of strings", async () => {
             const fetch = await instance.fetch([
                 "/base/test/resources/image.1440x900.jpg",
-                "/base/test/resources/image.1440x900.jpg",
+                "/base/test/resources/image.1440x900.jpg"
             ]);
 
             expect(fetch).to.be.an("array");
@@ -90,7 +92,7 @@ describe("constructor and public methods", () => {
         it("should be able to lists of url objects", async () => {
             const load = await instance.load([
                 getURL("/base/test/resources/image.1440x900.jpg"),
-                getURL("/base/test/resources/image.1440x900.jpg"),
+                getURL("/base/test/resources/image.1440x900.jpg")
             ]);
 
             expect(load).to.be.an("array");
@@ -117,7 +119,7 @@ describe("constructor and public methods", () => {
         it("should be able to handle lists of strings", async () => {
             const load = await instance.load([
                 "/base/test/resources/image.1440x900.jpg",
-                "/base/test/resources/image.1440x900.jpg",
+                "/base/test/resources/image.1440x900.jpg"
             ]);
 
             expect(load).to.be.an("array");

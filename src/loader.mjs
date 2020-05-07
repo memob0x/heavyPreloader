@@ -1,9 +1,12 @@
 import { getURL } from "./loader.utils.mjs";
-import lfetch from "./loader.fetch.mjs";
-import lload from "./loader.load.mjs";
+import Fetch from "./loader.fetch.mjs";
+import Load from "./loader.load.mjs";
 
 export default class Loader {
-    constructor() {}
+    constructor() {
+        this._fetch = new Fetch();
+        this._load = new Load();
+    }
 
     /**
      * Fetches one or more resources url
@@ -24,7 +27,7 @@ export default class Loader {
 
         // ...
         if (resource instanceof URL) {
-            return await lfetch.fetch(resource.href, options);
+            return await this._fetch.fetch(resource.href, options);
         }
 
         // ...
@@ -56,7 +59,7 @@ export default class Loader {
                 : await this.fetch(resource, options);
 
         // ...
-        return await lload.load(blob, options);
+        return await this._load.load(blob, options);
     }
 
     /**
@@ -66,6 +69,6 @@ export default class Loader {
      * @returns {void}
      */
     register(type, loader) {
-        return lload.register(type, loader);
+        return this._load.register(type, loader);
     }
 }

@@ -1,9 +1,11 @@
 import { getURL } from "../../src/loader.utils.mjs";
-import lfetch from "../../src/loader.fetch.mjs";
-import lload from "../../src/loader.load.mjs";
+import Fetch from "../../src/loader.fetch.mjs";
+import Load from "../../src/loader.load.mjs";
 import javascript from "../../src/loaders/loader.javascript.mjs";
 
 describe("scripts loader", () => {
+    const lfetch = new Fetch();
+    const lload = new Load();
     lload.register("javascript", javascript);
 
     it("should return a promise which resolves to empty module if a non-module script is fetched", async () => {

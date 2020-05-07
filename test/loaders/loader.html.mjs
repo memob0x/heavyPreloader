@@ -1,9 +1,11 @@
 import { getURL } from "../../src/loader.utils.mjs";
-import lfetch from "../../src/loader.fetch.mjs";
-import lload from "../../src/loader.load.mjs";
+import Fetch from "../../src/loader.fetch.mjs";
+import Load from "../../src/loader.load.mjs";
 import html from "../../src/loaders/loader.html.mjs";
 
 describe("html loader", () => {
+    const lfetch = new Fetch();
+    const lload = new Load();
     lload.register("html", html);
 
     it("should return a promise which resolves to plain text", async () => {

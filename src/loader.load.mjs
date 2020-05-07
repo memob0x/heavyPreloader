@@ -1,7 +1,7 @@
 /**
  *
  */
-export default new (class LoaderLoad {
+export default class Load {
     constructor() {
         // loaders closure, filled with default loaders
         // https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
@@ -45,4 +45,4 @@ export default new (class LoaderLoad {
             `Invalid ${blob.type} media type passed to Loader class "load" method.`
         );
     }
-})();
+}

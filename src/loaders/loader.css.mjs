@@ -1,30 +1,10 @@
+import modern from "./loader.css.modern.mjs";
+import legacy from "./loader.css.legacy.mjs";
+
 export default async (blob, options) => {
-    //
-    options = { ...{ element: document }, options };
-
-    //
-    const url = URL.createObjectURL(blob);
-
-    //
-    const sheet = new CSSStyleSheet();
-
-    //
-    await sheet.replace(`@import url("${url}")`);
-
-    //
-    URL.revokeObjectURL(url);
-
-    //
-    if (
-        typeof options.element === "object" &&
-        "adoptedStyleSheets" in options.element
-    ) {
-        options.element.adoptedStyleSheets = [
-            ...options.element.adoptedStyleSheets,
-            sheet
-        ];
+    try {
+        return await modern(blob, options);
+    } catch {
+        return await legacy(blob);
     }
-
-    //
-    return sheet;
 };

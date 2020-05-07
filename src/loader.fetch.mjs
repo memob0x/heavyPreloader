@@ -3,7 +3,7 @@ import lworker from "./loader.worker.mjs";
 /**
  *
  */
-export default new (class LoaderFetch {
+export default class Fetch {
     constructor() {
         // ...
         this.cache = {};
@@ -69,4 +69,4 @@ export default new (class LoaderFetch {
             });
         }));
     }
-})();
+}

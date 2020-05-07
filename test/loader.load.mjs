@@ -1,6 +1,8 @@
-import lload from "../src/loader.load.mjs";
+import Load from "../src/loader.load.mjs";
 
 describe("load function", () => {
+    const lload = new Load();
+
     it("should be able to recognize media type blob objects", async () => {
         const type = "image/gif";
         const promise = new Promise((resolve) => lload.register(type, resolve));

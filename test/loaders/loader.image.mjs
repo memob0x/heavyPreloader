@@ -1,9 +1,11 @@
 import { getURL } from "../../src/loader.utils.mjs";
-import lfetch from "../../src/loader.fetch.mjs";
-import lload from "../../src/loader.load.mjs";
+import Fetch from "../../src/loader.fetch.mjs";
+import Load from "../../src/loader.load.mjs";
 import image from "../../src/loaders/loader.image.mjs";
 
 describe("image loader", () => {
+    const lfetch = new Fetch();
+    const lload = new Load();
     lload.register("image", image);
 
     it("should return a promise which resolves to a load/error Event", async () => {

@@ -1,7 +1,7 @@
 export default async (blob, options) => {
     //
     const image =
-        options && options.element instanceof HTMLImageElement
+        options?.element instanceof HTMLImageElement
             ? options.element
             : new Image();
 
@@ -10,9 +10,26 @@ export default async (blob, options) => {
 
     //
     const promise = new Promise((resolve, reject) => {
-        image.onload = resolve;
-        image.onerror = () =>
+        const events = (type) => {
+            image[`${type}EventListener`]("load", onload);
+            image[`${type}EventListener`]("error", onerror);
+        };
+
+        const clean = () => events("remove");
+
+        const onload = (event) => {
+            clean();
+
+            resolve(event);
+        };
+
+        const onerror = () => {
+            clean();
+
             reject(new Error(`Error loading image ${blob.type}`));
+        };
+
+        events("add");
     });
 
     //
