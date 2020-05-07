@@ -3,10 +3,8 @@ import Fetch from "./loader.fetch.mjs";
 import Load from "./loader.load.mjs";
 
 export default class Loader {
-    constructor() {
-        this._fetch = new Fetch();
-        this._load = new Load();
-    }
+    #fetch = new Fetch();
+    #load = new Load();
 
     /**
      * Fetches one or more resources url
@@ -27,7 +25,7 @@ export default class Loader {
 
         // ...
         if (resource instanceof URL) {
-            return await this._fetch.fetch(resource.href, options);
+            return await this.#fetch.fetch(resource.href, options);
         }
 
         // ...
@@ -59,7 +57,7 @@ export default class Loader {
                 : await this.fetch(resource, options);
 
         // ...
-        return await this._load.load(blob, options);
+        return await this.#load.load(blob, options);
     }
 
     /**
@@ -69,6 +67,6 @@ export default class Loader {
      * @returns {void}
      */
     register(type, loader) {
-        return this._load.register(type, loader);
+        return this.#load.register(type, loader);
     }
 }

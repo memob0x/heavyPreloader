@@ -2,11 +2,9 @@
  *
  */
 export default class Load {
-    constructor() {
-        // loaders closure, filled with default loaders
-        // https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
-        this.loaders = {};
-    }
+    // loaders closure, filled with default loaders
+    // https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
+    #loaders = {};
 
     /**
      *
@@ -15,7 +13,7 @@ export default class Load {
      * @returns {void}
      */
     register(type, loader) {
-        this.loaders[type] = loader;
+        this.#loaders[type] = loader;
     }
 
     /**
@@ -35,8 +33,8 @@ export default class Load {
         for (const key in keys) {
             const loader = keys[key];
 
-            if (loader in this.loaders) {
-                return await this.loaders[loader](blob, options);
+            if (loader in this.#loaders) {
+                return await this.#loaders[loader](blob, options);
             }
         }
 

@@ -56,43 +56,40 @@ const createFetchWorker = () =>
  *
  */
 export default new (class LoaderWorker {
-    constructor() {
-        this._worker = null;
-
-        this._requests = 0;
-    }
+    #worker = null;
+    #requests = 0;
 
     terminate() {
         //
         //
-        if (this._requests > 0) {
-            this._requests--;
+        if (this.#requests > 0) {
+            this.#requests--;
         }
 
         //
-        if (this._requests === 0) {
-            this._worker.terminate();
+        if (this.#requests === 0) {
+            this.#worker.terminate();
 
-            this._worker = null;
+            this.#worker = null;
         }
 
         //
-        return this._worker;
+        return this.#worker;
     }
 
     worker() {
         // ...
-        this._requests++;
+        this.#requests++;
 
         // ...
-        if (this._worker) {
-            return this._worker;
+        if (this.#worker) {
+            return this.#worker;
         }
 
         // ...
-        this._worker = createFetchWorker();
+        this.#worker = createFetchWorker();
 
         //
-        return this._worker;
+        return this.#worker;
     }
 })();

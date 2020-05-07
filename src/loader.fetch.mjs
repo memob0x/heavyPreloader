@@ -4,9 +4,21 @@ import lworker from "./loader.worker.mjs";
  *
  */
 export default class Fetch {
-    constructor() {
-        // ...
-        this.cache = {};
+    // ...
+    #cache = {};
+
+    /**
+     *
+     */
+    get cache() {
+        return this.#cache;
+    }
+
+    /**
+     *
+     */
+    clear() {
+        this.#cache = {};
     }
 
     /**
@@ -19,20 +31,18 @@ export default class Fetch {
     async fetch(href, options) {
         // ...
         options = {
-            ...{
-                cache: true,
-                fetch: {}
-            },
+            cache: true,
+            fetch: {},
             ...options
         };
 
         // ...
-        if (options.cache === true && href in this.cache) {
-            return await this.cache[href];
+        if (options.cache === true && href in this.#cache) {
+            return await this.#cache[href];
         }
 
         // ...
-        return (this.cache[href] = new Promise((resolve, reject) => {
+        return (this.#cache[href] = new Promise((resolve, reject) => {
             //
             const worker = lworker.worker();
 

@@ -29,7 +29,7 @@ describe("fetch function", () => {
 
         expect(result).to.equals(value);
 
-        lfetch.cache = {};
+        lfetch.clear();
 
         return promise;
     });
