@@ -24,11 +24,12 @@
         "@babel/preset-env": "^7.9.6",
         "@node-minify/core": "^5.3.0",
         "@node-minify/html-minifier": "^5.3.0",
-        "autoprefixer": "^9.7.6",
+        "autoprefixer": "^9.8.0",
         "chai": "4.2.0",
+        "fork-acorn-optional-chaining": "^7.2.0",
         "handlebars": "^4.7.6",
         "handlebars-layouts": "^3.1.4",
-        "karma": "^5.0.4",
+        "karma": "^5.0.9",
         "karma-chai": "^0.1.0",
         "karma-chrome-launcher": "^3.1.0",
         "karma-mocha": "^2.0.1",
@@ -37,9 +38,7 @@
         "mkdirp": "^1.0.4",
         "mocha": "7.1.2",
         "node-sass": "^4.14.1",
-        "puppeteer": "^3.0.3",
-        "rollup": "^2.8.1",
-        "rollup-plugin-babel": "^4.4.0",
-        "rollup-plugin-terser": "^5.3.0"
+        "puppeteer": "^3.1.0",
+        "rollup": "github:rollup/rollup#acorn-optional-chaining"
     }
 }

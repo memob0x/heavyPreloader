@@ -74,54 +74,63 @@ System.register('Loader', [], function (exports) {
              *
              */
             var lworker = new (class LoaderWorker {
-                constructor() {
-                    this._worker = null;
-
-                    this._requests = 0;
-                }
+                #worker = null;
+                #requests = 0;
 
                 terminate() {
                     //
                     //
-                    if (this._requests > 0) {
-                        this._requests--;
+                    if (this.#requests > 0) {
+                        this.#requests--;
                     }
 
                     //
-                    if (this._requests === 0) {
-                        this._worker.terminate();
+                    if (this.#requests === 0) {
+                        this.#worker.terminate();
 
-                        this._worker = null;
+                        this.#worker = null;
                     }
 
                     //
-                    return this._worker;
+                    return this.#worker;
                 }
 
                 worker() {
                     // ...
-                    this._requests++;
+                    this.#requests++;
 
                     // ...
-                    if (this._worker) {
-                        return this._worker;
+                    if (this.#worker) {
+                        return this.#worker;
                     }
 
                     // ...
-                    this._worker = createFetchWorker();
+                    this.#worker = createFetchWorker();
 
                     //
-                    return this._worker;
+                    return this.#worker;
                 }
             })();
 
             /**
              *
              */
-            var lfetch = new (class LoaderFetch {
-                constructor() {
-                    // ...
-                    this.cache = {};
+            class Fetch {
+                // ...
+                #cache = {};
+
+                /**
+                 *
+                 */
+                get cache() {
+                    return this.#cache;
+                }
+
+                /**
+                 *
+                 */
+                clear() {
+                    this.#cache = {};
                 }
 
                 /**
@@ -134,20 +143,18 @@ System.register('Loader', [], function (exports) {
                 async fetch(href, options) {
                     // ...
                     options = {
-                        ...{
-                            cache: true,
-                            fetch: {}
-                        },
+                        cache: true,
+                        fetch: {},
                         ...options
                     };
 
                     // ...
-                    if (options.cache === true && href in this.cache) {
-                        return await this.cache[href];
+                    if (options.cache === true && href in this.#cache) {
+                        return await this.#cache[href];
                     }
 
                     // ...
-                    return (this.cache[href] = new Promise((resolve, reject) => {
+                    return (this.#cache[href] = new Promise((resolve, reject) => {
                         //
                         const worker = lworker.worker();
 
@@ -184,17 +191,15 @@ System.register('Loader', [], function (exports) {
                         });
                     }));
                 }
-            })();
+            }
 
             /**
              *
              */
-            var lload = new (class LoaderLoad {
-                constructor() {
-                    // loaders closure, filled with default loaders
-                    // https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
-                    this.loaders = {};
-                }
+            class Load {
+                // loaders closure, filled with default loaders
+                // https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
+                #loaders = {};
 
                 /**
                  *
@@ -203,7 +208,7 @@ System.register('Loader', [], function (exports) {
                  * @returns {void}
                  */
                 register(type, loader) {
-                    this.loaders[type] = loader;
+                    this.#loaders[type] = loader;
                 }
 
                 /**
@@ -223,8 +228,8 @@ System.register('Loader', [], function (exports) {
                     for (const key in keys) {
                         const loader = keys[key];
 
-                        if (loader in this.loaders) {
-                            return await this.loaders[loader](blob, options);
+                        if (loader in this.#loaders) {
+                            return await this.#loaders[loader](blob, options);
                         }
                     }
 
@@ -233,10 +238,11 @@ System.register('Loader', [], function (exports) {
                         `Invalid ${blob.type} media type passed to Loader class "load" method.`
                     );
                 }
-            })();
+            }
 
             class Loader {
-                constructor() {}
+                #fetch = new Fetch();
+                #load = new Load();
 
                 /**
                  * Fetches one or more resources url
@@ -257,7 +263,7 @@ System.register('Loader', [], function (exports) {
 
                     // ...
                     if (resource instanceof URL) {
-                        return await lfetch.fetch(resource.href, options);
+                        return await this.#fetch.fetch(resource.href, options);
                     }
 
                     // ...
@@ -289,7 +295,7 @@ System.register('Loader', [], function (exports) {
                             : await this.fetch(resource, options);
 
                     // ...
-                    return await lload.load(blob, options);
+                    return await this.#load.load(blob, options);
                 }
 
                 /**
@@ -299,7 +305,7 @@ System.register('Loader', [], function (exports) {
                  * @returns {void}
                  */
                 register(type, loader) {
-                    return lload.register(type, loader);
+                    return this.#load.register(type, loader);
                 }
             } exports('default', Loader);
 

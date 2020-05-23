@@ -1,7 +1,5 @@
 import "@babel/core";
 import { rollup } from "rollup";
-import terser from "rollup-plugin-terser";
-import babel from "rollup-plugin-babel";
 
 const write = { sourcemap: true };
 
@@ -11,11 +9,11 @@ const variants = [
     {
         formats: [],
         plugins: []
-    },
+    }, /*, TODO: handle manually with babel() and (maybe) uglify()
     {
         formats: ["min"],
         plugins: [minify()]
-    },
+    }, 
     {
         formats: ["es5"],
         plugins: [babel()]
@@ -23,7 +21,7 @@ const variants = [
     {
         formats: ["es5", "min"],
         plugins: [babel(), minify()]
-    }
+    } */
 ];
 
 export const OUTPUT_FORMAT_KEYWORD = "%formats%";

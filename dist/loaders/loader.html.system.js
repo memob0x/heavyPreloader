@@ -21,11 +21,7 @@ System.register('htmlLoader', [], function (exports) {
                 let result = await promise;
 
                 //
-                if (
-                    options &&
-                    typeof options.filter === "string" &&
-                    options.filter.length
-                ) {
+                if (typeof options?.filter === "string" && options?.filter?.length) {
                     //
                     result = new DOMParser().parseFromString(result, "text/html").body;
                     //
@@ -38,12 +34,9 @@ System.register('htmlLoader', [], function (exports) {
 
                 //
                 if (
-                    options &&
-                    options.element &&
-                    options.element instanceof HTMLElement &&
-                    result &&
+                    options?.element instanceof HTMLElement &&
                     typeof result === "string" &&
-                    result.length
+                    result?.length
                 ) {
                     options.element.innerHTML = result;
                 }

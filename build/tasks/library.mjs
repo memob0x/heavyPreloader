@@ -4,12 +4,11 @@ import { each, name } from "../utils.mjs";
 
 const boundles = (options) =>
     Promise.all([
-        // temp
-        // bundle("iife", options),
-        // bundle("amd", options),
-        // bundle("cjs", options),
-        // bundle("system", options),
-        // bundle("es", options)
+        bundle("iife", options),
+        bundle("amd", options),
+        bundle("cjs", options),
+        bundle("system", options),
+        bundle("es", options)
     ]);
 
 (async (options) => await boundles(options))({
