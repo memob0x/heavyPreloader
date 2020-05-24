@@ -1,18 +1,33 @@
-let jobs = [];
+import Handlebars from "handlebars";
+import { ls, each, name, buffer } from "./build/utils.mjs";
+import buildCSS from "./build/sass.mjs";
+import buildHTML from "./build/hbs.mjs";
 
-const args = process.argv;
+const partial = async (name, path) =>
+    Handlebars.registerPartial(name, await buffer(path));
 
-const libraryArg = args.indexOf("--library") > -1;
-const demoArg = args.indexOf("--demo") > -1;
+const eachHbs = async (path, callback) => await each(path, "hbs", callback);
 
-const noArgs = !libraryArg && !demoArg;
+(async (root) => {
+    partial("layout", `${root}/layout.hbs`);
 
-if (libraryArg || noArgs) {
-    jobs.push(import("./build/tasks/library.mjs"));
-}
+    await each(root, async (path) => {
+        const entries = await ls(`${path}/src`);
 
-if (demoArg || noArgs) {
-    jobs.push(import("./build/tasks/demo.mjs"));
-}
+        await each(
+            entries,
+            async (path) =>
+                await eachHbs(path, async (file) => partial(name(file), file))
+        );
 
-(async () => await Promise.all(jobs))();
+        await Promise.all([
+            each(
+                entries,
+                "scss",
+                async (scss) => await buildCSS(scss, `${path}/dist`)
+            ),
+
+            eachHbs(entries, async (hbs) => await buildHTML(hbs, path))
+        ]);
+    });
+})("./demo");

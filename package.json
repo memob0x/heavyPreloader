@@ -8,25 +8,11 @@
     },
     "scripts": {
         "build": "node ./build.mjs",
-        "demo": "node ./build.mjs --demo",
-        "library": "node ./build.mjs --library",
         "test": "karma start --single-run --browsers ChromeHeadless karma.conf.js"
     },
     "dependencies": {
-        "@babel/core": "^7.9.6",
-        "@babel/plugin-proposal-class-properties": "^7.8.3",
-        "@babel/plugin-proposal-nullish-coalescing-operator": "^7.8.3",
-        "@babel/plugin-proposal-object-rest-spread": "^7.9.6",
-        "@babel/plugin-proposal-optional-chaining": "^7.9.0",
-        "@babel/plugin-proposal-private-methods": "^7.8.3",
-        "@babel/plugin-transform-classes": "^7.9.5",
-        "@babel/polyfill": "^7.8.7",
-        "@babel/preset-env": "^7.9.6",
-        "@node-minify/core": "^5.3.0",
-        "@node-minify/html-minifier": "^5.3.0",
         "autoprefixer": "^9.8.0",
         "chai": "4.2.0",
-        "fork-acorn-optional-chaining": "^7.2.0",
         "handlebars": "^4.7.6",
         "handlebars-layouts": "^3.1.4",
         "karma": "^5.0.9",
@@ -36,9 +22,8 @@
         "karma-mocha-reporter": "^2.2.5",
         "mjs-mocha": "^3.0.0",
         "mkdirp": "^1.0.4",
-        "mocha": "7.1.2",
+        "mocha": "7.2.0",
         "node-sass": "^4.14.1",
-        "puppeteer": "^3.1.0",
-        "rollup": "github:rollup/rollup#acorn-optional-chaining"
+        "puppeteer": "^3.1.0"
     }
 }

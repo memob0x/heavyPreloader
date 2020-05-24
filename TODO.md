@@ -3,6 +3,7 @@
 -   library: complete lib jsdocs and comments
 -   readme: explain dist folder major bundle files in README.md
 -   readme: explain loader "plugins" in README.md
+-   readme: explain no build library strategy
 
 ## 2.0
 

@@ -1,6 +1,6 @@
 import { promises as fs } from "fs";
 import sass from "node-sass";
-import { name } from "../utils.mjs";
+import { name } from "./utils.mjs";
 
 export default async (path, dest) => {
     console.log(`${path}: start`);
