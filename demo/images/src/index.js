@@ -1,7 +1,7 @@
 (async () => {
-    const loaderLib = await import(location.origin + "/src/loader.mjs");
+    const loaderLib = await import(location.origin + "/dist/loader.mjs");
     const imageLoader = await import(
-        location.origin + "/src/loaders/loader.image.mjs"
+        location.origin + "/dist/loaders/loader.image.mjs"
     );
     const Loader = loaderLib.default;
 
@@ -9,6 +9,12 @@
 
     const loader = new Loader();
     loader.register("image", imageLoader.default);
+
+    if (!("IntersectionObserver" in window)) {
+        await import(
+            "https://polyfill.io/v3/polyfill.min.js?features=IntersectionObserver"
+        );
+    }
 
     const observer = new IntersectionObserver((entries) =>
         entries

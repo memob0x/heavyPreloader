@@ -1,15 +1,13 @@
-import Handlebars from "handlebars";
-import { ls, each, name, buffer } from "./build/utils.mjs";
+import { ls, each, name } from "./build/utils.mjs";
 import buildCSS from "./build/sass.mjs";
 import buildHTML from "./build/hbs.mjs";
+import buildJS from "./build/mjs.mjs";
+import { registerHbsPartial, eachHbs } from "./build/hbs.mjs";
 
-const partial = async (name, path) =>
-    Handlebars.registerPartial(name, await buffer(path));
-
-const eachHbs = async (path, callback) => await each(path, "hbs", callback);
-
+// demo files
+// -----------------------------------------------------------------------------------------
 (async (root) => {
-    partial("layout", `${root}/layout.hbs`);
+    registerHbsPartial("layout", `${root}/layout.hbs`);
 
     await each(root, async (path) => {
         const entries = await ls(`${path}/src`);
@@ -17,7 +15,9 @@ const eachHbs = async (path, callback) => await each(path, "hbs", callback);
         await each(
             entries,
             async (path) =>
-                await eachHbs(path, async (file) => partial(name(file), file))
+                await eachHbs(path, async (file) =>
+                    registerHbsPartial(name(file), file)
+                )
         );
 
         await Promise.all([
@@ -31,3 +31,20 @@ const eachHbs = async (path, callback) => await each(path, "hbs", callback);
         ]);
     });
 })("./demo");
+
+// library
+// -----------------------------------------------------------------------------------------
+(async () =>
+    await Promise.all([
+        each(
+            await ls("./src/"),
+            "mjs",
+            async (scss) => await buildJS(scss, "./dist")
+        ),
+
+        each(
+            await ls("./src/loaders"),
+            "mjs",
+            async (scss) => await buildJS(scss, "./dist/loaders")
+        )
+    ]))();
