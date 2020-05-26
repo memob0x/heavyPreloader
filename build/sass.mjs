@@ -10,7 +10,8 @@ export default async (path, dest) => {
             {
                 file: path,
                 outputStyle: "compressed",
-                sourceMap: dest
+                sourceMap: path,
+                omitSourceMapUrl: true
             },
             (err, result) => (err ? reject(err) : resolve(result))
         )
