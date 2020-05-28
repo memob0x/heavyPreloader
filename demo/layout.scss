@@ -1,0 +1,286 @@
+$color-background: #fafafa;
+$color-text: #1b1b1b;
+
+$color-panels-background: #ffffff;
+$color-panels-borders: #dbdbdb;
+
+$color-labels-background: #ffebcd;
+$color-labels-text: $color-text;
+
+$color-button-text: $color-text;
+$color-button-background: $color-background;
+$color-button-borders: $color-panels-borders;
+
+$placeholders-background: #dfdfdf;
+
+$transition-colors: 0.15s linear;
+
+$contents__sidebar-width: 240px;
+$contents__sidebar-width--small: 140px;
+$contents-gutters: 20px;
+
+// TODO: media query mixins
+
+$screen-small: 480px;
+$screen-medium: 768px;
+$screen-large: 1024px;
+
+// TODO: refactor flex extensions
+
+%flex {
+    display: flex;
+}
+
+%flex-column {
+    display: flex;
+    flex-direction: column;
+}
+
+%flex-grow {
+    flex-grow: 1;
+}
+
+%flex-column-grow {
+    @extend %flex-grow;
+    @extend %flex-column;
+}
+
+%flex-justify-center {
+    @extend %flex;
+    justify-content: center;
+}
+
+%flex-column-justify-center {
+    @extend %flex-justify-center;
+    flex-direction: column;
+}
+
+%min-height-100 {
+    min-height: 100%;
+}
+
+%panel {
+    transition: background-color #{$transition-colors},
+        border-color #{$transition-colors};
+    background-color: $color-panels-background;
+    border-width: 0;
+    border-color: $color-panels-borders;
+    border-style: solid;
+}
+
+%container {
+    width: 1024px;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 24px;
+}
+
+%section {
+    @extend %flex-column;
+    padding: $contents-gutters/2 0;
+}
+
+%contents-grid {
+    display: flex;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    margin: $contents-gutters / 2 * -1;
+}
+
+%contents-grid__item {
+    width: 100%;
+    margin: $contents-gutters / 2;
+}
+
+%cover {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+%label {
+    font-size: 16px;
+    display: inline-block;
+    padding: 0 10px;
+    border-radius: 6px;
+    position: relative;
+    top: 1px;
+    margin: 0 7px;
+    color: $color-labels-text;
+    transition: color #{$transition-colors};
+
+    &:before {
+        content: "";
+        position: absolute;
+        top: -4px;
+        right: 0;
+        bottom: -4px;
+        left: 0;
+        background: $color-labels-background;
+        transition: background-color #{$transition-colors};
+        z-index: 0;
+        border-radius: 4px;
+    }
+
+    span {
+        position: relative;
+        top: 1px;
+        z-index: 1;
+    }
+}
+
+%button {
+    color: $color-button-text;
+    border: 1px solid $color-button-borders;
+    background: $color-button-background;
+    transition: color #{$transition-colors},
+        background-color #{$transition-colors},
+        border-color #{$transition-colors};
+
+    padding: 11px 18px;
+    outline: none;
+    cursor: pointer;
+
+    &:focus,
+    &:hover {
+        border-color: darken($color-button-borders, 5%);
+        background: darken($color-button-background, 5%);
+    }
+
+    &:active {
+        border-color: darken($color-button-borders, 8%);
+        background: darken($color-button-background, 8%);
+    }
+
+    .navigation & {
+        width: 100%;
+    }
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    @extend %min-height-100;
+    @extend %flex-column-grow;
+
+    font-family: sans-serif;
+    line-height: 23px;
+    font-size: 13px;
+
+    color: $color-text;
+    transition: color #{$transition-colors};
+}
+
+body {
+    @extend %min-height-100;
+    @extend %flex-column-grow;
+
+    margin: 0;
+    transition: background-color #{$transition-colors};
+    background-color: $color-background;
+}
+
+p {
+    margin: 0 0 $contents-gutters / 2;
+
+    &:last-child,
+    &:only-child {
+        margin-bottom: 0;
+    }
+}
+
+#root {
+    @extend %flex-column-grow;
+}
+
+.topbar {
+    @extend %panel;
+    border-bottom-width: 1px;
+
+    &__inner {
+        @extend %container;
+    }
+
+    &__title {
+        padding: 0 $contents-gutters;
+        margin: 0;
+        font-size: 26px;
+        display: flex;
+        align-items: center;
+    }
+
+    &__label {
+        @extend %label;
+    }
+}
+
+.contents {
+    @extend %flex-column-grow;
+    @extend %container;
+
+    &__inner {
+        @extend %panel;
+        @extend %flex-grow;
+
+        border-width: 1px;
+        border-radius: 3px;
+        display: flex;
+        flex-wrap: nowrap;
+        flex-direction: column;
+
+        @media (min-width: #{$screen-small}) {
+            flex-direction: row;
+        }
+    }
+}
+
+.section {
+    &__item {
+        padding: $contents-gutters/2 $contents-gutters;
+    }
+
+    &--main {
+        @extend %section;
+        order: 1;
+
+        @media (min-width: #{$screen-small}) and (max-width: #{$screen-medium}) {
+            width: calc(100% - #{$contents__sidebar-width--small});
+        }
+
+        @media (min-width: #{$screen-medium}) {
+            width: calc(100% - #{$contents__sidebar-width});
+        }
+    }
+
+    &--sidebar {
+        @extend %section;
+        @extend %panel;
+        order: 0;
+        border-bottom-width: 1px;
+
+        @media (min-width: #{$screen-small}) {
+            border-right-width: 1px;
+            border-bottom-width: 0;
+        }
+
+        @media (min-width: #{$screen-small}) and (max-width: #{$screen-medium}) {
+            width: $contents__sidebar-width--small;
+        }
+
+        @media (min-width: #{$screen-medium}) {
+            width: $contents__sidebar-width;
+        }
+    }
+}
+
+.navigation {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}

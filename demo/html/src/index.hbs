@@ -1,0 +1,41 @@
+{{#extend "layout"}}
+
+{{!-- intro block --}}
+{{#content "intro"}}
+
+<p>Press the <strong>Load Music Titles</strong> button or the <strong>Load Movie Titles</strong> button to fetch fresh
+    <strong>html</strong> contents in a separate processor <strong>thread</strong>.</p>
+
+{{/content}}
+
+{{!-- sidebar block --}}
+{{#content "sidebar"}}
+
+<ul class="navigation">
+    <li class="section__item navigation__item">
+        <button class="navigation__button--load-html" data-target="albums">
+            Load Music Titles
+        </button>
+    </li>
+
+    <li class="section__item navigation__item">
+        <button class="navigation__button--load-html" data-target="movies">
+            Load Movie Titles
+        </button>
+    </li>
+</ul>
+
+{{/content}}
+
+{{!-- demo block --}}
+{{#content "demo"}}
+
+<div class="demo-area__inner">
+    {{#each @items}}
+    {{> item item=.}}
+    {{/each}}
+</div>
+
+{{/content}}
+
+{{/extend}}

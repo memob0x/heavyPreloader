@@ -1,0 +1,81 @@
+$color-background--dark-mode: #2a2a2a;
+$color-panels-background--dark-mode: #373737;
+$color-panels-borders--dark-mode: #4d4d4d;
+$color-text--dark-mode: #d8d8d8;
+$color-labels-background--dark-mode: #ff1493;
+$color-labels-text--dark-mode: white;
+$color-button-text--dark-mode: #e2e2e2;
+$color-button-background--dark-mode: #616161;
+$color-button-borders--dark-mode: #818181;
+
+%panel {
+    background-color: $color-panels-background--dark-mode;
+    border-color: $color-panels-borders--dark-mode;
+}
+
+$dark-mode-selector: "html.dark-mode";
+
+@mixin dark-mode {
+    #{$dark-mode-selector} & {
+        @content;
+    }
+}
+
+#{$dark-mode-selector} {
+    color: $color-text--dark-mode;
+}
+
+body {
+    @include dark-mode {
+        background-color: $color-background--dark-mode;
+    }
+}
+
+.topbar {
+    @include dark-mode {
+        @extend %panel;
+    }
+
+    &__label {
+        @include dark-mode {
+            color: $color-labels-text--dark-mode;
+        }
+
+        &::before {
+            @include dark-mode {
+                background-color: $color-labels-background--dark-mode;
+            }
+        }
+    }
+}
+
+.contents__inner {
+    @include dark-mode {
+        @extend %panel;
+    }
+}
+
+.section--sidebar {
+    @include dark-mode {
+        @extend %panel;
+    }
+}
+
+.navigation__button--load-css {
+    @include dark-mode {
+        color: $color-button-text--dark-mode;
+        border-color: $color-button-borders--dark-mode;
+        background: $color-button-background--dark-mode;
+
+        &:focus,
+        &:hover {
+            border-color: lighten($color-button-borders--dark-mode, 5%);
+            background: lighten($color-button-background--dark-mode, 5%);
+        }
+
+        &:active {
+            border-color: lighten($color-button-borders--dark-mode, 8%);
+            background: lighten($color-button-background--dark-mode, 8%);
+        }
+    }
+}

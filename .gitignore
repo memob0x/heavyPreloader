@@ -1,4 +1,4 @@
 node_modules
-bower_components
-vendors
-*.log
+.vscode
+*.orig
+error_log

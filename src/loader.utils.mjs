@@ -1,75 +1,12 @@
+const a = document.createElement("a");
+
 /**
  *
- * @param {HTMLElement} el
- * @param {Object} attrs
- * @returns {void}
+ * @param {String} path
+ * @returns {URL}
  */
-export const switchAttributes = (el, attrs) => {
-    Object.keys(attrs).forEach(attr => {
-        let dataAttr = attrs[attr];
-        dataAttr = dataAttr === 'src' || dataAttr === 'srcset' ? `data-${dataAttr}` : dataAttr; // TODO: refactory
-        const dataAttrVal = el.getAttribute(dataAttr);
+export const getURL = (path) => {
+    a.href = path;
 
-        if (dataAttrVal) {
-            el.setAttribute(attr, dataAttrVal);
-            el.removeAttribute(dataAttr);
-        }
-    });
+    return new URL(a.href);
 };
-
-/**
- *
- * @param {HTMLElement} el
- * @param {HTMLElement} attributes
- * @returns {void}
- */
-export const copyAttributes = (el, target, attributes) =>
-    attributes.forEach(attr => {
-        const attribute = target.getAttribute(attr);
-        if (attribute) {
-            el.setAttribute(attr === 'src' || attr === 'srcset' ? `data-${attr}` : attr, attribute); // TODO: refactory
-        }
-    });
-
-/**
- *
- * @param {HTMLElement} el
- * @param {Array} attributes
- * @returns {void}
- */
-export const removeAttributes = (el, attributes) => attributes.forEach(attr => el.removeAttribute(attr));
-
-// TODO: rename
-export const ID = (() => {
-    const s4 = () =>
-        Math.floor((1 + Math.random()) * 0x10000)
-            .toString(16)
-            .substring(1);
-    return `${s4()}${s4()}-${s4()}-${s4()}-${s4()}-${s4()}${s4()}${s4()}`;
-})();
-
-export const isIntersectionObserverSupported = 'IntersectionObserver' in window;
-
-export const LoaderEvent = (() => {
-    if (typeof window.CustomEvent === 'function') {
-        return window.CustomEvent;
-    }
-
-    function CustomEvent(event, params) {
-        params = params || {
-            bubbles: false,
-            cancelable: false,
-            detail: undefined
-        };
-
-        const evt = document.createEvent('CustomEvent');
-
-        evt.initCustomEvent(event, params.bubbles, params.cancelable, params.detail);
-
-        return evt;
-    }
-
-    CustomEvent.prototype = window.Event.prototype;
-
-    return CustomEvent;
-})();
