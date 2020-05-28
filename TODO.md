@@ -4,6 +4,7 @@
 -   demos: "build" mjs files, src --> dist
 -   library and demos: cross-browser check
 -   demos: check TODO notes
+-   demos: javascript demo
 -   library: check TODO notes
 -   tests: check TODO notes
 -   library: enhance cache param: true|false|(int)seconds

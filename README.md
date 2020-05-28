@@ -1,4 +1,4 @@
-# [loader.js](https://memob0x.github.io/loader/demo/index.html)
+# [loader.js](https://memob0x.github.io/loader/demo/images/index.html)
 
 ![Node.js CI](https://github.com/memob0x/loader/workflows/Node.js%20CI/badge.svg?branch=new-aim)
 
@@ -115,7 +115,7 @@ Promise.allSettled(loader.load(["theme.blue.css", "area.account.css"])).then(
 
 Here's the full [demo](https://memob0x.github.io/loader/demo/css/index.html).
 
-## [JavaScript](https://memob0x.github.io/loader/demo/javascript/index.html)
+## JavaScript
 
 `Loader` internally uses dynamic `import` for `text/javascript` MIME type so it can be used to consume any kind of native module.
 
@@ -135,8 +135,6 @@ loader.load("cart.js").then((module) => {
     cart.add("product-foo-12345678-bar");
 });
 ```
-
-Here's the full [demo](https://memob0x.github.io/loader/demo/javascript/index.html).
 
 ## [Lazy Images](https://memob0x.github.io/loader/demo/images/index.html)
 
