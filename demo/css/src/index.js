@@ -1,7 +1,9 @@
 (async () => {
-    const loaderModule = await import(location.origin + "/dist/esm/loader.mjs");
+    const loaderModule = await import(
+        `${location.origin}/loader/dist/esm/loader.mjs`
+    );
     const cssLoader = await import(
-        location.origin + "/dist/esm/loaders/loader.css.mjs"
+        `${location.origin}/loader/dist/esm/loaders/loader.css.mjs`
     );
     const Loader = loaderModule.default;
 
@@ -11,7 +13,7 @@
     document
         .querySelector(".navigation__button--load-css")
         .addEventListener("click", async () => {
-            await loader.load(["/demo/css/dist/index.dark.css"]);
+            await loader.load(["/loader/demo/css/dist/index.dark.css"]);
 
             document.documentElement.classList.toggle("dark-mode");
         });

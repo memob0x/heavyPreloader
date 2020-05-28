@@ -1,5 +1,7 @@
 (async () => {
-    const loaderModule = await import(location.origin + "/dist/esm/loader.mjs");
+    const loaderModule = await import(
+        `${location.origin}/loader/dist/esm/loader.mjs`
+    );
     const Loader = loaderModule.default;
 
     // creating a Loader instance
@@ -36,7 +38,7 @@
     document
         .querySelector(".navigation__button--load-json")
         .addEventListener("click", async () => {
-            const json = await loader.load("/demo/json/dist/index.json");
+            const json = await loader.load("/loader/demo/json/dist/index.json");
 
             document.querySelector(
                 ".demo-area--json"
