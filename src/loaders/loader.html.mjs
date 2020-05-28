@@ -1,13 +1,14 @@
+//
+const reader = new FileReader();
+
+//
 export default async (blob, options) => {
     //
-    const reader = new FileReader();
-
-    //
-    const promise = new Promise((resolve) =>
-        reader.addEventListener("loadend", (buffer) =>
-            resolve(buffer.srcElement.result)
-        )
-    );
+    const promise = new Promise((resolve) => {
+        reader.onload = (buffer) => resolve(buffer.srcElement.result);
+        reader.onerror = reader.onabort = () =>
+            reject(new Error(`Error loading ${blob.type} resource.`));
+    });
 
     //
     reader.readAsText(blob);

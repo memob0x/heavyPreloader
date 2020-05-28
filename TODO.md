@@ -1,8 +1,3 @@
-## 2.0-rc
-
--   readme: explain loader "plugins" in README.md
--   readme: explain no build (no ie11/oldies) library "strategy"
-
 ## 2.0
 
 -   library: complete lib jsdocs and comments
@@ -12,6 +7,7 @@
 -   library: check TODO notes
 -   tests: check TODO notes
 -   library: enhance cache param: true|false|(int)seconds
+-   build: provide dist/amd, dist/cjs, dist/systemjs library transpilation
 
 ## 2.1
 
@@ -22,3 +18,7 @@
 -   readme: provide details to "requirements" section
 -   build: possibly ditch "rollup-plugin-babel" and "rollup-plugin-terser" in favor of "@node-minify/core"
 -   build: possibly ditch some "@babel/plugin-\*" packages
+
+## 2.2
+
+-   service workers integration, demos, readme ...

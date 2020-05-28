@@ -32,19 +32,19 @@ import { registerHbsPartial, eachHbs } from "./build/hbs.mjs";
     });
 })("./demo");
 
-// library
+// library (standard esm)
 // -----------------------------------------------------------------------------------------
 (async () =>
     await Promise.all([
         each(
             await ls("./src/"),
             "mjs",
-            async (scss) => await buildJS(scss, "./dist")
+            async (scss) => await buildJS(scss, "./dist/esm")
         ),
 
         each(
             await ls("./src/loaders"),
             "mjs",
-            async (scss) => await buildJS(scss, "./dist/loaders")
+            async (scss) => await buildJS(scss, "./dist/esm/loaders")
         )
     ]))();

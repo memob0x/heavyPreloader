@@ -1,7 +1,7 @@
 (async () => {
-    const loaderLib = await import(location.origin + "/dist/loader.mjs");
+    const loaderLib = await import(location.origin + "/dist/esm/loader.mjs");
     const imageLoader = await import(
-        location.origin + "/dist/loaders/loader.image.mjs"
+        location.origin + "/dist/esm/loaders/loader.image.mjs"
     );
     const Loader = loaderLib.default;
 

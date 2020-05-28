@@ -1,7 +1,7 @@
 (async () => {
-    const loaderLib = await import(`${location.origin}/dist/loader.mjs`);
+    const loaderLib = await import(`${location.origin}/dist/esm/loader.mjs`);
     const htmlLoader = await import(
-        `${location.origin}/dist/loaders/loader.html.mjs`
+        `${location.origin}/dist/esm/loaders/loader.html.mjs`
     );
     const Loader = loaderLib.default;
 
