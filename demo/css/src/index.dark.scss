@@ -21,6 +21,12 @@ $dark-mode-selector: "html.dark-mode";
     }
 }
 
+%text-color {
+    @include dark-mode {
+        color: $color-text--dark-mode;
+    }
+}
+
 #{$dark-mode-selector} {
     color: $color-text--dark-mode;
 }
@@ -29,6 +35,34 @@ body {
     @include dark-mode {
         background-color: $color-background--dark-mode;
     }
+}
+
+p {
+    @extend %text-color;
+}
+
+h1 {
+    @extend %text-color;
+}
+
+h2 {
+    @extend %text-color;
+}
+
+h3 {
+    @extend %text-color;
+}
+
+h4 {
+    @extend %text-color;
+}
+
+h5 {
+    @extend %text-color;
+}
+
+h6 {
+    @extend %text-color;
 }
 
 .topbar {

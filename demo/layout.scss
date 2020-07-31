@@ -165,6 +165,10 @@ $screen-large: 1024px;
     box-sizing: border-box;
 }
 
+%text-color {
+    color: $color-text;
+}
+
 html {
     @extend %min-height-100;
     @extend %flex-column-grow;
@@ -173,7 +177,7 @@ html {
     line-height: 23px;
     font-size: 13px;
 
-    color: $color-text;
+    @extend %text-color;
     transition: color #{$transition-colors};
 }
 
@@ -187,12 +191,37 @@ body {
 }
 
 p {
+    @extend %text-color;
     margin: 0 0 $contents-gutters / 2;
 
     &:last-child,
     &:only-child {
         margin-bottom: 0;
     }
+}
+
+h1 {
+    @extend %text-color;
+}
+
+h2 {
+    @extend %text-color;
+}
+
+h3 {
+    @extend %text-color;
+}
+
+h4 {
+    @extend %text-color;
+}
+
+h5 {
+    @extend %text-color;
+}
+
+h6 {
+    @extend %text-color;
 }
 
 #root {

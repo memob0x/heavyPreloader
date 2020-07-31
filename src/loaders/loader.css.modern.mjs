@@ -1,16 +1,14 @@
-export default async (resource, options) => {
+import blobText from "../utils/blob.text.mjs";
+
+export default async (blob, options) => {
     //
-    const url =
-        resource instanceof Blob ? URL.createObjectURL(resource) : resource;
+    let result = await blobText(blob);
 
     //
     const sheet = new CSSStyleSheet();
 
     //
-    await sheet.replace(`@import url("${url}")`);
-
-    //
-    URL.revokeObjectURL(url);
+    await sheet.replace(result);
 
     //
     const element = options?.element || document;

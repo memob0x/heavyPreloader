@@ -1,17 +1,9 @@
-//
-const reader = new FileReader();
+import blobText from "../utils/blob.text.mjs";
 
 //
 export default async (blob, options) => {
     //
-    const promise = new Promise((resolve) => {
-        reader.onload = (buffer) => resolve(buffer.srcElement.result);
-        reader.onerror = reader.onabort = () =>
-            reject(new Error(`Error loading ${blob.type} resource.`));
-    });
-
-    //
-    reader.readAsText(blob);
+    const promise = blobText(blob);
 
     //
     let result = await promise;

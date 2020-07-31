@@ -39,12 +39,18 @@ import { registerHbsPartial, eachHbs } from "./build/hbs.mjs";
         each(
             await ls("./src/"),
             "mjs",
-            async (scss) => await buildJS(scss, "./dist/esm")
+            async (file) => await buildJS(file, "./dist/esm")
+        ),
+
+        each(
+            await ls("./src/utils"),
+            "mjs",
+            async (file) => await buildJS(file, "./dist/esm/utils")
         ),
 
         each(
             await ls("./src/loaders"),
             "mjs",
-            async (scss) => await buildJS(scss, "./dist/esm/loaders")
+            async (file) => await buildJS(file, "./dist/esm/loaders")
         )
     ]))();
