@@ -12,7 +12,7 @@
         "test": "karma start --single-run --browsers ChromeHeadless karma.conf.js"
     },
     "dependencies": {
-        "@babel/core": "^7.11.0",
+        "@babel/core": "^7.11.1",
         "@babel/plugin-proposal-class-properties": "^7.10.4",
         "@babel/plugin-proposal-export-default-from": "^7.10.4",
         "@babel/plugin-proposal-nullish-coalescing-operator": "^7.10.4",
@@ -30,7 +30,7 @@
         "karma-mocha-reporter": "^2.2.5",
         "mjs-mocha": "^3.0.0",
         "mkdirp": "^1.0.4",
-        "mocha": "8.1.0",
+        "mocha": "8.1.1",
         "node-sass": "^4.14.1",
         "puppeteer": "^5.2.1",
         "serve-static": "^1.14.1"
