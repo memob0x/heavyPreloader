@@ -1,9 +1,16 @@
-import { getURL } from "./loader.utils.mjs";
-import Fetch from "./loader.fetch.mjs";
-import Load from "./loader.load.mjs";
+import { getURL } from "./utils.mjs";
+import Fetch from "./fetch.mjs";
+import Load from "./load.mjs";
 
 export default class Loader {
+    /**
+     * 
+     */
     #fetch = new Fetch();
+
+    /**
+     * 
+     */
     #load = new Load();
 
     /**

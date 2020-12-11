@@ -1,56 +1,112 @@
-import { ls, each, name } from "./build/utils.mjs";
-import buildCSS from "./build/sass.mjs";
-import buildHTML from "./build/hbs.mjs";
-import buildJS from "./build/mjs.mjs";
-import { registerHbsPartial, eachHbs } from "./build/hbs.mjs";
+import { rollup } from "rollup";
+import rollupBabel from "@rollup/plugin-babel";
+import rollupGzip from 'rollup-plugin-gzip';
+import rollupNodeResolve from '@rollup/plugin-node-resolve';
+import rollupReplace from 'rollup-plugin-replace';
+import rollupVue from 'rollup-plugin-vue2';
+import rollupCommonJs from '@rollup/plugin-commonjs';
+import rollupScss from 'rollup-plugin-scss'
+
+const babelPresets = ["@babel/preset-env"];
+const babelPlugins = ["@babel/plugin-proposal-class-properties"];
+
+const buildBundle = async options => {
+    console.log(`${options.input.input}: start`);
+
+    const result = await rollup({
+        ...options.input,
+        plugins: options.plugins
+    });
+
+    options.output = Array.isArray(options.output) ? options.output : [options.output];
+
+    await Promise.all(options.output.map(output => result.write(output)));
+
+    console.log(`${options.input.input}: end`);
+};
 
 // demo files
 // -----------------------------------------------------------------------------------------
-(async (root) => {
-    registerHbsPartial("layout", `${root}/layout.hbs`);
+/* (async root => await Promise.all([
+    await buildBundle({
+        input: {
+            input: `${root}/src/main.js`
+        },
 
-    await each(root, async (path) => {
-        const entries = await ls(`${path}/src`);
+        plugins: [
+            rollupNodeResolve(),
 
-        await each(
-            entries,
-            async (path) =>
-                await eachHbs(path, async (file) =>
-                    registerHbsPartial(name(file), file)
-                )
-        );
+            rollupScss(),
 
-        await Promise.all([
-            each(
-                entries,
-                "scss",
-                async (scss) => await buildCSS(scss, `${path}/dist`)
-            ),
+            rollupVue({ css: false }),
 
-            eachHbs(entries, async (hbs) => await buildHTML(hbs, path))
-        ]);
-    });
-})("./demo");
+            rollupCommonJs(),
 
-// library (standard esm)
+            rollupReplace({
+              'process.env.NODE_ENV': JSON.stringify('production')
+            })
+        ],
+        
+        output: [
+            {
+                compact: true,
+                sourcemap: true,
+                format: 'iife',
+                file: `${root}/dist/main.js`,
+                plugins: [
+                    rollupBabel.getBabelOutputPlugin({
+                        compact: true,
+                        comments: false,
+                        presets: babelPresets,
+                        plugins: babelPlugins,
+                        allowAllFormats: true
+                    })
+                ]
+            }
+        ]
+    })
+]))("./demo"); */
+
+// library
 // -----------------------------------------------------------------------------------------
-(async () =>
-    await Promise.all([
-        each(
-            await ls("./src/"),
-            "mjs",
-            async (file) => await buildJS(file, "./dist/esm")
-        ),
+(async root => {
+    const bundles = [];
 
-        each(
-            await ls("./src/utils"),
-            "mjs",
-            async (file) => await buildJS(file, "./dist/esm/utils")
-        ),
+    const bundlify = async (type, min) => await buildBundle({
+        input: {
+            input: `${root}src/loader.mjs`
+        },
 
-        each(
-            await ls("./src/loaders"),
-            "mjs",
-            async (file) => await buildJS(file, "./dist/esm/loaders")
-        )
-    ]))();
+        output: [
+            {
+                compact: min,
+                sourcemap: true,
+                format: type,
+                name: "Loader",
+                file: `${root}dist/${type}/loader${ min ? '.min' : '' }.js`,
+                exports: "auto",
+                plugins: [
+                    rollupBabel.getBabelOutputPlugin({
+                        compact: min,
+                        comments: false,
+                        presets: babelPresets,
+                        plugins: babelPlugins,
+                        allowAllFormats: true
+                    }),
+                    
+                    rollupGzip()
+                ]
+            }
+        ]
+    });
+
+    ["amd", "iife", "system", "es", "cjs"].forEach(type => {
+        // non-minified version
+        bundles.push(bundlify(type, false));
+
+        // minified version
+        bundles.push(bundlify(type, true));
+    });
+
+    await Promise.all(bundles);
+})('./');

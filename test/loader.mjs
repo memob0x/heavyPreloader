@@ -1,6 +1,6 @@
-import { getURL } from "../src/loader.utils.mjs";
+import { getURL } from "../src/utils.mjs";
 import Loader from "../src/loader.mjs";
-import image from "../src/loaders/loader.image.mjs";
+import image from "../src/loaders/image.mjs";
 
 describe("constructor and public methods", () => {
     const instance = new Loader();

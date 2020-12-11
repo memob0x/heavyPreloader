@@ -1,10 +1,14 @@
 {
-    "name": "loader",
+    "name": "@memob0x/loader",
     "version": "2.0.0",
     "license": "MIT",
     "repository": {
         "type": "git",
-        "url": "https://github.com/memob0x/loader.git"
+        "url": "ssh://git@github.com:memob0x/loader.git",
+        "directory": "@memob0x/loader"
+    },
+    "publishConfig": {
+        "registry": "https://npm.pkg.github.com/memob0x"
     },
     "scripts": {
         "build": "node ./build.mjs",
@@ -12,27 +16,33 @@
         "test": "karma start --single-run --browsers ChromeHeadless karma.conf.js"
     },
     "devDependencies": {
-        "@babel/core": "^7.11.5",
-        "@babel/plugin-proposal-class-properties": "^7.10.4",
-        "@babel/plugin-proposal-export-default-from": "^7.10.4",
-        "@babel/plugin-proposal-nullish-coalescing-operator": "^7.10.4",
-        "@babel/plugin-proposal-optional-chaining": "^7.11.0",
-        "@babel/plugin-proposal-private-methods": "^7.10.4",
-        "autoprefixer": "^9.8.6",
+        "@babel/core": "^7.12.3",
+        "@babel/plugin-proposal-class-properties": "^7.12.1",
+        "@babel/preset-env": "^7.12.1",
+        "@rollup/plugin-babel": "^5.2.1",
+        "@rollup/plugin-commonjs": "^17.0.0",
+        "@rollup/plugin-node-resolve": "^11.0.0",
         "chai": "4.2.0",
         "connect": "^3.7.0",
-        "handlebars": "^4.7.6",
-        "handlebars-layouts": "^3.1.4",
-        "karma": "^5.2.1",
+        "karma": "^5.2.3",
         "karma-chai": "^0.1.0",
         "karma-chrome-launcher": "^3.1.0",
         "karma-mocha": "^2.0.1",
         "karma-mocha-reporter": "^2.2.5",
         "mjs-mocha": "^3.0.0",
-        "mkdirp": "^1.0.4",
-        "mocha": "8.1.3",
+        "mocha": "8.2.0",
+        "node-gzip": "^1.1.2",
         "node-sass": "^4.14.1",
-        "puppeteer": "^5.2.1",
-        "serve-static": "^1.14.1"
-    }
+        "postcss": "^8.1.3",
+        "puppeteer": "^5.3.1",
+        "reset-css": "^5.0.1",
+        "rollup": "^2.32.1",
+        "rollup-plugin-gzip": "^2.5.0",
+        "rollup-plugin-replace": "^2.2.0",
+        "rollup-plugin-scss": "^2.6.1",
+        "rollup-plugin-vue2": "^0.8.1",
+        "serve-static": "^1.14.1",
+        "vue": "^2.6.12"
+    },
+    "dependencies": {}
 }

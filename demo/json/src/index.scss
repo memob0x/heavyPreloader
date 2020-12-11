@@ -1,9 +1,0 @@
-@import "../../layout.scss";
-
-.navigation__button--load-json {
-    @extend %button;
-}
-
-.demo-area--json:empty {
-    display: none;
-}
