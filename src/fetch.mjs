@@ -1,24 +1,29 @@
-import lworker from "./worker.mjs";
+import loaderWorker from "./worker.mjs";
 
 /**
- *
+ * Fetch class, handles http requests using a worker singleton, implements some basic responses memoization (cache)
  */
 export default class Fetch {
-    // ...
+    /**
+     * Memoized responses collection
+     * Stores promise objects with the resources urls as keys
+     */
     #cache = {};
 
     /**
-     *
+     * Gets the cached responses collection
+     * @returns {Object} The memoized responses collection
      */
     get cache() {
         return this.#cache;
     }
 
     /**
-     *
+     * Erases the cached responses collection
+     * @returns {Object} The memoized responses collection
      */
     clear() {
-        this.#cache = {};
+        return this.#cache = {};
     }
 
     /**
@@ -28,53 +33,52 @@ export default class Fetch {
      * @returns {Promise} The fetch promise
      */
     async fetch(href, options) {
-        // ...
+        // options object composition
         options = {
             cache: true,
-            fetch: {},
+            fetch: {}, // workers "fetch" API options
             ...options
         };
 
-        // ...
+        // If cache is true and given resource url response has been already memoized, then return its promise reference
         if (options.cache === true && href in this.#cache) {
             return await this.#cache[href];
         }
 
-        // ...
+        // Stores the promise object to the cache member and returns it at the same time
         return (this.#cache[href] = new Promise((resolve, reject) => {
-            //
-            const worker = lworker.worker();
+            // Gets the worker singleton
+            const worker = loaderWorker.worker();
 
-            // ...
+            // Sends a message to the worker
             worker.postMessage({
                 href: href,
                 options: options.fetch
             });
 
-            // ...
+            // Listens to worker messages responses
             // TODO: possibly use messageerror for reject?
             worker.addEventListener("message", event => {
                 const data = event.data;
 
-                // ...
+                // If this is another request response (resourse url doesn't match) then skips it
                 if (data.href !== href) {
                     return;
                 }
 
-                //
-                lworker.terminate();
+                // Sends a termination singal
+                // (worker class knows if worker is free and can be terminated or needs to be kept alive)
+                loaderWorker.terminate();
 
-                // ...
+                // If status is ok then the promise is resolved
                 if (data.status === 200) {
                     resolve(data.blob);
 
                     return;
                 }
 
-                // ...
-                reject(
-                    new Error(`${data.statusText} for ${data.href} resource.`)
-                );
+                // Rejection, an error has occurred during fetch call in worker context
+                reject(new Error(`${data.statusText} for ${data.href} resource.`));
             });
         }));
     }

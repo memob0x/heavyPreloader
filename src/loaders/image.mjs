@@ -1,3 +1,6 @@
+/**
+ * 
+ */
 export default async (blob, options) => {
     //
     const url = URL.createObjectURL(blob);
@@ -5,10 +8,7 @@ export default async (blob, options) => {
     //
     const result = await new Promise((resolve, reject) => {
         //
-        const image =
-            options?.element instanceof HTMLImageElement
-                ? options.element
-                : new Image();
+        const image = options?.element instanceof HTMLImageElement ? options.element : new Image();
 
         //
         const events = type => {

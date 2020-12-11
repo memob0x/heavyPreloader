@@ -22,7 +22,7 @@ export default class Loader {
     async fetch(resource, options) {
         // ...
         if (Array.isArray(resource)) {
-            return await resource.map(a => this.fetch(a, options)); // TODO: rename "a"
+            return await resource.map(_resource => this.fetch(_resource, options)); // TODO: rename "a"
         }
 
         // ...
@@ -36,9 +36,7 @@ export default class Loader {
         }
 
         // ...
-        throw new TypeError(
-            `Invalid argment of type ${typeof resource} passed to Loader class "fetch" method.`
-        );
+        throw new TypeError(`Invalid argment of type ${typeof resource} passed to Loader class "fetch" method.`);
     }
 
     /**
@@ -52,16 +50,11 @@ export default class Loader {
         if (Array.isArray(resource)) {
             const isArrayOpts = Array.isArray(options);
 
-            return await resource.map((a, i) =>
-                this.load(a, isArrayOpts ? options[i] : options)
-            );
+            return await resource.map((a, i) => this.load(a, isArrayOpts ? options[i] : options));
         }
 
         // ...
-        const blob =
-            resource instanceof Blob
-                ? resource
-                : await this.fetch(resource, options);
+        const blob = resource instanceof Blob ? resource : await this.fetch(resource, options);
 
         // ...
         return await this.#load.load(blob, options);

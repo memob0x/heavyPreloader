@@ -1,5 +1,8 @@
 import blobText from "../utils/blob.text.mjs";
 
+/**
+ * 
+ */
 export default async (blob, options) => {
     //
     let result = await blobText(blob);

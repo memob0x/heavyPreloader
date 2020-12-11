@@ -1,3 +1,6 @@
+/**
+ * 
+ */
 export default async resource => {
     //
     const url = resource instanceof Blob ? URL.createObjectURL(resource) : resource;
@@ -5,7 +8,7 @@ export default async resource => {
     //
     const result = await new Promise(resolve => {
         //
-        var script = document.createElement("script");
+        const script = document.createElement("script");
         //
         script.async = true;
         script.src = url;

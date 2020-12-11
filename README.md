@@ -196,9 +196,9 @@ loader.register("json", async (blob, options) => {
 
     // handling json load
     const promise = new Promise(resolve => {
-        reader.onload = buffer => resolve(buffer.srcElement.result);
-        reader.onerror = reader.onabort = () =>
-            reject(new Error(`Error loading ${blob.type} resource.`));
+        reader.onload = buffer => resolve(buffer.target.result);
+
+        reader.onerror = reader.onabort = () => reject(new Error(`Error loading ${blob.type} resource.`));
     });
 
     // triggering json load

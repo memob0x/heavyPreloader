@@ -1,3 +1,6 @@
+/**
+ * 
+ */
 export default async resource => {
     //
     const url = resource instanceof Blob ? URL.createObjectURL(resource) : resource;
@@ -14,6 +17,7 @@ export default async resource => {
         //
         const callback = () => {
             link.removeEventListener("load", callback);
+
             link.removeEventListener("error", callback);
 
             resolve(link);
@@ -30,6 +34,7 @@ export default async resource => {
 
         //
         link.addEventListener("load", callback);
+        
         link.addEventListener("error", callback);
 
         //
