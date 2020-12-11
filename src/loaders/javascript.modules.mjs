@@ -1,4 +1,4 @@
-export default async (resource) => {
+export default async resource => {
     //
     const url =
         resource instanceof Blob ? URL.createObjectURL(resource) : resource;

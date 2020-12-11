@@ -152,9 +152,9 @@ loader.register("image", imageLoader);
 const observer = new IntersectionObserver((entries) =>
     entries
         // filtering the visible images
-        .filter((entry) => entry.isIntersecting)
+        .filter(entry => entry.isIntersecting)
         // looping through visible images
-        .forEach(async (entry) => {
+        .forEach(async entry => {
             const image = entry.target;
 
             // detaching observer to the visible image
@@ -195,8 +195,8 @@ loader.register("json", async (blob, options) => {
     const url = URL.createObjectURL(blob);
 
     // handling json load
-    const promise = new Promise((resolve) => {
-        reader.onload = (buffer) => resolve(buffer.srcElement.result);
+    const promise = new Promise(resolve => {
+        reader.onload = buffer => resolve(buffer.srcElement.result);
         reader.onerror = reader.onabort = () =>
             reject(new Error(`Error loading ${blob.type} resource.`));
     });

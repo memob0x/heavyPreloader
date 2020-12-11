@@ -23,7 +23,6 @@ export default class Fetch {
 
     /**
      * Fetches a resource url in the secondary thread and retrieves it as a blob
-     * @private
      * @param {String} href The resource url to be fetched
      * @param {Object} options The fetch options object
      * @returns {Promise} The fetch promise
@@ -54,7 +53,7 @@ export default class Fetch {
 
             // ...
             // TODO: possibly use messageerror for reject?
-            worker.addEventListener("message", (event) => {
+            worker.addEventListener("message", event => {
                 const data = event.data;
 
                 // ...

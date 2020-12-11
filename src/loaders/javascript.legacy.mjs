@@ -1,10 +1,9 @@
-export default async (resource) => {
+export default async resource => {
     //
-    const url =
-        resource instanceof Blob ? URL.createObjectURL(resource) : resource;
+    const url = resource instanceof Blob ? URL.createObjectURL(resource) : resource;
 
     //
-    const result = await new Promise((resolve) => {
+    const result = await new Promise(resolve => {
         //
         var script = document.createElement("script");
         //
@@ -12,7 +11,7 @@ export default async (resource) => {
         script.src = url;
 
         //
-        const events = (type) => {
+        const events = type => {
             script[`${type}EventListener`]("readystatechange", onload);
             script[`${type}EventListener`]("load", onload);
         };

@@ -1,10 +1,9 @@
-export default async (resource) => {
+export default async resource => {
     //
-    const url =
-        resource instanceof Blob ? URL.createObjectURL(resource) : resource;
+    const url = resource instanceof Blob ? URL.createObjectURL(resource) : resource;
 
     //
-    const sheet = await new Promise((resolve) => {
+    const sheet = await new Promise(resolve => {
         //
         const link = document.createElement("link");
 

@@ -2,8 +2,10 @@
  *
  */
 export default class Load {
-    // loaders closure, filled with default loaders
-    // https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
+    /**
+     * loaders closure, filled with default loaders
+     * https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
+     */
     #loaders = {};
 
     /**
@@ -18,7 +20,6 @@ export default class Load {
 
     /**
      * Loads a resource, which usually consists in attaching it to an existent DOM element
-     * @private
      * @param {Blob} blob The resource to be loaded in Blob form
      * @param {Object} options The resource load options
      * @returns {Promise} The resource load in promise form

@@ -27,7 +27,7 @@ const buildBundle = async options => {
 
 // demo files
 // -----------------------------------------------------------------------------------------
-/* (async root => await Promise.all([
+(async root => await Promise.all([
     await buildBundle({
         input: {
             input: `${root}/src/main.js`
@@ -65,7 +65,7 @@ const buildBundle = async options => {
             }
         ]
     })
-]))("./demo"); */
+]))("./demo");
 
 // library
 // -----------------------------------------------------------------------------------------

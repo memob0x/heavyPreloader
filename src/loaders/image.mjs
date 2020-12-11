@@ -11,7 +11,7 @@ export default async (blob, options) => {
                 : new Image();
 
         //
-        const events = (type) => {
+        const events = type => {
             image[`${type}EventListener`]("load", onload);
             image[`${type}EventListener`]("error", onerror);
         };
@@ -20,7 +20,7 @@ export default async (blob, options) => {
         const clean = () => events("remove");
 
         //
-        const onload = (event) => {
+        const onload = event => {
             clean();
 
             resolve(event);

@@ -22,7 +22,7 @@ export default class Loader {
     async fetch(resource, options) {
         // ...
         if (Array.isArray(resource)) {
-            return await resource.map((a) => this.fetch(a, options));
+            return await resource.map(a => this.fetch(a, options)); // TODO: rename "a"
         }
 
         // ...
