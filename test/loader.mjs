@@ -2,7 +2,7 @@ import { getURL } from "../src/utils.mjs";
 import Loader from "../src/loader.mjs";
 import image from "../src/loaders/image.mjs";
 
-describe("constructor and public methods", () => {
+describe("loader", () => {
     const instance = new Loader();
     instance.register("image", image);
 

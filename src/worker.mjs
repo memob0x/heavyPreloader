@@ -1,5 +1,6 @@
 /**
- * Creates a dynamic worker, stringifying a given worker body code and passing to a Worker instance through createObjectURL
+ * Creates a dynamic worker, stringifying a given worker body code
+ * and passing to a Worker instance through createObjectURL
  * @param {Function} The worker body function
  * @returns {Worker} The worker instance
  */
@@ -47,16 +48,18 @@ const createFetchWorker = () => createDynamicWorker(() => (
 ));
 
 /**
- * Worker class, handles the worker singleton and its termination
+ * Worker class, handles the Web Worker instance as a singleton,
+ * its usage state and termination
  */
-class LoaderWorker {
+export default class LoaderWorker {
     /**
      * The worker single instance reference
      */
     #worker = null;
 
     /**
-     * The worker usages counter (when it comes back to 0, the worker can be terminated)
+     * The worker usages counter
+     * (when it comes back to 0, the worker can be terminated)
      */
     #requests = 0;
 
@@ -103,8 +106,3 @@ class LoaderWorker {
         return this.#worker;
     }
 }
-
-/**
- *
- */
-export default new LoaderWorker();

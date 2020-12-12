@@ -1,9 +1,15 @@
-import loaderWorker from "./worker.mjs";
+import LoaderWorker from "./worker.mjs";
 
 /**
- * Fetch class, handles http requests using a worker singleton, implements some basic responses memoization (cache)
+ * Fetch class, handles http requests using a worker singleton,
+ * implements some basic responses memoization (cache)
  */
 export default class Fetch {
+    /**
+     * Fetch instance worker
+     */
+    #worker = new LoaderWorker();
+
     /**
      * Memoized responses collection
      * Stores promise objects with the resources urls as keys
@@ -47,8 +53,8 @@ export default class Fetch {
 
         // Stores the promise object to the cache member and returns it at the same time
         return (this.#cache[href] = new Promise((resolve, reject) => {
-            // Gets the worker singleton
-            const worker = loaderWorker.worker();
+            // Gets the Web Worker instance (singleton)
+            const worker = this.#worker.worker();
 
             // Sends a message to the worker
             worker.postMessage({
@@ -68,7 +74,7 @@ export default class Fetch {
 
                 // Sends a termination singal
                 // (worker class knows if worker is free and can be terminated or needs to be kept alive)
-                loaderWorker.terminate();
+                this.#worker.terminate();
 
                 // If status is ok then the promise is resolved
                 if (data.status === 200) {

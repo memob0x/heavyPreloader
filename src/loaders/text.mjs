@@ -6,6 +6,7 @@ const reader = new FileReader();
  * @param {Blob} blob The given blob to be red as text
  * @returns {Promise} The blob read promise
  */
+// TODO: provide unit test
 export default async blob => {
     // The file reader instance event handlers promise conversion
     const promise = new Promise(resolve => {

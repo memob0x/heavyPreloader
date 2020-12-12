@@ -12,10 +12,10 @@ export default class Load {
      * Registers a new loader for a given type
      * @param {String} type The resource mime type (or mime type prefix) eg. "image/png" or "image"
      * @param {Function} loader The load handler
-     * @returns {void}
+     * @returns {Function} The loader handler itself
      */
     register(type, loader) {
-        this.#loaders[type] = loader;
+        return this.#loaders[type] = loader;
     }
 
     /**

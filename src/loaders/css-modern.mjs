@@ -1,11 +1,11 @@
-import blobText from "../utils/blob.text.mjs";
+import readBlobAsText from "./text.mjs";
 
 /**
  * 
  */
 export default async (blob, options) => {
     //
-    let result = await blobText(blob);
+    let result = await readBlobAsText(blob);
 
     //
     const sheet = new CSSStyleSheet();
@@ -14,7 +14,7 @@ export default async (blob, options) => {
     await sheet.replace(result);
 
     //
-    const element = options?.element || document;
+    const element = options?.element;
 
     //
     if (element instanceof Document || element instanceof ShadowRoot) {

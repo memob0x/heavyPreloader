@@ -1,6 +1,6 @@
 import Load from "../src/load.mjs";
 
-describe("load function", () => {
+describe("load", () => {
     const lload = new Load();
 
     it("should be able to recognize media type blob objects", async () => {

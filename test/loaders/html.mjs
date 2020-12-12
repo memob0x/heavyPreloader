@@ -3,7 +3,7 @@ import Fetch from "../../src/fetch.mjs";
 import Load from "../../src/load.mjs";
 import html from "../../src/loaders/html.mjs";
 
-describe("html loader", () => {
+describe("loaders/html", () => {
     const lfetch = new Fetch();
     const lload = new Load();
     lload.register("html", html);

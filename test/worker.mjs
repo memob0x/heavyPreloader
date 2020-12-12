@@ -1,6 +1,8 @@
-import lworker from "../src/worker.mjs";
+import LoaderWorker from "../src/worker.mjs";
 
 describe("worker", () => {
+    const lworker = new LoaderWorker();
+    
     it("should be able to create a worker dynamically", (done) => {
         expect(lworker.worker()).to.be.an.instanceof(Worker);
         expect(lworker.terminate()).to.be.a("null");

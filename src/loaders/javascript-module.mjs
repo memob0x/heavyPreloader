@@ -1,9 +1,9 @@
 /**
  * 
  */
-export default async resource => {
+export default async blob => {
     //
-    const url = resource instanceof Blob ? URL.createObjectURL(resource) : resource;
+    const url = URL.createObjectURL(blob);
 
     //
     const result = await import(url);

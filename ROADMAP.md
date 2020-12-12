@@ -1,9 +1,9 @@
 ## 2.0
 * [✓] build: provide dist/amd, dist/cjs, dist/systemjs library transpilation
-* [-] redo/simplify demo using vue...
 * [-] library: complete lib jsdocs and comments
+* [-] redo/simplify demo using vue...
+* [-] readme: add npm install notes and updates specifications
 * [-] publish npm package
-* [-] readme: add npm install notes...
 
 ## 2.0.1
 * [-] misc: ditch prettier, adopt eslint

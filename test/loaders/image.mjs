@@ -3,7 +3,7 @@ import Fetch from "../../src/fetch.mjs";
 import Load from "../../src/load.mjs";
 import image from "../../src/loaders/image.mjs";
 
-describe("image loader", () => {
+describe("loaders/image", () => {
     const lfetch = new Fetch();
     const lload = new Load();
     lload.register("image", image);

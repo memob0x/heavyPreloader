@@ -1,9 +1,9 @@
 import { getURL } from "../../src/utils.mjs";
 import Fetch from "../../src/fetch.mjs";
 import Load from "../../src/load.mjs";
-import javascript from "../../src/loaders/javascript.modules.mjs";
+import javascript from "../../src/loaders/javascript-module.mjs";
 
-describe("scripts loader (modules)", () => {
+describe("loaders/javascript-module", () => {
     const lfetch = new Fetch();
     const lload = new Load();
     lload.register("javascript", javascript);

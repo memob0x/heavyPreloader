@@ -1,4 +1,4 @@
-import blobText from "../utils/blob.text.mjs";
+import readBlobAsText from "./text.mjs";
 
 //
 const parser = new DOMParser();
@@ -8,7 +8,7 @@ const parser = new DOMParser();
  */
 export default async (blob, options) => {
     //
-    const promise = blobText(blob);
+    const promise = readBlobAsText(blob);
 
     //
     let result = await promise;
@@ -27,7 +27,7 @@ export default async (blob, options) => {
     }
 
     //
-    if ( options?.element instanceof HTMLElement && typeof result === "string" && result?.length ) {
+    if ( options?.element instanceof HTMLElement && typeof result === "string" ) {
         options.element.innerHTML = result;
     }
 
