@@ -1,11 +1,11 @@
 /**
- * Images load handler
- * @param {Blob} resource The resource Blob object to be loaded
+ * Loads a given Blob object as an image
+ * @param {Blob} blob The resource Blob object to be loaded
  * @param {Object} options Loader options, if an image element is passed as "element" property that image is used to load the given image resource
  * @returns {Promise} The load promise
  */
 export default async (blob, options) => {
-    //
+    // Creates a resource url from given blob object
     const url = URL.createObjectURL(blob);
 
     // Awaits the given image resource "load" or "error"
