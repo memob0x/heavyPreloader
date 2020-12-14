@@ -1,4 +1,4 @@
-//  Head element closure
+// Head element closure
 const head = document.head;
 
 /**

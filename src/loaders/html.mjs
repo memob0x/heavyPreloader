@@ -22,8 +22,9 @@ export default async (blob, options) => {
         result = [...result.querySelectorAll(options.filter)];
 
         //
-        // TODO: rename "x", "y"
-        result = result.length ? result.map(x => x.outerHTML).reduce((x, y) => x + y) : result;
+        result = result
+            .map(x => x.outerHTML)
+            .reduce((previousValue, currentValue) => previousValue + currentValue, []);
     }
 
     //

@@ -7,6 +7,7 @@
 
 ## 2.0.1
 * [-] misc: ditch prettier, adopt eslint
+* [-] library: check loaders which uses events to have those events removed properly when they are done with their own operation
 * [-] library: address TODO notes
 * [-] tests: address TODO notes
 * [-] library: enhance cache param: true|false|(int)seconds
