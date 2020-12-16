@@ -1,69 +1,25 @@
-// Head element closure
-const head = document.head;
+import genericLoader from './generic.mjs';
 
 /**
  * 
  */
-export default async (blob, options) => {
-    //
-    const url = URL.createObjectURL(blob);
+export default async (blob, options) => genericLoader(
+    blob,
+    options,
 
-    //
-    const result = await new Promise(resolve => {
-        //
-        const elementOptionExists = options?.element instanceof HTMLScriptElement;
+    document.head,
 
-        //
-        const script = elementOptionExists ? options.element : document.createElement("script");
+    HTMLScriptElement,
+    'script', 
+    
+    ['readystatechange', 'load'],
+    [],
 
+    (script, url) => {
         //
         script.async = true;
 
         //
         script.src = url;
-
-        /**
-         * 
-         * @param type 
-         * @returns {void} Nothing
-         */
-        const events = type => {
-            //
-            script[`${type}EventListener`]("readystatechange", onload);
-
-            //
-            script[`${type}EventListener`]("load", onload);
-        };
-
-        /**
-         * 
-         * @returns {void} Nothing
-         */
-        const onload = () => {
-            //
-            events("remove");
-
-            //
-            if( !elementOptionExists ){
-                head.removeChild(script);
-            }
-
-            //
-            resolve(script);
-        };
-
-        //
-        events("add");
-
-        //
-        if( !head.contains(script) ){
-            head.appendChild(script);
-        }
-    });
-
-    //
-    URL.revokeObjectURL(url);
-
-    //
-    return result;
-};
+    }
+);

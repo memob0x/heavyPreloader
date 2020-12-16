@@ -1,71 +1,34 @@
-// Head element closure
-const head = document.head;
+import genericLoader from './generic.mjs';
 
 /**
  * 
  */
-export default async (blob, options) => {
-    //
-    const url = URL.createObjectURL(blob);
+export default async (blob, options) => genericLoader(
+    blob,
+    options,
+    
+    document.head,
+    
+    HTMLLinkElement,
+    'link',
 
-    //
-    const sheet = await new Promise(resolve => {
-        //
-        const elementOptionExists = options?.element instanceof HTMLLinkElement;
+    ['load'],
+    ['error'],
 
-        //
-        const link = elementOptionExists ? options.element : document.createElement("link");
-
+    (link, url, success) => {
         //
         link.rel = "stylesheet";
 
         //
         link.href = url;
 
-        /**
-         * 
-         * @returns {void} Nothing
-         */
-        const callback = () => {
-            //
-            link.removeEventListener("load", callback);
-
-            //
-            link.removeEventListener("error", callback);
-
-            //
-            if( !elementOptionExists ){
-                head.removeChild(link);
-            }
-
-            //
-            resolve(link);
-        };
-
         //
         const sheets = document.styleSheets;
         let i = sheets.length;
         while (i--) {
             if (sheets[i].href === url) {
-                callback();
+                success();
             }
         }
-
-        //
-        link.addEventListener("load", callback);
-        
-        //
-        link.addEventListener("error", callback);
-
-        //
-        if( !head.contains(link) ){
-            head.appendChild(link);
-        }
-    });
-
-    //
-    URL.revokeObjectURL(url);
-
-    //
-    return sheet;
-};
+    }
+);
