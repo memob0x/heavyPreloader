@@ -8,15 +8,15 @@ describe("loaders/image", () => {
     const lload = new Load();
     lload.register("image", image);
 
-    it("should return a promise which resolves to a load/error Event", async () => {
+    it("should return a promise which resolves to an element", async () => {
         const path = "/base/test/resources/image.1440x900.jpg";
 
         const blob = await lfetch.fetch(getURL(path).href);
-        const event = await lload.load(blob);
+        const element = await lload.load(blob);
 
-        expect(event).to.be.an.instanceof(Event);
+        expect(element).to.be.an.instanceof(HTMLImageElement);
 
-        return event;
+        return element;
     });
 
     it("should attach resource to a non existent image element if no other image element is provied in options", async () => {
@@ -26,10 +26,10 @@ describe("loaders/image", () => {
         expect(el.naturalHeight).to.equals(0);
 
         const blob = await lfetch.fetch(getURL(path).href);
-        const event = await lload.load(blob, { element: el });
+        const element = await lload.load(blob, { element: el });
 
         expect(el.naturalHeight).to.equals(900);
 
-        return event;
+        return element;
     });
 });

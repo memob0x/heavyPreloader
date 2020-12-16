@@ -84,7 +84,7 @@ describe("loader", () => {
                 getURL("/base/test/resources/image.1440x900.jpg")
             );
 
-            expect(load).to.be.an.instanceof(Event);
+            expect(load).to.be.an.instanceOf(HTMLImageElement);
 
             return load;
         });
@@ -98,10 +98,10 @@ describe("loader", () => {
             expect(load).to.be.an("array");
 
             const first = await load[0];
-            expect(first).to.be.an.instanceof(Event);
+            expect(first).to.be.an.instanceOf(HTMLImageElement);
 
             const second = await load[0];
-            expect(second).to.be.an.instanceof(Event);
+            expect(second).to.be.an.instanceOf(HTMLImageElement);
 
             return Promise.allSettled(load);
         });
@@ -111,7 +111,7 @@ describe("loader", () => {
                 "/base/test/resources/image.1440x900.jpg"
             );
 
-            expect(load).to.be.an.instanceof(Event);
+            expect(load).to.be.an.instanceOf(HTMLImageElement);
 
             return load;
         });
@@ -125,10 +125,10 @@ describe("loader", () => {
             expect(load).to.be.an("array");
 
             const first = await load[0];
-            expect(first).to.be.an.instanceof(Event);
+            expect(first).to.be.an.instanceOf(HTMLImageElement);
 
             const second = await load[0];
-            expect(second).to.be.an.instanceof(Event);
+            expect(second).to.be.an.instanceOf(HTMLImageElement);
 
             return Promise.allSettled(load);
         });
