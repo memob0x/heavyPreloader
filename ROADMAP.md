@@ -1,6 +1,6 @@
 ## 2.0
 * [✓] build: provide dist/amd, dist/cjs, dist/systemjs library transpilation
-* [-] library: complete lib jsdocs and comments
+* [✓] library: complete lib jsdocs and comments
 * [-] library: generic loader success promise should resolve to Event, while error should resolve to... ?
 * [-] redo/simplify demo using vue...
 * [-] readme: add npm install notes and updates specifications

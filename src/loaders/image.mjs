@@ -7,20 +7,30 @@ import genericLoader from './generic.mjs';
  * @returns {Promise} The load promise
  */
 export default async (blob, options) => genericLoader(
+    // Rebinds the Blob object parameter
     blob,
+
+    // Rebinds the options object parameter
     options,
 
-    null,
-
+    // Element loader must be of HTMLImageElement
     HTMLImageElement,
+
+    // Element loader must be a an image element
     'img',
 
+    // Image doesn't need to be appended, load process would occur anyway
+    null,
+
+    // Success events to be listened
     ['load'],
+
+    // Error events to be listened
     ['error'],
 
+    // Before events attachment hook (nothing)
     () => {},
-    (image, url) => {
-        // Sets image src, triggers "load" or "error"
-        image.src = url;
-    }
+
+    // After events attachment hook, sets image src which triggers "load" or "error"
+    (image, url) => (image.src = url)
 );
