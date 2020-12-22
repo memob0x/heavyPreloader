@@ -1,15 +1,12 @@
 {
-    "name": "@memob0x/loader",
+    "name": "background-thread-loader",
+    "author": "Daniele Fioroni",
+    "description": "Loads resources in a background thread",
+    "main": "dist/umd/background-thread-loader.min.js",
+    "module": "dist/es/background-thread-loader.js",
     "version": "2.0.0",
     "license": "MIT",
-    "repository": {
-        "type": "git",
-        "url": "ssh://git@github.com:memob0x/loader.git",
-        "directory": "@memob0x/loader"
-    },
-    "publishConfig": {
-        "registry": "https://npm.pkg.github.com/memob0x"
-    },
+    "repository": "https://github.com/memob0x/background-thread-loader.git",
     "scripts": {
         "build": "node ./build.mjs",
         "start": "node ./start.mjs",

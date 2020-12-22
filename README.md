@@ -1,8 +1,8 @@
-# [loader.js](https://memob0x.github.io/loader/demo/#/images/)
+# [BackgroundThreadLoader](https://memob0x.github.io/background-thread-loader/demo/#/images/)
 
-![Node.js CI](https://github.com/memob0x/loader/workflows/Node.js%20CI/badge.svg)
+![Node.js CI](https://github.com/memob0x/background-thread-loader/workflows/Node.js%20CI/badge.svg)
 
-⚙️ **loader.js** is a small script (~4,0kB) that lets you programmatically fetch whatever resource type in a **separate thread** leaving the main one free to "concentrate" on animations and other visually noticeable changes in order to enhance the perceived performance to the end user.
+⚙️ **background-thread-loader.js** is a small script (~4,0kB) that lets you programmatically fetch whatever resource type in a **separate thread** leaving the main one free to "concentrate" on animations and other visually noticeable changes in order to enhance the perceived performance to the end user.
 
 Loader can be seen as a simple "boilerplate" script to perform [fetch](https://developer.mozilla.org/it/docs/Web/API/Fetch_API) in a [Web Worker](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API) context keeping the preferred loading strategy which can be [registered](#register) to its own mime-type.
 
@@ -68,19 +68,19 @@ Let's go into detail by cooking some of the most common recipes.
 
 #### All live demos:
 
--   [Loading HTML](https://memob0x.github.io/loader/demo/#/html/)
--   [Loading Stylesheets](https://memob0x.github.io/loader/demo/#/css/)
--   [Loading Scripts](https://memob0x.github.io/loader/demo/#/javascript/)
--   [Lazily Loading Images](https://memob0x.github.io/loader/demo/#/images/)
--   [Manual Handling (JSON files)](https://memob0x.github.io/loader/demo/#/json/)
+-   [Loading HTML](https://memob0x.github.io/background-thread-loader/demo/#/html/)
+-   [Loading Stylesheets](https://memob0x.github.io/background-thread-loader/demo/#/css/)
+-   [Loading Scripts](https://memob0x.github.io/background-thread-loader/demo/#/javascript/)
+-   [Lazily Loading Images](https://memob0x.github.io/background-thread-loader/demo/#/images/)
+-   [Manual Handling (JSON files)](https://memob0x.github.io/background-thread-loader/demo/#/json/)
 
-## [HTML](https://memob0x.github.io/loader/demo/#/html/)
+## [HTML](https://memob0x.github.io/background-thread-loader/demo/#/html/)
 
 `Loader` supports `text/html` MIME type so it can be used to retrieve new contents, also with `load` method updating the current view with fresh data is quite easy.
 
 ```javascript
 // instance construction
-const loader = new Loader();
+const loader = new BackgroundThreadLoader();
 
 // loader of choice registration
 // (distribution comes with a standard loader for this type which can be found in dist/esm/loader.html.mjs)
@@ -102,15 +102,15 @@ loader.load("/Messages/Inbox", {
 });
 ```
 
-Here's the full [demo](https://memob0x.github.io/loader/demo/#/html/).
+Here's the full [demo](https://memob0x.github.io/background-thread-loader/demo/#/html/).
 
-## [CSS](https://memob0x.github.io/loader/demo/#/css/)
+## [CSS](https://memob0x.github.io/background-thread-loader/demo/#/css/)
 
 `Loader` supports `text/css` MIME type so it can be used as an asynchronous stylesheets load callback (which is a quite an [ancient cross-browser issue](https://www.phpied.com/when-is-a-stylesheet-really-loaded/)).
 
 ```javascript
 // instance construction
-const loader = new Loader();
+const loader = new BackgroundThreadLoader();
 
 // loader of choice registration
 // (distribution comes with a loader for this type which can be found in dist/esm/loader.css.legacy.mjs)
@@ -124,7 +124,7 @@ Promise.allSettled(loader.load(["theme.blue.css", "area.account.css"])).then(
 );
 ```
 
-Here's the full [demo](https://memob0x.github.io/loader/demo/#/css/).
+Here's the full [demo](https://memob0x.github.io/background-thread-loader/demo/#/css/).
 
 ## JavaScript
 
@@ -132,7 +132,7 @@ Here's the full [demo](https://memob0x.github.io/loader/demo/#/css/).
 
 ```javascript
 // instance construction
-const loader = new Loader();
+const loader = new BackgroundThreadLoader();
 
 // loader of choice registration
 // (distribution comes with a loader for this type which can be found in dist/esm/loader.javascript.mjs)
@@ -147,13 +147,13 @@ loader.load("cart.js").then((module) => {
 });
 ```
 
-## [Lazy Images](https://memob0x.github.io/loader/demo/#/images/)
+## [Lazy Images](https://memob0x.github.io/background-thread-loader/demo/#/images/)
 
 `Loader` can be used with `IntersectionObserver` to provide an easy and enhanced lazy load functionality.
 
 ```javascript
 // instance construction
-const loader = new Loader();
+const loader = new BackgroundThreadLoader();
 
 // loader of choice registration
 // (distribution comes with a loader for this type which can be found in dist/esm/loader.image.mjs)
@@ -185,9 +185,9 @@ const observer = new IntersectionObserver((entries) =>
 );
 ```
 
-Here's the full [demo](https://memob0x.github.io/loader/demo/#/images/).
+Here's the full [demo](https://memob0x.github.io/background-thread-loader/demo/#/images/).
 
-## [Manual Handling](https://memob0x.github.io/loader/demo/#/images/)
+## [Manual Handling](https://memob0x.github.io/background-thread-loader/demo/#/images/)
 
 `Loader` supports **custom loaders registration** which means that you can add support for MIME types that are not already supported by default, override the default ones or even wrap legacy resource loaders in order to enhance existent perfomance state.
 
@@ -195,7 +195,7 @@ The following example is adapted to support **json** files.
 
 ```javascript
 // constructing a Loader instance
-const loader = new Loader();
+const loader = new BackgroundThreadLoader();
 
 // constructing a FileReader instance
 const reader = new FileReader();
@@ -241,7 +241,7 @@ loader
     .then((users) => users.forEach((user) => console.log(user.id)));
 ```
 
-Here's the full [demo](https://memob0x.github.io/loader/demo/#/json/).
+Here's the full [demo](https://memob0x.github.io/background-thread-loader/demo/#/json/).
 
 ## Requirements
 

@@ -82,8 +82,8 @@ const buildBundle = async options => {
                 compact: min,
                 sourcemap: true,
                 format: type,
-                name: "Loader",
-                file: `${root}dist/${type}/loader${ min ? '.min' : '' }.js`,
+                name: "BackgroundThreadLoader",
+                file: `${root}dist/${type}/background-thread-loader${ min ? '.min' : '' }.js`,
                 exports: "auto",
                 plugins: [
                     rollupBabel.getBabelOutputPlugin({
@@ -100,7 +100,7 @@ const buildBundle = async options => {
         ]
     });
 
-    ["amd", "iife", "system", "es", "cjs"].forEach(type => {
+    ["amd", "iife", "system", "es", "cjs", "umd"].forEach(type => {
         // non-minified version
         bundles.push(bundlify(type, false));
 

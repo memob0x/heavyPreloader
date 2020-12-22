@@ -6,7 +6,7 @@ import Load from "./load.mjs";
  * The main library class, exposes methods to grant resources load in a separate thread
  * and custom load handlers registration
  */
-export default class Loader {
+export default class BackgroundThreadLoader {
     /**
      * Loader instance fetcher
      */
