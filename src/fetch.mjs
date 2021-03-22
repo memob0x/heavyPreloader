@@ -1,4 +1,4 @@
-import LoaderWorker from "./worker.mjs";
+import LoaderWorker from './worker.mjs';
 
 /**
  * Fetch class, handles http requests using a worker singleton,
@@ -64,7 +64,7 @@ export default class Fetch {
 
             // Listens to worker messages responses
             // TODO: possibly use messageerror for reject?
-            worker.addEventListener("message", event => {
+            worker.addEventListener('message', event => {
                 const data = event.data;
 
                 // If this is another request response (resourse url doesn't match) then skips it

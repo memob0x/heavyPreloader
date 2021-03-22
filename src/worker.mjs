@@ -7,8 +7,8 @@
 // TODO: provide unit test
 const createDynamicWorker = body => {
     // Encapsulates the given worker body function in a Object URL
-    const url = URL.createObjectURL(new Blob(["(", body.toString(), ")()"], {
-        type: "application/javascript"
+    const url = URL.createObjectURL(new Blob(['(', body.toString(), ')()'], {
+        type: 'application/javascript'
     }));
 
     // Creates the worker instance

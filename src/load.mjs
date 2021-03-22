@@ -29,7 +29,7 @@ export default class Load {
         const type = blob.type;
 
         // Gets the loaders keys from blob type (full mime type, mime type prefix etc) used to get the right registered loader
-        const keys = type.split("/").reduce((previous, next) => [type, previous, next]);
+        const keys = type.split('/').reduce((previous, next) => [type, previous, next]);
 
         // Loops through the loaders keys and, if found, calls the matched loader
         for (const key in keys) {

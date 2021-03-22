@@ -1,4 +1,4 @@
-import readBlobAsText from "./text.mjs";
+import readBlobAsText from './text.mjs';
 
 /**
  * Loads a given Blob object as an stylesheet

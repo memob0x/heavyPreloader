@@ -1,5 +1,5 @@
-import modern from "./javascript-module.mjs";
-import legacy from "./javascript-nomodule.mjs";
+import modern from './javascript-module.mjs';
+import legacy from './javascript-nomodule.mjs';
 
 /**
  * Loads a given Blob object as a js file,

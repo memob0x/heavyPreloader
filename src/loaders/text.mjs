@@ -10,7 +10,7 @@ const reader = new FileReader();
 // TODO: remove listeners maybe
 export default async blob => {
     // The file reader instance event handlers promise conversion
-    const promise = new Promise(resolve => {
+    const promise = new Promise((resolve, reject) => {
         // Listens to the "load" event
         reader.onload = buffer => resolve(buffer.target.result);
         

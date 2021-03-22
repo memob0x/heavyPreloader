@@ -1,10 +1,10 @@
-import Load from "../src/load.mjs";
+import Load from '../../src/load.mjs';
 
-describe("load", () => {
+describe('load', () => {
     const lload = new Load();
 
-    it("should be able to recognize media type blob objects", async () => {
-        const type = "image/gif";
+    it('should be able to recognize media type blob objects', async () => {
+        const type = 'image/gif';
         const promise = new Promise((resolve) => lload.register(type, resolve));
 
         await lload.load(new Blob([], { type: type }));

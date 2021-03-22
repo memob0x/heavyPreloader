@@ -1,112 +1,61 @@
-import { rollup } from "rollup";
-import rollupBabel from "@rollup/plugin-babel";
+import { rollup } from 'rollup';
+import rollupBabelPackage from '@rollup/plugin-babel';
 import rollupGzip from 'rollup-plugin-gzip';
-import rollupNodeResolve from '@rollup/plugin-node-resolve';
-import rollupReplace from 'rollup-plugin-replace';
-import rollupVue from 'rollup-plugin-vue2';
-import rollupCommonJs from '@rollup/plugin-commonjs';
-import rollupScss from 'rollup-plugin-scss'
+import { terser as rollupTerser } from 'rollup-plugin-terser';
+import fs from 'fs/promises';
 
-const babelPresets = ["@babel/preset-env"];
-const babelPlugins = ["@babel/plugin-proposal-class-properties"];
+const { getBabelOutputPlugin: rollupBabel } = rollupBabelPackage;
 
-const buildBundle = async options => {
-    console.log(`${options.input.input}: start`);
+const root = '.';
 
-    const result = await rollup({
-        ...options.input,
-        plugins: options.plugins
-    });
+const bundlesTypes = ['amd', 'iife', 'system', 'es', 'cjs', 'umd'];
 
-    options.output = Array.isArray(options.output) ? options.output : [options.output];
+(async () => {
+    const [
+        babelConfigStream = 0,
 
-    await Promise.all(options.output.map(output => result.write(output)));
+        rollupResult = 1
+    ] = await Promise.all([
+        // TODO: check why this is not read by default
+        fs.readFile(`${root}/babel.config.json`),
 
-    console.log(`${options.input.input}: end`);
-};
+        rollup({
+            input: `${root}/src/loader.mjs`
+        })
+    ]);
 
-// demo files
-// -----------------------------------------------------------------------------------------
-(async root => await Promise.all([
-    await buildBundle({
-        input: {
-            input: `${root}/src/main.js`
-        },
+    const babelConfig = JSON.parse(babelConfigStream);
 
-        plugins: [
-            rollupNodeResolve(),
+    const writing = [];
+    
+    for( let bundlnesTypesIndex = 0, bundlesTypesLength = bundlesTypes.length; bundlnesTypesIndex < bundlesTypesLength; bundlnesTypesIndex++ ){
+        const bundleType = bundlesTypes[bundlnesTypesIndex];
 
-            rollupScss(),
+        for( let i = 0; i < 2; i++ ){
+            const isMinBundle = i === 1;
 
-            rollupVue({ css: false }),
+            const plugins = [rollupBabel({
+                ...babelConfig,
+                comments: false,
+                allowAllFormats: true
+            })];
 
-            rollupCommonJs(),
-
-            rollupReplace({
-              'process.env.NODE_ENV': JSON.stringify('production')
-            })
-        ],
-        
-        output: [
-            {
-                compact: true,
-                sourcemap: true,
-                format: 'iife',
-                file: `${root}/dist/main.js`,
-                plugins: [
-                    rollupBabel.getBabelOutputPlugin({
-                        compact: true,
-                        comments: false,
-                        presets: babelPresets,
-                        plugins: babelPlugins,
-                        allowAllFormats: true
-                    })
-                ]
+            if( isMinBundle ){
+                plugins.push(rollupTerser());
             }
-        ]
-    })
-]))("./demo");
 
-// library
-// -----------------------------------------------------------------------------------------
-(async root => {
-    const bundles = [];
+            plugins.push(rollupGzip());
 
-    const bundlify = async (type, min) => await buildBundle({
-        input: {
-            input: `${root}src/loader.mjs`
-        },
-
-        output: [
-            {
-                compact: min,
+            writing.push(rollupResult.write({
                 sourcemap: true,
-                format: type,
-                name: "BackgroundThreadLoader",
-                file: `${root}dist/${type}/background-thread-loader${ min ? '.min' : '' }.js`,
-                exports: "auto",
-                plugins: [
-                    rollupBabel.getBabelOutputPlugin({
-                        compact: min,
-                        comments: false,
-                        presets: babelPresets,
-                        plugins: babelPlugins,
-                        allowAllFormats: true
-                    }),
-                    
-                    rollupGzip()
-                ]
-            }
-        ]
-    });
+                format: bundleType,
+                name: 'BackgroundThreadLoader',
+                file: `${root}/dist/${bundleType}/loader${ isMinBundle ? '.min' : '' }.js`,
+                exports: 'default',
+                plugins
+            }));
+        }
+    }
 
-    ["amd", "iife", "system", "es", "cjs", "umd"].forEach(type => {
-        // non-minified version
-        bundles.push(bundlify(type, false));
-
-        // minified version
-        bundles.push(bundlify(type, true));
-    });
-
-    await Promise.all(bundles);
-})('./');
+    await Promise.all(writing);
+})();

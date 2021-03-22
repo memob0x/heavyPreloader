@@ -1,6 +1,6 @@
-import { getURL } from "./utils.mjs";
-import Fetch from "./fetch.mjs";
-import Load from "./load.mjs";
+import { getURL } from './utils.mjs';
+import Fetch from './fetch.mjs';
+import Load from './load.mjs';
 
 /**
  * The main library class, exposes methods to grant resources load in a separate thread
@@ -31,7 +31,7 @@ export default class BackgroundThreadLoader {
         }
 
         // If a String url is passed
-        if (typeof resource === "string") {
+        if (typeof resource === 'string') {
             return await this.fetch(getURL(resource), options);
         }
 

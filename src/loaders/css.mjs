@@ -1,5 +1,5 @@
-import modern from "./css-modern.mjs";
-import legacy from "./css-legacy.mjs";
+import modern from './css-modern.mjs';
+import legacy from './css-legacy.mjs';
 
 /**
  * Loads a given Blob object as a css file,

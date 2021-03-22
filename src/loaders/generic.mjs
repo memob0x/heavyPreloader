@@ -36,7 +36,7 @@ export default async (
     const url = URL.createObjectURL(blob);
 
     // Load/error event handlers as a Promise
-    const result = await new Promise(resolve => {
+    const result = await new Promise((resolve, reject) => {
         // The "element" option property exists and is a valid HTMLElement (given derived interface) element
         const elementOptionExists = options?.element instanceof elementInterface;
 

@@ -1,4 +1,4 @@
-import readBlobAsText from "./text.mjs";
+import readBlobAsText from './text.mjs';
 
 // DOM parser instance
 const parser = new DOMParser();
@@ -15,9 +15,9 @@ export default async (blob, options) => {
 
     // If a "filter" property is passed in "option" object
     // then that is used to traverse the new HTML to match that filter among nodes
-    if (typeof options?.filter === "string" && options?.filter?.length) {
+    if (typeof options?.filter === 'string' && options?.filter?.length) {
         // The Blob object red as text is now parsed as HTML
-        result = parser.parseFromString(result, "text/html").body;
+        result = parser.parseFromString(result, 'text/html').body;
         
         // The given filter option is used to traverse that parsed HTML
         result = [...result.querySelectorAll(options.filter)];
@@ -30,7 +30,7 @@ export default async (blob, options) => {
 
     // If an "element" property is passed in "option" object
     // then that element is used as a host for the red (and possibly filtered) HTML string
-    if ( options?.element instanceof HTMLElement && typeof result === "string" ) {
+    if ( options?.element instanceof HTMLElement && typeof result === 'string' ) {
         options.element.innerHTML = result;
     }
 

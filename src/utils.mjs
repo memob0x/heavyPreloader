@@ -1,5 +1,5 @@
 // A link element closure, used to create reliable absolute urls
-const a = document.createElement("a");
+const a = document.createElement('a');
 
 /**
  * Gets an absolute url from a relative url

@@ -32,7 +32,7 @@ export default async (blob, options) => genericLoader(
     // Before events attachment hook
     (link, url, success) => {
         // Link [rel="stylesheet"] is a mandatory link attribute value
-        link.rel = "stylesheet";
+        link.rel = 'stylesheet';
 
         // Sets the link src (load will be triggered by element insertion in DOM though)
         link.href = url;
