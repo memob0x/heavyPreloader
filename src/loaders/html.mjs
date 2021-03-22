@@ -1,8 +1,5 @@
 import readBlobAsText from './text.mjs';
 
-// DOM parser instance
-const parser = new DOMParser();
-
 /**
  * Loads a given Blob object as an html
  * @param {Blob} blob The resource Blob object to be loaded
@@ -10,6 +7,9 @@ const parser = new DOMParser();
  * @returns {Promise} The load promise
  */
 export default async (blob, options) => {
+    // DOM parser instance
+    const parser = new DOMParser();
+
     // Reads the blob as text
     let result = await readBlobAsText(blob);
 

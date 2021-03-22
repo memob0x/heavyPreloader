@@ -20,7 +20,7 @@ const bundlesTypes = ['amd', 'iife', 'system', 'es', 'cjs', 'umd'];
         fs.readFile(`${root}/babel.config.json`),
 
         rollup({
-            input: `${root}/src/loader.mjs`
+            input: `${root}/src/thread-fetcher.mjs`
         })
     ]);
 
@@ -49,8 +49,8 @@ const bundlesTypes = ['amd', 'iife', 'system', 'es', 'cjs', 'umd'];
             writing.push(rollupResult.write({
                 sourcemap: true,
                 format: bundleType,
-                name: 'BackgroundThreadLoader',
-                file: `${root}/dist/${bundleType}/loader${ isMinBundle ? '.min' : '' }.js`,
+                name: 'ThreadFetcher',
+                file: `${root}/dist/${bundleType}/thread-fetcher${ isMinBundle ? '.min' : '' }.js`,
                 exports: 'default',
                 plugins
             }));

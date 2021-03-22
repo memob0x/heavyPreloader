@@ -1,12 +1,16 @@
 {
-    "name": "background-thread-loader",
-    "author": "Daniele Fioroni",
-    "description": "Loads resources in a background thread",
-    "main": "dist/umd/background-thread-loader.min.js",
-    "module": "dist/es/background-thread-loader.js",
+    "name": "thread-fetcher",
+    "author": {
+        "name": "memob0x",
+        "email": "dfioroni91@gmail.com",
+        "url": "https://github.com/memob0x"
+    },
+    "description": "Fetches resources in a background thread",
+    "main": "dist/umd/thread-fetcher.min.js",
+    "module": "dist/es/thread-fetcher.js",
     "version": "2.0.0",
     "license": "MIT",
-    "repository": "https://github.com/memob0x/background-thread-loader.git",
+    "repository": "https://github.com/memob0x/thread-fetcher.git",
     "scripts": {
         "lint": "./node_modules/.bin/eslint --ext .js --ext .mjs . --fix",
         "build": "node ./build.mjs",

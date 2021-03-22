@@ -1,9 +1,9 @@
 import { getURL } from '../../src/utils.mjs';
-import Loader from '../../src/loader.mjs';
+import ThreadFetcher from '../../src/thread-fetcher.mjs';
 import image from '../../src/loaders/image.mjs';
 
 describe('loader', () => {
-    const instance = new Loader();
+    const instance = new ThreadFetcher();
     instance.register('image', image);
 
     it('constructor should expose load and fetch methods', (done) => {
