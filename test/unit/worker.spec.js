@@ -1,4 +1,10 @@
-import LoaderWorker from '../../src/worker.mjs';
+
+
+
+
+import { expect } from 'chai';
+
+import LoaderWorker from '../../src/worker.js';
 
 describe('worker', () => {
     const lworker = new LoaderWorker();

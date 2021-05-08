@@ -1,6 +1,6 @@
-import { getURL } from './utils.mjs';
-import Fetch from './fetch.mjs';
-import Load from './load.mjs';
+import { getURL } from './utils.js';
+import Fetch from './fetch.js';
+import Load from './load.js';
 
 /**
  * The main library class, exposes methods to grant resources load in a separate thread
@@ -27,7 +27,8 @@ export default class ThreadFetcher {
     async fetch(resource, options) {
         // Multiple resources (array) support (through recursion)
         if (Array.isArray(resource)) {
-            return await resource.map(_resource => this.fetch(_resource, options)); // TODO: rename "a"
+            // TODO: replace with for loop
+            return await Promise.all(resource.map(r => this.fetch(r, options)));
         }
 
         // If a String url is passed
@@ -55,7 +56,8 @@ export default class ThreadFetcher {
         if (Array.isArray(resource)) {
             const isArrayOpts = Array.isArray(options);
 
-            return await resource.map((a, i) => this.load(a, isArrayOpts ? options[i] : options));
+            // TODO: replace with for loop
+            return await Promise.all(resource.map((a, i) => this.load(a, isArrayOpts ? options[i] : options)));
         }
 
         // Blob reduction, if instance is not a Blob tries to fetch the resource (calls "fetch" method)

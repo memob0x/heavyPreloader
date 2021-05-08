@@ -1,7 +1,13 @@
-import { getURL } from '../../../src/utils.mjs';
-import Fetch from '../../../src/fetch.mjs';
-import Load from '../../../src/load.mjs';
-import javascript from '../../../src/loaders/javascript-module.mjs';
+
+import '../../global-mocks.js';
+
+
+import { expect } from 'chai';
+
+import { getURL } from '../../../src/utils.js';
+import Fetch from '../../../src/fetch.js';
+import Load from '../../../src/load.js';
+import javascript from '../../../src/loaders/javascript-module.js';
 
 describe('loaders/javascript-module', () => {
     const lfetch = new Fetch();
@@ -9,7 +15,7 @@ describe('loaders/javascript-module', () => {
     lload.register('javascript', javascript);    
 
     it('should return a promise which resolves to empty module if a non-module script is fetched', async () => {
-        const path = '/base/test/resources/javascript.global.js';
+        const path = 'http://localhost:8080/resources/javascript.global.js';
 
         delete window.foo;
         expect(window).not.to.have.property('foo');
@@ -24,7 +30,7 @@ describe('loaders/javascript-module', () => {
     });
 
     it('should return a promise which resolves to an exported api from the fetched module', async () => {
-        const path = '/base/test/resources/javascript.module.mjs';
+        const path = 'http://localhost:8080/resources/javascript.module.js';
 
         const blob = await lfetch.fetch(getURL(path).href);
         const module = await lload.load(blob);

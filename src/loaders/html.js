@@ -1,4 +1,4 @@
-import readBlobAsText from './text.mjs';
+import readBlobAsText from './text.js';
 
 /**
  * Loads a given Blob object as an html

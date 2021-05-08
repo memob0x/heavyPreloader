@@ -83,7 +83,7 @@ Let's go into detail by cooking some of the most common recipes.
 const loader = new ThreadFetch();
 
 // loader of choice registration
-// (distribution comes with a standard loader for this type which can be found in dist/esm/loader.html.mjs)
+// (distribution comes with a standard loader for this type which can be found in dist/esm/loader.html.js)
 loader.register("html", htmlLoader);
 
 // updating #root with new contents
@@ -113,7 +113,7 @@ Here's the full [demo](https://codesandbox.io/s/thread-fetcher-1592t/#/html/).
 const loader = new ThreadFetch();
 
 // loader of choice registration
-// (distribution comes with a loader for this type which can be found in dist/esm/loader.css.legacy.mjs)
+// (distribution comes with a loader for this type which can be found in dist/esm/loader.css.legacy.js)
 loader.register("css", cssLoader);
 
 // loading a new visual theme and a new app area
@@ -135,7 +135,7 @@ Here's the full [demo](https://codesandbox.io/s/thread-fetcher-1592t/#/css/).
 const loader = new ThreadFetch();
 
 // loader of choice registration
-// (distribution comes with a loader for this type which can be found in dist/esm/loader.javascript.mjs)
+// (distribution comes with a loader for this type which can be found in dist/esm/loader.javascript.js)
 loader.register("javascript", javascriptLoader);
 
 // retrieving and consuming a specific module
@@ -156,7 +156,7 @@ loader.load("cart.js").then((module) => {
 const loader = new ThreadFetch();
 
 // loader of choice registration
-// (distribution comes with a loader for this type which can be found in dist/esm/loader.image.mjs)
+// (distribution comes with a loader for this type which can be found in dist/esm/loader.image.js)
 loader.register("image", imageLoader);
 
 // observer initialization

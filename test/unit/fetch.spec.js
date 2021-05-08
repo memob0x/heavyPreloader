@@ -1,8 +1,12 @@
-import { getURL } from '../../src/utils.mjs';
-import Fetch from '../../src/fetch.mjs';
+
+
+import { expect } from 'chai';
+
+import { getURL } from '../../src/utils.js';
+import Fetch from '../../src/fetch.js';
 
 describe('fetch', () => {
-    const path = '/base/test/resources/css.inherit.css';
+    const path = 'http://localhost:8080/resources/css.inherit.css';
     const url = getURL(path).href;
     const lfetch = new Fetch();
 

@@ -1,4 +1,7 @@
-import Load from '../../src/load.mjs';
+
+
+
+import Load from '../../src/load.js';
 
 describe('load', () => {
     const lload = new Load();

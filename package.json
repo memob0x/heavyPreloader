@@ -1,5 +1,6 @@
 {
     "name": "thread-fetcher",
+    "type": "module",
     "author": {
         "name": "memob0x",
         "email": "dfioroni91@gmail.com",
@@ -12,31 +13,26 @@
     "license": "MIT",
     "repository": "https://github.com/memob0x/thread-fetcher.git",
     "scripts": {
-        "lint": "./node_modules/.bin/eslint --ext .js --ext .mjs . --fix",
-        "build": "node ./build.mjs",
-        "test:unit": "karma start --single-run --browsers ChromeHeadless karma.conf.js",
+        "lint": "./node_modules/.bin/eslint --ext .js . --fix",
+        "build": "node ./build.js",
+        "test:unit": "node ./start.js & ./node_modules/.bin/mocha ./test/unit/*.spec.*",
         "test": "npm run test:unit"
     },
     "devDependencies": {
-        "@babel/core": "^7.13.10",
-        "@babel/eslint-parser": "^7.13.10",
-        "@babel/eslint-plugin": "^7.13.10",
+        "@babel/core": "^7.14.0",
+        "@babel/eslint-parser": "^7.13.14",
+        "@babel/eslint-plugin": "^7.13.16",
         "@babel/plugin-proposal-class-properties": "^7.13.0",
-        "@babel/preset-env": "^7.13.10",
+        "@babel/preset-env": "^7.14.1",
         "@rollup/plugin-babel": "^5.3.0",
         "chai": "^4.3.4",
-        "eslint": "^7.22.0",
+        "eslint": "^7.26.0",
         "express": "^4.17.1",
-        "karma": "^6.2.0",
-        "karma-chai": "^0.1.0",
-        "karma-chrome-launcher": "^3.1.0",
-        "karma-mocha": "^2.0.1",
-        "karma-mocha-reporter": "^2.2.5",
-        "mocha": "^8.3.2",
-        "puppeteer": "^8.0.0",
-        "rollup": "^2.42.2",
+        "jsdom": "^16.5.3",
+        "jsdom-global": "^3.0.2",
+        "mocha": "^8.4.0",
+        "rollup": "^2.47.0",
         "rollup-plugin-gzip": "^2.5.0",
-        "rollup-plugin-terser": "^7.0.2",
-        "serve-static": "^1.14.1"
+        "rollup-plugin-terser": "^7.0.2"
     }
 }

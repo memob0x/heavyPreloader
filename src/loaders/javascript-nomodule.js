@@ -1,4 +1,4 @@
-import genericLoader from './generic.mjs';
+import genericLoader from './generic.js';
 
 /**
  * Loads a given Blob object as an javascript file

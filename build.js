@@ -20,7 +20,7 @@ const bundlesTypes = ['amd', 'iife', 'system', 'es', 'cjs', 'umd'];
         fs.readFile(`${root}/babel.config.json`),
 
         rollup({
-            input: `${root}/src/thread-fetcher.mjs`
+            input: `${root}/src/thread-fetcher.js`
         })
     ]);
 

@@ -1,4 +1,4 @@
-import LoaderWorker from './worker.mjs';
+import LoaderWorker from './worker.js';
 
 /**
  * Fetch class, handles http requests using a worker singleton,

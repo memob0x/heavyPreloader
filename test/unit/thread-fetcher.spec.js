@@ -1,6 +1,12 @@
-import { getURL } from '../../src/utils.mjs';
-import ThreadFetcher from '../../src/thread-fetcher.mjs';
-import image from '../../src/loaders/image.mjs';
+
+
+
+
+import { expect } from 'chai';
+
+import { getURL } from '../../src/utils.js';
+import ThreadFetcher from '../../src/thread-fetcher.js';
+import image from '../../src/loaders/image.js';
 
 describe('loader', () => {
     const instance = new ThreadFetcher();
@@ -19,7 +25,7 @@ describe('loader', () => {
     describe('fetch public method', () => {
         it('should be able to handle an url object', async () => {
             const fetch = await instance.fetch(
-                getURL('/base/test/resources/image.1440x900.jpg')
+                getURL('http://localhost:8080/resources/image.1440x900.jpg')
             );
 
             expect(fetch).to.be.an.instanceof(Blob);
@@ -30,8 +36,8 @@ describe('loader', () => {
 
         it('should be able to lists of url objects', async () => {
             const fetch = await instance.fetch([
-                getURL('/base/test/resources/image.1440x900.jpg'),
-                getURL('/base/test/resources/image.1440x900.jpg')
+                getURL('http://localhost:8080/resources/image.1440x900.jpg'),
+                getURL('http://localhost:8080/resources/image.1440x900.jpg')
             ]);
 
             expect(fetch).to.be.an('array');
@@ -49,7 +55,7 @@ describe('loader', () => {
 
         it('should be able to handle strings', async () => {
             const fetch = await instance.fetch(
-                '/base/test/resources/image.1440x900.jpg'
+                'http://localhost:8080/resources/image.1440x900.jpg'
             );
 
             expect(fetch).to.be.an.instanceof(Blob);
@@ -60,8 +66,8 @@ describe('loader', () => {
 
         it('should be able to handle lists of strings', async () => {
             const fetch = await instance.fetch([
-                '/base/test/resources/image.1440x900.jpg',
-                '/base/test/resources/image.1440x900.jpg'
+                'http://localhost:8080/resources/image.1440x900.jpg',
+                'http://localhost:8080/resources/image.1440x900.jpg'
             ]);
 
             expect(fetch).to.be.an('array');
@@ -81,7 +87,7 @@ describe('loader', () => {
     describe('load public method', () => {
         it('should be able to handle an url object', async () => {
             const load = await instance.load(
-                getURL('/base/test/resources/image.1440x900.jpg')
+                getURL('http://localhost:8080/resources/image.1440x900.jpg')
             );
 
             expect(load).to.be.an.instanceOf(HTMLImageElement);
@@ -91,8 +97,8 @@ describe('loader', () => {
 
         it('should be able to lists of url objects', async () => {
             const load = await instance.load([
-                getURL('/base/test/resources/image.1440x900.jpg'),
-                getURL('/base/test/resources/image.1440x900.jpg')
+                getURL('http://localhost:8080/resources/image.1440x900.jpg'),
+                getURL('http://localhost:8080/resources/image.1440x900.jpg')
             ]);
 
             expect(load).to.be.an('array');
@@ -108,7 +114,7 @@ describe('loader', () => {
 
         it('should be able to handle strings', async () => {
             const load = await instance.load(
-                '/base/test/resources/image.1440x900.jpg'
+                'http://localhost:8080/resources/image.1440x900.jpg'
             );
 
             expect(load).to.be.an.instanceOf(HTMLImageElement);
@@ -118,8 +124,8 @@ describe('loader', () => {
 
         it('should be able to handle lists of strings', async () => {
             const load = await instance.load([
-                '/base/test/resources/image.1440x900.jpg',
-                '/base/test/resources/image.1440x900.jpg'
+                'http://localhost:8080/resources/image.1440x900.jpg',
+                'http://localhost:8080/resources/image.1440x900.jpg'
             ]);
 
             expect(load).to.be.an('array');
