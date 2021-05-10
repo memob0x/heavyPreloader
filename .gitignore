@@ -1,5 +1,5 @@
 node_modules
 .vscode
 *.orig
-error_log
-/dist
+dist
+.local-chromium

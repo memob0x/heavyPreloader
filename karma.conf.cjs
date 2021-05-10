@@ -1,4 +1,4 @@
-process.env.CHROME_BIN = require('puppeteer').executablePath();
+process.env.CHROME_BIN = './.local-chromium/chromium-linux-869685/chrome-linux/chrome';
 
 module.exports = config => config.set({
     frameworks: ['mocha', 'chai'],
