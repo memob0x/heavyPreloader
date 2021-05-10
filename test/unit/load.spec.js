@@ -1,6 +1,3 @@
-
-
-
 import Load from '../../src/load.js';
 
 describe('load', () => {

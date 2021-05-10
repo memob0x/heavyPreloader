@@ -1,9 +1,3 @@
-
-
-import '../../global-mocks.js';
-
-import { expect } from 'chai';
-
 import { getURL } from '../../../src/utils.js';
 import Fetch from '../../../src/fetch.js';
 import Load from '../../../src/load.js';
@@ -15,7 +9,7 @@ describe('loaders/css-modern', () => {
     lload.register('css', css);    
 
     it('should return a promise which resolves to a CSSStyleSheet object', async () => {
-        const path = 'http://localhost:8080/resources/css.inherit.css';
+        const path = '/base/test/resources/css.inherit.css';
 
         const blob = await lfetch.fetch(getURL(path).href);
         const stylesheet = await lload.load(blob);
@@ -27,7 +21,7 @@ describe('loaders/css-modern', () => {
 
     it('should attach stylesheet to document if no different option is specified', async () => {
         const sheets = document.adoptedStyleSheets;
-        const path = 'http://localhost:8080/resources/css.blue-background.css';
+        const path = '/base/test/resources/css.blue-background.css';
         const getBodyBackgroundColor = () =>
             getComputedStyle(document.body).backgroundColor;
 

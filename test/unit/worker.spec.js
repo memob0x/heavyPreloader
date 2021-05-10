@@ -1,9 +1,3 @@
-
-
-
-
-import { expect } from 'chai';
-
 import LoaderWorker from '../../src/worker.js';
 
 describe('worker', () => {

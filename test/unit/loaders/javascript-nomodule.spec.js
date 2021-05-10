@@ -1,9 +1,3 @@
-
-import '../../global-mocks.js';
-
-
-import { expect } from 'chai';
-
 import { getURL } from '../../../src/utils.js';
 import Fetch from '../../../src/fetch.js';
 import Load from '../../../src/load.js';
@@ -15,7 +9,7 @@ describe('loaders/javascript-nomodule', () => {
     lload.register('javascript', javascript);    
 
     it('should return a promise which resolves to a script element', async () => {
-        const path = 'http://localhost:8080/resources/javascript.global.js';
+        const path = '/base/test/resources/javascript.global.js';
 
         delete window.foo;
         expect(window).not.to.have.property('foo');

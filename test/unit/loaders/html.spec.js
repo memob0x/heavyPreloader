@@ -1,9 +1,3 @@
-
-import '../../global-mocks.js';
-
-
-import { expect } from 'chai';
-
 import { getURL } from '../../../src/utils.js';
 import Fetch from '../../../src/fetch.js';
 import Load from '../../../src/load.js';
@@ -15,7 +9,7 @@ describe('loaders/html', () => {
     lload.register('html', html);    
 
     it('should return a promise which resolves to plain text', async () => {
-        const path = 'http://localhost:8080/resources/html.a-view.html';
+        const path = '/base/test/resources/html.a-view.html';
 
         const blob = await lfetch.fetch(getURL(path).href);
         const text = await lload.load(blob);
@@ -26,7 +20,7 @@ describe('loaders/html', () => {
     });
 
     it('should insert retrieved html to an element if provided in options', async () => {
-        const path = 'http://localhost:8080/resources/html.a-div-with-a-paragraph.html';
+        const path = '/base/test/resources/html.a-div-with-a-paragraph.html';
         const el = document.createElement('div');
 
         expect(el.innerHTML).to.equals('');
@@ -41,7 +35,7 @@ describe('loaders/html', () => {
     });
 
     it('should filter retrieved html if filter is provided in options', async () => {
-        const path = 'http://localhost:8080/resources/html.a-div-with-a-paragraph.html';
+        const path = '/base/test/resources/html.a-div-with-a-paragraph.html';
         const el = document.createElement('div');
 
         expect(el.innerHTML).to.equals('');
