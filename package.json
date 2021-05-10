@@ -1,38 +1,41 @@
 {
-    "name": "loader",
+    "name": "thread-fetcher",
+    "type": "module",
+    "author": {
+        "name": "memob0x",
+        "email": "dfioroni91@gmail.com",
+        "url": "https://github.com/memob0x"
+    },
+    "description": "Fetches resources in a background thread",
+    "main": "dist/umd/thread-fetcher.min.js",
+    "module": "dist/es/thread-fetcher.js",
     "version": "2.0.0",
     "license": "MIT",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/memob0x/loader.git"
-    },
+    "repository": "https://github.com/memob0x/thread-fetcher.git",
     "scripts": {
-        "build": "node ./build.mjs",
-        "start": "node ./start.mjs",
-        "test": "karma start --single-run --browsers ChromeHeadless karma.conf.js"
+        "lint": "./node_modules/.bin/eslint --ext .js . --fix",
+        "build": "node ./build.js",
+        "test:unit": "node ./test.js && karma start --single-run --browsers ChromeHeadless karma.conf.cjs",
+        "test": "npm run test:unit"
     },
     "devDependencies": {
-        "@babel/core": "^7.11.5",
-        "@babel/plugin-proposal-class-properties": "^7.10.4",
-        "@babel/plugin-proposal-export-default-from": "^7.10.4",
-        "@babel/plugin-proposal-nullish-coalescing-operator": "^7.10.4",
-        "@babel/plugin-proposal-optional-chaining": "^7.11.0",
-        "@babel/plugin-proposal-private-methods": "^7.10.4",
-        "autoprefixer": "^9.8.6",
-        "chai": "4.2.0",
-        "connect": "^3.7.0",
-        "handlebars": "^4.7.6",
-        "handlebars-layouts": "^3.1.4",
-        "karma": "^5.2.1",
+        "@babel/core": "^7.14.0",
+        "@babel/eslint-parser": "^7.13.14",
+        "@babel/eslint-plugin": "^7.13.16",
+        "@babel/plugin-proposal-class-properties": "^7.13.0",
+        "@babel/preset-env": "^7.14.1",
+        "@rollup/plugin-babel": "^5.3.0",
+        "chai": "^4.3.4",
+        "download-chromium": "^2.1.0",
+        "eslint": "^7.26.0",
+        "karma": "^6.3.2",
         "karma-chai": "^0.1.0",
         "karma-chrome-launcher": "^3.1.0",
         "karma-mocha": "^2.0.1",
         "karma-mocha-reporter": "^2.2.5",
-        "mjs-mocha": "^3.0.0",
-        "mkdirp": "^1.0.4",
-        "mocha": "8.1.3",
-        "node-sass": "^4.14.1",
-        "puppeteer": "^5.2.1",
-        "serve-static": "^1.14.1"
+        "mocha": "^8.4.0",
+        "rollup": "^2.47.0",
+        "rollup-plugin-gzip": "^2.5.0",
+        "rollup-plugin-terser": "^7.0.2"
     }
 }

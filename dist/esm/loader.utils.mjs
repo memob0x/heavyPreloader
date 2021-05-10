@@ -1,1 +1,0 @@
-const a=document.createElement("a");export const getURL=path=>{a.href=path;return new URL(a.href);};
