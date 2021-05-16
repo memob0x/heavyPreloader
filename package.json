@@ -15,7 +15,7 @@
     "scripts": {
         "lint": "./node_modules/.bin/eslint --ext .js . --fix",
         "build": "node ./build.js",
-        "test:unit": "node ./test.js && karma start --single-run --browsers ChromeHeadless karma.conf.cjs",
+        "test:unit": "karma start --single-run --browsers ChromeHeadless karma.conf.cjs",
         "test": "npm run test:unit"
     },
     "devDependencies": {
