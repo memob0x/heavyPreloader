@@ -4,8 +4,7 @@ module.exports = async config => {
     console.log('Downloading chromium...');
 
     process.env.CHROME_BIN = await downloadChromium({
-        revision: '869685',
-        installPath: './.local-chromium' 
+        revision: '869685'
     });
     
     console.log(`Chrome downloaded at ${process.env.CHROME_BIN}`);
