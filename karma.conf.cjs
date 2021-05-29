@@ -1,11 +1,7 @@
-const downloadChromium = require('download-chromium');
+const puppeteer = require('puppeteer');
 
 module.exports = async config => {
-    console.log('Downloading chromium...');
-
-    process.env.CHROME_BIN = await downloadChromium({
-        revision: '869685'
-    });
+    process.env.CHROME_BIN = puppeteer.executablePath();
     
     console.log(`Chrome downloaded at ${process.env.CHROME_BIN}`);
 
