@@ -1,8 +1,8 @@
-import { getURL } from '../../src/utils.js';
+import getAbsoluteUrl from '../../src/get-absolute-url.js';
 import ThreadFetcher from '../../src/thread-fetcher.js';
 import image from '../../src/loaders/image.js';
 
-describe('loader', () => {
+describe('thread-fetcher.js', () => {
     const instance = new ThreadFetcher();
     instance.register('image', image);
 
@@ -19,7 +19,7 @@ describe('loader', () => {
     describe('fetch public method', () => {
         it('should be able to handle an url object', async () => {
             const fetch = await instance.fetch(
-                getURL('/base/test/resources/image.1440x900.jpg')
+                getAbsoluteUrl('/base/test/resources/image.1440x900.jpg')
             );
 
             expect(fetch).to.be.an.instanceof(Blob);
@@ -30,8 +30,8 @@ describe('loader', () => {
 
         it('should be able to lists of url objects', async () => {
             const fetch = await instance.fetch([
-                getURL('/base/test/resources/image.1440x900.jpg'),
-                getURL('/base/test/resources/image.1440x900.jpg')
+                getAbsoluteUrl('/base/test/resources/image.1440x900.jpg'),
+                getAbsoluteUrl('/base/test/resources/image.1440x900.jpg')
             ]);
 
             expect(fetch).to.be.an('array');
@@ -81,7 +81,7 @@ describe('loader', () => {
     describe('load public method', () => {
         it('should be able to handle an url object', async () => {
             const load = await instance.load(
-                getURL('/base/test/resources/image.1440x900.jpg')
+                getAbsoluteUrl('/base/test/resources/image.1440x900.jpg')
             );
 
             expect(load).to.be.an.instanceOf(HTMLImageElement);
@@ -91,8 +91,8 @@ describe('loader', () => {
 
         it('should be able to lists of url objects', async () => {
             const load = await instance.load([
-                getURL('/base/test/resources/image.1440x900.jpg'),
-                getURL('/base/test/resources/image.1440x900.jpg')
+                getAbsoluteUrl('/base/test/resources/image.1440x900.jpg'),
+                getAbsoluteUrl('/base/test/resources/image.1440x900.jpg')
             ]);
 
             expect(load).to.be.an('array');

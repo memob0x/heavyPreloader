@@ -1,4 +1,4 @@
-import { getURL } from './utils.js';
+import getAbsoluteUrl from './get-absolute-url.js';
 import Fetch from './fetch.js';
 import Load from './load.js';
 
@@ -33,7 +33,7 @@ export default class ThreadFetcher {
 
         // If a String url is passed
         if (typeof resource === 'string') {
-            return await this.fetch(getURL(resource), options);
+            return await this.fetch(getAbsoluteUrl(resource), options);
         }
 
         // if an URL object is passed

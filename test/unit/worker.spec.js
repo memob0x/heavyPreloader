@@ -1,6 +1,6 @@
 import LoaderWorker from '../../src/worker.js';
 
-describe('worker', () => {
+describe('worker.js', () => {
     const lworker = new LoaderWorker();
 
     it('should be able to create a worker dynamically', (done) => {

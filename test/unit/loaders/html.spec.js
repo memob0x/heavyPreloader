@@ -1,9 +1,9 @@
-import { getURL } from '../../../src/utils.js';
+import getAbsoluteUrl from '../../../src/get-absolute-url.js';
 import Fetch from '../../../src/fetch.js';
 import Load from '../../../src/load.js';
 import html from '../../../src/loaders/html.js';
 
-describe('loaders/html', () => {
+describe('loaders/html.js', () => {
     const lfetch = new Fetch();
     const lload = new Load();
     lload.register('html', html);    
@@ -11,7 +11,7 @@ describe('loaders/html', () => {
     it('should return a promise which resolves to plain text', async () => {
         const path = '/base/test/resources/html.a-view.html';
 
-        const blob = await lfetch.fetch(getURL(path).href);
+        const blob = await lfetch.fetch(getAbsoluteUrl(path).href);
         const text = await lload.load(blob);
 
         expect(text).to.be.a('string');
@@ -25,7 +25,7 @@ describe('loaders/html', () => {
 
         expect(el.innerHTML).to.equals('');
 
-        const blob = await lfetch.fetch(getURL(path).href);
+        const blob = await lfetch.fetch(getAbsoluteUrl(path).href);
         const text = await lload.load(blob, { element: el });
 
         expect(el.innerHTML).to.equals(text);
@@ -40,7 +40,7 @@ describe('loaders/html', () => {
 
         expect(el.innerHTML).to.equals('');
 
-        const blob = await lfetch.fetch(getURL(path).href);
+        const blob = await lfetch.fetch(getAbsoluteUrl(path).href);
         const text = await lload.load(blob, { element: el, filter: 'p' });
 
         expect(el.innerHTML).not.to.equals('');

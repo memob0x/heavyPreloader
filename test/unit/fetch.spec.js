@@ -1,9 +1,9 @@
-import { getURL } from '../../src/utils.js';
+import getAbsoluteUrl from '../../src/get-absolute-url.js';
 import Fetch from '../../src/fetch.js';
 
-describe('fetch', () => {
+describe('fetch.js', () => {
     const path = '/base/test/resources/css.inherit.css';
-    const url = getURL(path).href;
+    const url = getAbsoluteUrl(path).href;
     const lfetch = new Fetch();
 
     it('should return a promise which resolves to a resource blob object', () => {

@@ -3,7 +3,7 @@
  * @param {String} path The relative url
  * @returns {URL} The newly created absolute url
  */
-export const getURL = path => {
+export default path => {
     const a = document.createElement('a');
 
     a.href = path;
